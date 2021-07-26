@@ -50,7 +50,8 @@ class PolyHash(Hash):
       pad = ((16 - len(message)) % 16) % 16
       padded_message = message + b'\x00'*pad
       blocks = [padded_message[i:i+self.lengths()['blocksize']] for i in range(0, len(padded_message), self.lengths()['blocksize'])]
-      hash_result = self.gf(len(message)) * h
+      # message length in bits used for length
+      hash_result = self.gf(len(message) * 8) * h
       for i in range(len(blocks)):
         exponent = (len(blocks) + 1) - i
         hash_result += (h**exponent) * self.gf(int.from_bytes(blocks[i], byteorder='big'))

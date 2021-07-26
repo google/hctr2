@@ -17,17 +17,23 @@ h = os.urandom(16)
 print(p.hash(h, b'abc123'))
 
 hctr = HCTR()
-print(list(hctr.variants()))
-hctr.choose_variant(lambda v: v['blockcipher']['lengths']['key'] == 32)
+hctr.choose_variant(lambda v: v['blockcipher']['lengths']['key'] == 32 and v['lengths']['tweak'] == 1)
 k = os.urandom(hctr.lengths()['key'])
-txt = b'a'*30
-tweak = b'\x05'
-ct = hctr.encrypt(txt, k, tweak)
+
+ct = hctr.encrypt(b'a'*30, k, b'\x05')
 print(ct)
-pt = hctr.decrypt(ct, k, tweak)
+pt = hctr.decrypt(ct, k, b'\x05')
 print(pt)
-tweak = b'\x06'
-ct = hctr.encrypt(txt, k, tweak)
+ct = hctr.encrypt(b'a'*25+b'b'+b'a'*4, k, b'\x05')
 print(ct)
-pt = hctr.decrypt(ct, k, tweak)
+pt = hctr.decrypt(ct, k, b'\x05')
+print(pt)
+
+ct = hctr.encrypt(b'a'*30, k, b'\x06')
+print(ct)
+pt = hctr.decrypt(ct, k, b'\x06')
+print(pt)
+ct = hctr.encrypt(b'a'*25+b'b'+b'a'*4, k, b'\x06')
+print(ct)
+pt = hctr.decrypt(ct, k, b'\x06')
 print(pt)

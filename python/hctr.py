@@ -36,18 +36,22 @@ class HCTR(cipher.Blockcipher):
     raise Exception(f"Unknown block cipher: {v}")
 
   def variants(self):
-    for (bs, ctr) in self._blockcipher_pairs():
-      yield {
-        'cipher': self.name(),
-        'blockcipher': bs.variant,
-        'lengths': {
-            'key': 16 + bs.variant['lengths']['key'],
-            'blocksize': 16
-        }}
+    # tweak length in bytes
+    for t in [0, 1, 2, 4, 8, 16, 32, 64, 128, 256]:
+      for (bs, ctr) in self._blockcipher_pairs():
+        yield {
+          'cipher': self.name(),
+          'blockcipher': bs.variant,
+          'lengths': {
+              'key': 16 + bs.variant['lengths']['key'],
+              'blocksize': 16,
+              'tweak': t
+          }}
 
   def encrypt(self, pt, key, tweak):
     assert len(key) == self.lengths()['key']
     assert len(pt) >= self.lengths()['blocksize']
+    assert len(tweak) >= self.lengths()['tweak']
     hash_key = key[0:16]
     block_key = key[16:]
     m = pt[0:16]
@@ -57,11 +61,12 @@ class HCTR(cipher.Blockcipher):
     s = Crypto.Util.strxor.strxor(mm, cc)
     d = self._ctr.encrypt(n, block_key, s)
     c = Crypto.Util.strxor.strxor(cc, self._polyhash.hash(hash_key, d + tweak))
-    return c + d
+    return (c + d)[0:len(pt)]
 
   def decrypt(self, ct, key, tweak):
     assert len(key) == self.lengths()['key']
     assert len(ct) >= self.lengths()['blocksize']
+    assert len(tweak) >= self.lengths()['tweak']
     hash_key = key[0:16]
     block_key = key[16:]
     c = ct[0:16]
@@ -71,7 +76,7 @@ class HCTR(cipher.Blockcipher):
     s = Crypto.Util.strxor.strxor(mm, cc)
     n = self._ctr.decrypt(d, block_key, s)
     m = Crypto.Util.strxor.strxor(mm, self._polyhash.hash(hash_key, n + tweak))
-    return m + n
+    return (m + n)[0:len(ct)]
 
 
   def _setup_variant(self):
