@@ -25,24 +25,29 @@ struct polyhash_key {
 };
 
 struct polyhash_state {
-	ble128 h;
+	ble128 state;
+    size_t num_hashed_bytes;
 };
 
 void polyhash_setkey(struct polyhash_key *key, const u8 *raw_key);
 
 static inline void polyhash_init(struct polyhash_state *state)
 {
-	memset(&state->h, 0, sizeof(state->h));
+	memset(&state->state, 0, sizeof(state->state));
+    state->num_hashed_bytes = 0;
 }
 
 void polyhash_generic(const struct polyhash_key *key,
 			     struct polyhash_state *state,
-			     const u8 *data, size_t nblocks, u32 hibit);
+			     const u8 *data, size_t nbytes);
+
+void polyhash_update_clmulni(const struct polyhash_key *key,
+        struct polyhash_state *state, const u8 *data,
+        size_t nbytes);
 
 static inline void polyhash(const struct polyhash_key *key,
 				   struct polyhash_state *state,
-				   const void *data, size_t nblocks, u32 hibit,
-				   bool simd)
+				   const void *data, size_t nbytes, bool simd)
 {
-	polyhash_generic(key, state, data, nblocks, hibit << 24);
+	polyhash_generic(key, state, data, nbytes);
 }
