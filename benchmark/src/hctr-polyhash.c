@@ -45,29 +45,61 @@ void polyhash_update_clmulni(const struct polyhash_key *key,
     ble128 tmp;
     u64 exponent;
     ble128 pow;
-    size_t nblocks = nbytes / POLYHASH_BLOCK_SIZE;
+    size_t nblocks;
+    size_t partial_append;
 
-    if(nblocks - 2 < NUM_PRECOMPUTE_KEYS) {
+    // last update left partial block
+    if(state->partial_block_length > 0) {
+        if(nbytes >= POLYHASH_BLOCK_SIZE - state->partial_block_length) {
+            // we now have a full block
+            partial_append = POLYHASH_BLOCK_SIZE - state->partial_block_length;
+            memcpy((u8*)&(state->partial_block) + state->partial_block_length,
+                    data, partial_append);
+            memcpy(&tmp, &key->h, POLYHASH_KEY_SIZE);
+            clmul_polyhash_mul(&state->state, &tmp);
+            /* block * h^2 */
+            memcpy(&tmp, &key->powers[0], POLYHASH_KEY_SIZE);
+            clmul_polyhash_mul(&tmp, &state->partial_block);
+            ble128_xor(&state->state, &tmp);
+            memset(&state->partial_block, 0, POLYHASH_BLOCK_SIZE);
+            state->partial_block_length = 0;
+        }
+        else {
+            partial_append = nbytes;
+            memcpy((u8 *)&state->partial_block + state->partial_block_length,
+                    data, partial_append);
+            state->partial_block_length += partial_append;
+        }
+        // shift data pointer to account for partial first block
+        data = data+partial_append;
+        state->num_hashed_bytes += partial_append;
+        nbytes -= partial_append;
+        // now we can hash normally as if there was no partial block
+    }
+    nblocks = nbytes / POLYHASH_BLOCK_SIZE;
+
+    // exponentiate all previously hashed blocks
+    if(nblocks > 1 && nblocks - 2 < NUM_PRECOMPUTE_KEYS) {
         memcpy(&tmp, &key->powers[nblocks - 2], POLYHASH_KEY_SIZE);
     }
     else if(nblocks == 1) {
         memcpy(&tmp, &key->h, POLYHASH_KEY_SIZE);
     }
-    else if(nblocks == 0) {
-        return;
-    }
-    else {
+    else if(nblocks > 0) {
         // this path can be avoided by hashing in batches of 32 blocks
         memcpy(&tmp, &key->h, POLYHASH_KEY_SIZE);
         for(int j = 1; j < exponent; j++) {
             clmul_polyhash_mul(&tmp, &key->h);
         }
     }
-    clmul_polyhash_mul(&state->state, &tmp);
+
+    if(nblocks != 0) {
+        clmul_polyhash_mul(&state->state, &tmp);
+    }
 
     for(int i = 0; i < nblocks; i++) {
         exponent = (nblocks+1) - i;
-        memcpy(&tmp, data + (i * nblocks), POLYHASH_BLOCK_SIZE);
+        memcpy(&tmp, data + (i * POLYHASH_BLOCK_SIZE), POLYHASH_BLOCK_SIZE);
         if(exponent - 2 < NUM_PRECOMPUTE_KEYS) {
             clmul_polyhash_mul(&tmp, &(key->powers[exponent - 2]));
             ble128_xor(&state->state, &tmp);
@@ -81,43 +113,12 @@ void polyhash_update_clmulni(const struct polyhash_key *key,
             ble128_xor(&state->state, &tmp);
         }
     }
-    state->num_hashed_bytes += nbytes;
-}
-
-/*
- * Optionally called as the last hash round to allow for end blocks that
- * are not multiples of POLYHASH_BLOCK_SIZE
- *
- * Equivalent to polyhash_update if nbytes is a multiple of POLYHASH_BLOCK_SIZE
- *
- * nbytes is not required to be a multiple of POLYHASH_BLOCK_SIZE
- */
-void polyhash_tail_clmulni(const struct polyhash_key *key,
-        		struct polyhash_state *state, const u8 *data,
-                size_t nbytes) {
-    size_t nblocks = nbytes / POLYHASH_BLOCK_SIZE;
-    ble128 tmp;
-    ble128 padded_block;
-
-    if(nblocks > 0) {
-        polyhash_update_clmulni(key, state, data, nblocks * POLYHASH_BLOCK_SIZE);
-    }
     if(nbytes % POLYHASH_BLOCK_SIZE) {
-        memcpy(&tmp, &key->h, POLYHASH_KEY_SIZE);
-    	clmul_polyhash_mul(&state->state, &tmp);
-
-        /* block * h^2 */
-        memcpy(&tmp, &key->powers[0], POLYHASH_KEY_SIZE);
-        memset(&padded_block, 0, POLYHASH_BLOCK_SIZE);
-        memcpy(&padded_block, data + nblocks, nbytes % POLYHASH_BLOCK_SIZE);
-		clmul_polyhash_mul(&tmp, &padded_block);
-        ble128_xor(&state->state, &tmp);
-
-        for(int i = 0; i < 16; i++) {
-            printf("%02hhx", ((u8 *)&state->state)[i]);
-        }
-        printf("\n");
+        memcpy(&state->partial_block, data + nblocks*POLYHASH_BLOCK_SIZE, 
+                nbytes % POLYHASH_BLOCK_SIZE);
+        state->partial_block_length = nbytes % POLYHASH_BLOCK_SIZE;
     }
+
     state->num_hashed_bytes += nbytes;
 }
 
@@ -127,12 +128,32 @@ void polyhash_emit_clmulni(const struct polyhash_key *key,
 	ble128 tmp;
     if(state->num_hashed_bytes == 0) {
         memcpy(out, &key->h, POLYHASH_DIGEST_SIZE);
+        return;
+    }
+    if(state->partial_block_length) {
+        memcpy(&tmp, &key->h, POLYHASH_KEY_SIZE);
+        clmul_polyhash_mul(&state->state, &tmp);
+        /* block * h^2 */
+        memcpy(&tmp, &key->powers[0], POLYHASH_KEY_SIZE);
+        clmul_polyhash_mul(&tmp, &state->partial_block);
+        ble128_xor(&state->state, &tmp);
     }
     tmp.lo = 0;
     tmp.hi = be64_to_cpu(state->num_hashed_bytes*8);
     memcpy(out, &key->h, POLYHASH_KEY_SIZE);
     clmul_polyhash_mul((ble128*)out, &tmp);
     ble128_xor((ble128*)out, &state->state);
+}
+
+void polyhash_update(const struct polyhash_key *key,
+        		struct polyhash_state *state, const u8 *data,
+                size_t nbytes) {
+    polyhash_update_clmulni(key, state, data, nbytes);
+}
+
+void polyhash_emit(const struct polyhash_key *key,
+        struct polyhash_state * state, u8 *out) {
+    polyhash_emit_clmulni(key, state, out);
 }
 
 /* Poly1305 benchmarking */
