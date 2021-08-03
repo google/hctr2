@@ -36,7 +36,7 @@ void polyhash_setkey(struct polyhash_key *key, const u8 *raw_key);
 static inline void polyhash_init(struct polyhash_state *state)
 {
 	memset(&state->state, 0, sizeof(state->state));
-	memset(&state->partial_block, 0, sizeof(state->state));
+	memset(&state->partial_block, 0, sizeof(state->partial_block));
     state->num_hashed_bytes = 0;
     state->partial_block_length = 0;
 }
