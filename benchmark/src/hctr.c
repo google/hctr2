@@ -22,19 +22,21 @@
 
 struct hctr_ctx {
 	struct aes_ctx aes_ctx;
+	struct aes_ctx aesti_ctx;
 	unsigned int default_tweak_len;
     struct polyhash_key polyhash_key;
 };
 
 /*
- * Let K_E be the 256-bit AES key and K_H be the 128-bit hash key
+ * Let K_H be the 128-bit hash key and K_E be the 256-bit AES key
  * Assume:
- *     K = K_E || K_H
+ *     K = K_H || K_E
  */
 void hctr_setkey(struct hctr_ctx *ctx, const u8 *key)
 {
-	aesti_expand_key(&ctx->aes_ctx, key, BLOCKCIPHER_KEY_SIZE);
-    polyhash_setkey(&ctx->polyhash_key, key + BLOCKCIPHER_KEY_SIZE);
+    polyhash_setkey(&ctx->polyhash_key, key);
+	aesti_expand_key(&ctx->aes_ctx, key + HCTR_HASH_KEY_SIZE, BLOCKCIPHER_KEY_SIZE);
+	aes256_setkey(&ctx->aesti_ctx, key + HCTR_HASH_KEY_SIZE);
     ctx->default_tweak_len = HCTR_DEFAULT_TWEAK_LEN;
 }
 
@@ -78,13 +80,13 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     polyhash_emit(&ctx->polyhash_key, &polystate, (u8 *)&digest);
 
     xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
+    
     if(encrypt) {
-        aes_encrypt(&ctx->aes_ctx, &CC, MM);
+        aes_encrypt(&ctx->aesti_ctx, &CC, MM);
     }
     else {
-        aes_decrypt(&ctx->aes_ctx, &CC, MM);
+        aes_decrypt(&ctx->aesti_ctx, &CC, MM);
     }
-    memcpy(&CC, MM, BLOCKCIPHER_BLOCK_SIZE);
     
     xor(&S, &MM, &CC, BLOCKCIPHER_BLOCK_SIZE);
 
