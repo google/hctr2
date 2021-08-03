@@ -47,7 +47,7 @@ class GF(object):
     return self(p)
 
   def add(self, a, b):
-    return a ^ b
+    return self(a ^ b)
 
   # TODO: Exponent by square
   def pow(self, a, e):
