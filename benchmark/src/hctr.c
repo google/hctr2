@@ -10,6 +10,7 @@
 
 #include "aes.h"
 #include "hctr-polyhash.h"
+#include "testvec.h"
 #include "util.h"
 
 #define HCTR_DEFAULT_TWEAK_LEN	32
@@ -62,7 +63,7 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     size_t N_bytes;
     size_t i;
 	
-    //ASSERT(nbytes >= BLOCKCIPHER_BLOCK_SIZE);
+    ASSERT(nbytes >= BLOCKCIPHER_BLOCK_SIZE);
     M_bytes = BLOCKCIPHER_BLOCK_SIZE;
     N_bytes = nbytes - M_bytes;
     M = src;
@@ -104,12 +105,36 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     xor(C, &CC, digest, BLOCKCIPHER_BLOCK_SIZE);
 }
 
-void hctr_encrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
+void _hctr_encrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
         size_t nbytes, const u8 *tweak, size_t tweak_len) {
     hctr_crypt(ctx, dst, src, nbytes, tweak, tweak_len, true);
 }
 
-void hctr_decrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
+void _hctr_decrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
         size_t nbytes, const u8 *tweak, size_t tweak_len) {
     hctr_crypt(ctx, dst, src, nbytes, tweak, tweak_len, false);
+}
+
+void hctr_encrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
+        size_t nbytes, const u8 *tweak) {
+    _hctr_encrypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len);
+}
+
+void hctr_decrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
+        size_t nbytes, const u8 *tweak) {
+    _hctr_decrypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len);
+}
+
+
+
+void test_hctr(void)
+{
+#define ALGNAME		"HCTR"
+#define KEY_BYTES	HCTR_KEY_SIZE
+#define IV_BYTES	HCTR_DEFAULT_TWEAK_LEN
+#define KEY		struct hctr_ctx
+#define SETKEY		hctr_setkey
+#define ENCRYPT		hctr_encrypt
+#define DECRYPT		hctr_decrypt
+#include "cipher_benchmark_template.h"
 }

@@ -159,17 +159,29 @@ void polyhash_emit(const struct polyhash_key *key,
 /* Poly1305 benchmarking */
 
 static void _polyhash(const struct polyhash_key *key, const void *src,
-		      unsigned int srclen, u8 *digest, bool simd)
+		      unsigned int srclen, u8 *digest)
 {
-	struct polyhash_state state;
+	struct polyhash_state polystate;
 	ble128 out;
+    int i;
 
-	polyhash_init(&state);
-	polyhash_emit_generic(key, src, srclen, out);
+	polyhash_init(&polystate);
+    for(i = 0; i + POLYHASH_BLOCK_SIZE*32 <= srclen; i += POLYHASH_BLOCK_SIZE*32) {
+        polyhash_update(key, &polystate, src + i, POLYHASH_BLOCK_SIZE*32);
+    }
+    polyhash_update(key, &polystate, src + i, srclen % (POLYHASH_BLOCK_SIZE*32));
+	polyhash_emit(key, &polystate, &out);
 
 	memcpy(digest, &out, sizeof(out));
 }
 
-void test_polyhash(void)
+void test_hctr_polyhash(void)
 {
+#define ALGNAME		"HCTR-Polyhash"
+#define HASH		_polyhash
+#define KEY		struct polyhash_key
+#define SETKEY		polyhash_setkey
+#define KEY_BYTES	POLYHASH_KEY_SIZE
+#define DIGEST_SIZE	POLYHASH_DIGEST_SIZE
+#include "hash_benchmark_template.h"
 }

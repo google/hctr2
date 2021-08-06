@@ -25,6 +25,8 @@ static const struct cipher {
 	{ "ChaCha-MEM",		test_chacha_mem },
 	{ "CHAM",		test_cham },
 	{ "Chaskey-LTS",	test_chaskey_lts },
+	{ "HCTR",		test_hctr },
+	{ "HCTR-Polyhash",		test_hctr_polyhash },
 	{ "HPolyC",		test_hpolyc },
 	{ "LEA",		test_lea },
 	{ "NH",			test_nh },
