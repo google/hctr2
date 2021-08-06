@@ -155,6 +155,7 @@ ddq_add_8:
 	.rept (by)
 		club XDATA, i
 		movq counter, var_xdata
+		.set i, (i +1)
 	.endr
 
 	.if (load_keys)
