@@ -23,6 +23,7 @@ void test_rc6(void);
 void test_speck(void);
 void test_xtea(void);
 void test_hctr_polyhash(void);
+void test_hctr_ctr(void);
 void test_hctr(void);
 
 void do_insn_timing(void);

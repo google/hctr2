@@ -35,6 +35,15 @@ static inline int aes_nrounds(const struct crypto_aes_ctx *ctx)
 	return 6 + ctx->key_length / 4;
 }
 
+asmlinkage int aesni_set_key(struct crypto_aes_ctx *ctx, const u8 *in_key,
+            unsigned int key_len);
+
+asmlinkage void aesni_ecb_enc(struct crypto_aes_ctx *ctx, const u8 *dst, u8 *src,
+            size_t len);
+
+asmlinkage void aesni_dec_enc(struct crypto_aes_ctx *ctx, const u8 *dst, u8 *src,
+            size_t len);
+
 int aesti_expand_key(struct crypto_aes_ctx *ctx, const u8 *in_key,
 		     unsigned int key_len);
 

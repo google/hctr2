@@ -9,6 +9,8 @@
  */
 
 #include "aes.h"
+#include "aes_linux.h"
+#include "hctr-ctr.h"
 #include "hctr-polyhash.h"
 #include "testvec.h"
 #include "util.h"
@@ -37,7 +39,7 @@ void hctr_setkey(struct hctr_ctx *ctx, const u8 *key)
 {
     polyhash_setkey(&ctx->polyhash_key, key);
 	aesti_expand_key(&ctx->aes_ctx, key + HCTR_HASH_KEY_SIZE, BLOCKCIPHER_KEY_SIZE);
-	aes256_setkey(&ctx->aesti_ctx, key + HCTR_HASH_KEY_SIZE);
+	aesni_set_key(&ctx->aesti_ctx, key + HCTR_HASH_KEY_SIZE, BLOCKCIPHER_KEY_SIZE);
     ctx->default_tweak_len = HCTR_DEFAULT_TWEAK_LEN;
 }
 
@@ -83,15 +85,15 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
     
     if(encrypt) {
-        aes_encrypt(&ctx->aesti_ctx, &CC, MM);
+        aesni_ecb_enc(&ctx->aesti_ctx, &CC, MM, BLOCKCIPHER_BLOCK_SIZE);
     }
     else {
-        aes_decrypt(&ctx->aesti_ctx, &CC, MM);
+        aesni_ecb_dec(&ctx->aesti_ctx, &CC, MM, BLOCKCIPHER_BLOCK_SIZE);
     }
     
     xor(&S, &MM, &CC, BLOCKCIPHER_BLOCK_SIZE);
 
-    aes_ctr_enc_256_avx_by8(N, &S, &ctx->aes_ctx, D, N_bytes);
+    hctr_ctr_crypt(&ctx->aes_ctx, D, N, N_bytes, &S);
 
     polyhash_init(&polystate);
     // Hash 32 blocks each iteration to ensure fast path
