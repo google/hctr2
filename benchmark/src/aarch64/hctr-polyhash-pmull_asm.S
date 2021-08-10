@@ -11,8 +11,7 @@
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation.
  */
-#include <linux/linkage.h>
-#include <asm/assembler.h>
+#include "asm_common.h"
 	OP1		.req	v0
 	OP2		.req	v1
 	T1		.req	v2
@@ -31,9 +30,7 @@
  * void pmull_poly_hash_update(le128 *dst, const le128 *src);
  */
 ENTRY(pmull_polyhash_mul)
-	/* Load digest into XL */
 	ld1		{OP1.16b}, [x0]
-	/* Load key into KEY */
 	ld1		{OP2.16b}, [x1]
 	/* Load g*(x) = g(x) + x^128 = x^7 + x^2 + x + 1 into both halves of
 	 * GSTAR */
