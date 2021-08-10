@@ -57,7 +57,9 @@ class HCTR(cipher.Blockcipher):
     m = pt[0:16]
     n = pt[16:]
     mm = Crypto.Util.strxor.strxor(m, self._polyhash.hash(hash_key, n + tweak))
+    print(mm.hex())
     cc = self._block.encrypt(mm, key=block_key)
+    print(cc.hex())
     s = Crypto.Util.strxor.strxor(mm, cc)
     d = self._ctr.encrypt(n, block_key, s)
     c = Crypto.Util.strxor.strxor(cc, self._polyhash.hash(hash_key, d + tweak))

@@ -16,7 +16,7 @@ class Counter(object):
     self.reset()
 
   def counter(self):
-    result = bytes(a ^ b for (a, b) in zip(self.nonce, self.current.to_bytes(self.blocksize, byteorder='big')))
+    result = bytes(a ^ b for (a, b) in zip(self.nonce, self.current.to_bytes(self.blocksize, byteorder='little')))
     self.current += 1
     return result
 

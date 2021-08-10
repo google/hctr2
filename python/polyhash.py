@@ -46,7 +46,7 @@ class PolyHash(Hash):
       if(len(message) == 0):
         return key
       # Make h into a Galois field element
-      h = self.gf(int.from_bytes(key, byteorder="big"))
+      h = self.gf(int.from_bytes(key, byteorder="little"))
       pad = ((16 - len(message)) % 16) % 16
       padded_message = message + b'\x00'*pad
       blocks = [padded_message[i:i+self.lengths()['blocksize']] for i in range(0, len(padded_message), self.lengths()['blocksize'])]
@@ -54,5 +54,5 @@ class PolyHash(Hash):
       hash_result = self.gf(len(message) * 8) * h
       for i in range(len(blocks)):
         exponent = (len(blocks) + 1) - i
-        hash_result += (h**exponent) * self.gf(int.from_bytes(blocks[i], byteorder='big'))
-      return int(hash_result).to_bytes(self.lengths()['blocksize'], byteorder='big')
+        hash_result += (h**exponent) * self.gf(int.from_bytes(blocks[i], byteorder='little'))
+      return int(hash_result).to_bytes(self.lengths()['blocksize'], byteorder='little')
