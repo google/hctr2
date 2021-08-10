@@ -172,12 +172,6 @@ ddq_add_8:
 	.set i, 0
 	.rept (by)
 		club XDATA, i
-		vpshufb	xbyteswap, var_xdata, var_xdata
-		.set i, (i +1)
-	.endr
-	.set i, 0
-	.rept (by)
-		club XDATA, i
 		vpxor xiv, var_xdata, var_xdata
 		.set i, (i +1)
 	.endr

@@ -103,11 +103,7 @@ ENTRY(clmul_polyhash_mul)
 	FRAME_BEGIN
 	movups (%rdi), OP1
 	movups (%rsi), OP2
-	movdqa	byteswap_const(%rip), BSWAP
-	pshufb BSWAP, OP1
-	pshufb BSWAP, OP2
 	call __clmul_gf128mul_ble
-	pshufb BSWAP, OP1
 	movups OP1, (%rdi)
 	FRAME_END
 	ret

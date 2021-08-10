@@ -12,17 +12,26 @@
 
 #include "hctr-polyhash.h"
 
+#ifdef __x86_64__
 asmlinkage void clmul_polyhash_mul(ble128 * op1, const ble128 * op2);
+#define CLMUL(X, Y) clmul_polyhash_mul(X, Y)
+#endif
+
+#ifdef __aarch64__
+asmlinkage void pmull_polyhash_mul(ble128 * op1, const ble128 * op2);
+#define CLMUL(X, Y) pmull_polyhash_mul(X, Y)
+#endif
+
 
 static void polyhash_key_powers_clmulni(struct polyhash_key *key)
 {
 	for(int i = 0; i < NUM_PRECOMPUTE_KEYS; i++) {
 		memcpy(&key->powers[i], &key->h, sizeof(ble128));
 		if(i == 0) {
-			clmul_polyhash_mul((&key->powers)[i], &(key->h));
+			CLMUL((&key->powers)[i], &(key->h));
 		}
 		else {
-			clmul_polyhash_mul(&(key->powers[i]), &(key->powers[(i-1)]));
+			CLMUL(&(key->powers[i]), &(key->powers[(i-1)]));
 		}
 	}
 }
@@ -56,10 +65,10 @@ void polyhash_update_clmulni(const struct polyhash_key *key,
             memcpy((u8*)&(state->partial_block) + state->partial_block_length,
                     data, partial_append);
             memcpy(&tmp, &key->h, POLYHASH_KEY_SIZE);
-            clmul_polyhash_mul(&state->state, &tmp);
+            CLMUL(&state->state, &tmp);
             /* block * h^2 */
             memcpy(&tmp, &key->powers[0], POLYHASH_KEY_SIZE);
-            clmul_polyhash_mul(&tmp, &state->partial_block);
+            CLMUL(&tmp, &state->partial_block);
             ble128_xor(&state->state, &tmp);
             memset(&state->partial_block, 0, POLYHASH_BLOCK_SIZE);
             state->partial_block_length = 0;
@@ -89,27 +98,27 @@ void polyhash_update_clmulni(const struct polyhash_key *key,
         // this path can be avoided by hashing in batches of 32 blocks
         memcpy(&tmp, &key->h, POLYHASH_KEY_SIZE);
         for(int j = 1; j < exponent; j++) {
-            clmul_polyhash_mul(&tmp, &key->h);
+            CLMUL(&tmp, &key->h);
         }
     }
 
     if(nblocks != 0) {
-        clmul_polyhash_mul(&state->state, &tmp);
+        CLMUL(&state->state, &tmp);
     }
 
     for(int i = 0; i < nblocks; i++) {
         exponent = (nblocks+1) - i;
         memcpy(&tmp, data + (i * POLYHASH_BLOCK_SIZE), POLYHASH_BLOCK_SIZE);
         if(exponent - 2 < NUM_PRECOMPUTE_KEYS) {
-            clmul_polyhash_mul(&tmp, &(key->powers[exponent - 2]));
+            CLMUL(&tmp, &(key->powers[exponent - 2]));
             ble128_xor(&state->state, &tmp);
         } else {
             // this path can be avoided by hashing in batches of 32 blocks
             memcpy(&pow, &key->h, POLYHASH_KEY_SIZE);
             for(int j = 1; j < exponent; j++) {
-                clmul_polyhash_mul(&pow, &key->h);
+                CLMUL(&pow, &key->h);
             }
-            clmul_polyhash_mul(&tmp, &pow);
+            CLMUL(&tmp, &pow);
             ble128_xor(&state->state, &tmp);
         }
     }
@@ -132,16 +141,16 @@ void polyhash_emit_clmulni(const struct polyhash_key *key,
     }
     if(state->partial_block_length) {
         memcpy(&tmp, &key->h, POLYHASH_KEY_SIZE);
-        clmul_polyhash_mul(&state->state, &tmp);
+        CLMUL(&state->state, &tmp);
         /* block * h^2 */
         memcpy(&tmp, &key->powers[0], POLYHASH_KEY_SIZE);
-        clmul_polyhash_mul(&tmp, &state->partial_block);
+        CLMUL(&tmp, &state->partial_block);
         ble128_xor(&state->state, &tmp);
     }
-    tmp.lo = 0;
-    tmp.hi = be64_to_cpu(state->num_hashed_bytes*8);
+    tmp.lo = le64_to_cpu(state->num_hashed_bytes*8);
+    tmp.hi = 0;
     memcpy(out, &key->h, POLYHASH_KEY_SIZE);
-    clmul_polyhash_mul((ble128*)out, &tmp);
+    CLMUL((ble128*)out, &tmp);
     ble128_xor((ble128*)out, &state->state);
 }
 

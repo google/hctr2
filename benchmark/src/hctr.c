@@ -25,7 +25,6 @@
 
 struct hctr_ctx {
 	struct aes_ctx aes_ctx;
-	struct aes_ctx aesti_ctx;
 	unsigned int default_tweak_len;
     struct polyhash_key polyhash_key;
 };
@@ -39,12 +38,8 @@ void hctr_setkey(struct hctr_ctx *ctx, const u8 *key)
 {
     polyhash_setkey(&ctx->polyhash_key, key);
 	aesti_expand_key(&ctx->aes_ctx, key + HCTR_HASH_KEY_SIZE, BLOCKCIPHER_KEY_SIZE);
-	aesni_set_key(&ctx->aesti_ctx, key + HCTR_HASH_KEY_SIZE, BLOCKCIPHER_KEY_SIZE);
     ctx->default_tweak_len = HCTR_DEFAULT_TWEAK_LEN;
 }
-
-asmlinkage void aes_ctr_enc_256_avx_by8(const u8 * in, const u8 * iv, 
-        		const u8 * key, u8 * out, size_t num_bytes);
 
 /*
  * Assume that nbytes is a multiple of BLOCKCIPHER_BLOCK_SIZE
@@ -84,12 +79,17 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
 
     xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
     
+#ifdef __x86_64__
     if(encrypt) {
-        aesni_ecb_enc(&ctx->aesti_ctx, &CC, MM, BLOCKCIPHER_BLOCK_SIZE);
+        aesni_ecb_enc(&ctx->aes_ctx, &CC, MM, BLOCKCIPHER_BLOCK_SIZE);
     }
     else {
-        aesni_ecb_dec(&ctx->aesti_ctx, &CC, MM, BLOCKCIPHER_BLOCK_SIZE);
+        aesni_ecb_dec(&ctx->aes_ctx, &CC, MM, BLOCKCIPHER_BLOCK_SIZE);
     }
+#endif
+#ifdef __aarch64__
+    memcpy(&CC, MM, BLOCKCIPHER_BLOCK_SIZE);
+#endif
     
     xor(&S, &MM, &CC, BLOCKCIPHER_BLOCK_SIZE);
 
