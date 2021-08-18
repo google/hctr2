@@ -113,7 +113,6 @@ ST5(	st1		{v4.16b}, [x0], #16		)
 AES_FUNC_END(aes_ecb_decrypt)
 
 
-	.section	".rodata", "a"
 	.align		6
 .Lcts_permute_table:
 	.byte		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
@@ -122,7 +121,6 @@ AES_FUNC_END(aes_ecb_decrypt)
 	.byte		 0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf
 	.byte		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 	.byte		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
-	.previous
 	
     /*
 	 * aes_hctr_ctr_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
@@ -206,7 +204,7 @@ ST5(	csel		x14, x17, xzr, gt		)
 	cmp		w4, #16 - (MAX_STRIDE << 4)
 	blt		.Lhctrctrtail1x
 
-	ldr		x12, =.Lcts_permute_table // THIS SHOULD PROBABLY BE ADR_L
+	adr		x12, .Lcts_permute_table // THIS SHOULD PROBABLY BE ADR_L
 	add		x12, x12, x13
 
 ST5(	ld1		{v5.16b}, [x1], x17		)

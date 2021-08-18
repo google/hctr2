@@ -21,7 +21,9 @@
 	XM		.req	v6
 	XH		.req	v7
 	.text
-	.arch		armv8-a+crypto
+    .align		4
+
+    .arch		armv8-a+crypto
 	/* 16-byte aligned (2**4 = 16); not required, but might as well */
 	.align		4
 .Lgstar:
