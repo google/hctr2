@@ -12,7 +12,7 @@
 #define POLYHASH_BLOCK_SIZE	16
 #define POLYHASH_DIGEST_SIZE	16
 #define POLYHASH_KEY_SIZE	16
-#define NUM_PRECOMPUTE_KEYS	32
+#define NUM_PRECOMPUTE_KEYS	64
 
 struct polyhash_key {
 	ble128 h;

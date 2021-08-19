@@ -69,11 +69,7 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     D = dst + BLOCKCIPHER_BLOCK_SIZE;
 
     polyhash_init(&polystate);
-    // Hash 32 blocks each iteration to ensure fast path
-    for(i = 0; i + POLYHASH_BLOCK_SIZE*32 <= N_bytes; i += POLYHASH_BLOCK_SIZE*32) {
-    	 polyhash_update(&ctx->polyhash_key, &polystate, N + i, POLYHASH_BLOCK_SIZE*32);
-    }
-    polyhash_update(&ctx->polyhash_key, &polystate, N + i, N_bytes % (POLYHASH_BLOCK_SIZE*32));
+    polyhash_update(&ctx->polyhash_key, &polystate, N, N_bytes);
     polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len/8);
     polyhash_emit(&ctx->polyhash_key, &polystate, (u8 *)&digest);
 
@@ -96,11 +92,7 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     hctr_ctr_crypt(&ctx->aes_ctx, D, N, N_bytes, &S);
 
     polyhash_init(&polystate);
-    // Hash 32 blocks each iteration to ensure fast path
-    for(i = 0; i + POLYHASH_BLOCK_SIZE*32 <= N_bytes; i += POLYHASH_BLOCK_SIZE*32) {
-    	 polyhash_update(&ctx->polyhash_key, &polystate, D + i, POLYHASH_BLOCK_SIZE*32);
-    }
-    polyhash_update(&ctx->polyhash_key, &polystate, D + i, N_bytes % (POLYHASH_BLOCK_SIZE*32));
+    polyhash_update(&ctx->polyhash_key, &polystate, D, N_bytes);
     polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len/8);
     polyhash_emit(&ctx->polyhash_key, &polystate, (u8 *)&digest);
 

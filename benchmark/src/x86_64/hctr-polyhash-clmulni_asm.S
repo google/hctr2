@@ -108,3 +108,16 @@ ENTRY(clmul_polyhash_mul)
 	FRAME_END
 	ret
 ENDPROC(clmul_polyhash_mul)
+
+/* void clmul_polyhash_mul_xor(const u128 *op1, const u128 *op2, u128 * dst) */
+ENTRY(clmul_polyhash_mul_xor)
+	FRAME_BEGIN
+	movups (%rdi), OP1
+	movups (%rsi), OP2
+	call __clmul_gf128mul_ble
+	movups (%rdx), OP2
+    pxor OP2, OP1
+	movups OP1, (%rdx)
+	FRAME_END
+	ret
+ENDPROC(clmul_polyhash_mul_xor)
