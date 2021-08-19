@@ -1,0 +1,265 @@
+\documentclass[i-d]{rfc}
+%\documentclass[rfc]{rfc} for rfc instead of internet draft
+\title{HCTR Specification}
+\footertitle{HCTR}
+\author{N. Huckleberry}
+\address{Google}
+\pubdate{\today}
+\pubgroup{Crypto Forum Research Group}
+
+\addbibresource{rfc.bib}
+
+\begin{document}
+
+\maketitle
+
+\section*{Abstract}
+This memo describes a block cipher mode of operation known as HCTR.
+
+\section*{Status of This Memo}
+
+\section*{Copyright Notice}
+
+\tableofcontents
+
+\section{Introduction}
+
+This memo describes the implementation of the HCTR block cipher mode of operation. The primary benefit of HCTR is that it extends the strong pseudorandom permutation property of block ciphers to arbitrary-length messages. Additionally, HCTR allows for an arbitrary-length nonce called a tweak.
+
+\subsection{Requirements Language}
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in \cite{RFC2119}.
+
+\section{Notation}
+\begin{itemize}
+    \item block - 16 bytes.
+    \item block\_cipher\_encrypt(msg, key) - a subroutine call to the underlying blockcipher encryption function.
+    \item block\_cipher\_decrypt(msg, key) - a subroutine call to the underlying blockcipher decryption function.
+    \item block\_key - key for the underlying ecb block cipher calls.
+    \item buffer[i] - block i of buffer.  Defined for 0 <= i < N.
+    \item buffer[N+] - bytes 16 * N until the end of buffer. 
+    \item EMPTY - buffer of length zero.
+    \item GF(2\pow128) - Galois field of order 2\pow128 as described in section \ref{GFMath}.
+    \item hash\_key - key for the polynomial hash function.
+    \item hctr\_key - full key for HCTR, contains block\_key and hash\_key.
+    \item msg - shorthand for message, a buffer that is an input to a function.
+    \item TRUNC(X, n) - truncate X to be n bits. 
+    \item XXXX\_length - length of XXXX in bytes.
+    \item + - addition of integers
+    \item \# - addition in GF(2\pow128) as defined in section \ref{GFMath}.
+    \item * - multiplication in GF(2\pow128) as defined in section \ref{GFMath}.
+    \item 0\pow i - buffer of i zero bytes.
+    \item || - concatenation.
+    \item |x| - length of x in bits.
+    \item x || 0\pow * - x right-padded with 0 to be a multiple of 16 bytes.
+\end{itemize}
+\section{Overview}
+
+\subsection{Key size}
+The HCTR key consists of two parts, the underlying block cipher key and the hash key. The hash key is always 128 bits, so the full HCTR key size in bytes is block\_key\_length + 16.
+
+\subsection{Block Cipher}
+HCTR MUST use a block cipher with a block size of 128-bits.
+
+\section{GF(2\pow128) Math}\label{GFMath}
+
+\subsection{GF(2\pow128)}
+GF(2\pow128) is the Galois field with 2\pow128 elements defined by the irreducible polynomial x\pow128 + x\pow7 + x\pow2 + x + 1.
+
+Elements in the field are converted to and from 128-bit strings by taking the least significant bit of the first byte to be the coefficient of x\pow0, the most significant bit of the first byte to be the coefficient of x\pow7, and so on, until the most significant bit of the last byte is the coefficient of x\pow127.
+
+\subsection{Addition in 2\pow128}
+\begin{itemize}
+    \item Input
+    \begin{itemize}
+        \item Two 128-bit elements X, Y
+    \end{itemize}
+    \item Ouput
+    \begin{itemize}
+        \item 128-bit element X \# Y
+    \end{itemize}
+\end{itemize}
+For any two 128-bit elements X, Y in the Galois field, X \# Y is defined as X XOR Y.
+
+The operations + and XOR are interchangeable within this document. For consistency we use + on 128-bit strings and XOR if the arguments are not 128-bits long.
+\subsection{Multiplication in 2\pow128}
+\begin{itemize}
+    \item Input
+    \begin{itemize}
+        \item Two 128-bit elements X, Y
+    \end{itemize}
+    \item Ouput
+    \begin{itemize}
+        \item 128-bit element X * Y
+    \end{itemize}
+\end{itemize}
+Multiplication is defined on 128-bit blocks by converting them to polynomials as described above, and then computing the resulting product modulo x\pow128 + x\pow7 + x\pow2 + x + 1.
+
+\section{Algorithm}
+
+When appropriate, we will explain the output as both a mathematical formula and in pseudo-code.  This information is redundant, and it exists to provide additional clarity.  Implementations need not implement the exact algorithm specified by the pseudocode, so long as the output matches what the pseudocode would produce.
+
+\subsection{Keys}
+
+The HCTR key is a byte string of length block\_key\_length + 16. The polynomial hash key and underlying block cipher key are the respective substrings of the HCTR key.
+
+\begin{itemize}
+    \item hctr\_key = hash\_key || block\_key
+\end{itemize}
+
+\subsection{poly\_hash}
+
+The polynomial hash treats each block of msg as a coefficient to a polynomial in GF(2\pow128), and evaluates that polynomial at hash\_key to create a hash. 
+
+This hash function dominates the efficiency of HCTR, special care should be taken to optimize the efficiency of poly\_hash. In particular, multiplication in GF(2\pow128) is expensive, so pre-computing powers of hash\_key can signficantly increase HCTR's efficiency. 
+\begin{itemize}
+    \item Input
+    \begin{itemize}
+        \item msg, hash\_key
+    \end{itemize}
+    \item Output
+    \begin{itemize}
+        \item if (msg == EMPTY)
+        \begin{itemize}
+            \item k
+        \end{itemize}
+        \item if (msg != EMPTY)
+        \begin{itemize}
+            \item k\pow(N+1)*m\_0 \# k\pow N*m\_1 \# ... \# k\pow2*m\_\{N-1\} \# |msg|*k
+        \end{itemize}
+        \item Where k = hash\_key,
+        \item k\pow i is the ith power of k in GF(2\pow128)
+        \item m = msg || 0\pow *
+        \item N = number of blocks in m
+        \item m\_i = m[i] for 0 <= i <= N-1
+    \end{itemize}
+    \item Pseudo-code
+    \begin{itemize}
+        \item Precompute k\pow2 ... k\pow33
+        \item if (N == 0)
+        \begin{itemize}
+            \item return k
+        \end{itemize}
+        \item p = 0\pow16
+        \item for i = 0 to (N/32)-1
+        \begin{itemize}
+            \item p = p * k\pow32
+            \item for j = 0 to 31
+            \begin{itemize}
+                \item p = p \# (m[i*32 + j] * k\pow(33 - j))
+            \end{itemize}
+        \end{itemize}
+        \item x = N \% 32
+        \item p = p * k\pow x
+        \item for i = 0 to x-1
+        \begin{itemize}
+            \item p = p \# (m[(N/32)*32 + i] * k\pow(x + 1 - i))
+        \end{itemize}
+        \item return p
+    \end{itemize}
+\end{itemize}
+
+\subsection{HCTR\_ctr\_crypt}
+HCTR uses a modified version of CTR as a subroutine. The modified CTR requires a 128-bit initialization vector and produces a ciphertext with the same bit-length as the input message. 
+
+This modified CTR mode is an involution enciphering scheme, meaning that the encryption function is the same as the decryption function. Furthermore, it can be easily parallelized.
+\begin{itemize}
+    \item Input
+    \begin{itemize}
+        \item msg, block\_key, iv
+    \end{itemize}
+    \item Output
+    \begin{itemize}
+        \item out\_msg = c\_0 || ... || c\_\{m-2\} || c\_final
+        \item Where m = msg || 0\pow *
+        \item N = number of blocks in m
+        \item m\_i = m[i]
+        \item c\_i = m\_i XOR block\_cipher\_encrypt(iv XOR (i + 1), block\_key)
+        \item c\_final = TRUNC(c\_\{N-1\}, |msg| \% 256)
+    \end{itemize}
+    \item Pseudo-code:
+    \begin{itemize}
+        \item out\_msg = 0\pow|msg|
+        \item for i = 0 to N-2
+        \begin{itemize}
+            \item tmp = block\_cipher\_encrypt(iv XOR (i + 1), block\_key)
+            \item out\_msg[i] = m[i] XOR tmp
+        \end{itemize}
+        \item final = block\_cipher\_encrypt(iv XOR N, block\_key)
+        \item final = TRUNC(final, |msg| \% 256)
+        \item out\_msg[N-1] = final XOR m[N-1]
+    \end{itemize}
+\end{itemize}
+
+\subsection{HCTR\_encrypt}
+Core encryption function of HCTR. The length of the input message MUST be at least block\_size. The tweak can be any length, including zero, but the tweak length SHOULD stay constant between HCTR calls.
+\begin{itemize}
+    \item Input
+    \begin{itemize}
+        \item msg, key, tweak
+    \end{itemize}
+    \item Output
+    \begin{itemize}
+        \item out\_msg
+    \end{itemize}
+    Pseudo-code:
+    \begin{itemize}
+        \item M = msg[0]
+        \item N = msg[1+]
+        \item MM = M XOR poly\_hash(N || T, hash\_key)
+        \item CC = block\_cipher\_encrypt(MM, block\_key)
+        \item S = MM XOR CC
+        \item D = HCTR\_ctr\_crypt(N, block\_key, S)
+        \item C = CC XOR poly\_hash(D || T, hash\_key)
+        \item out\_msg = C || D
+    \end{itemize}
+\end{itemize}
+
+\subsection{HCTR\_decrypt}
+Core decryption function of HCTR. The length of the input message MUST be at least block\_size. The tweak can be any length, including zero, but the tweak length SHOULD stay constant between HCTR calls.
+\begin{itemize}
+    \item Input
+    \begin{itemize}
+        \item msg, key, tweak
+    \end{itemize}
+    \item Output
+    \begin{itemize}
+        \item out\_msg
+    \end{itemize}
+    Pseudo-code:
+    \begin{itemize}
+        \item C = msg[0]
+        \item D = msg[1+]
+        \item CC = C XOR poly\_hash(D || T, hash\_key)
+        \item MM = block\_cipher\_decrypt(CC, block\_key)
+        \item S = MM XOR CC
+        \item N = HCTR\_ctr\_crypt(D, block\_key, S)
+        \item M = MM XOR poly\_hash(N || T, hash\_key)
+        \item out\_msg = M || N
+    \end{itemize}
+\end{itemize}
+
+\section{Security Considerations}
+The minimum length of the plaintext for HCTR is 16 bytes. The maximum length is 2\pow32 - 1 bytes.
+
+\subsection{Security Implications of Tweak Use}
+
+If no tweak is used (or, equivalently, if a tweak is reused for multiple messages) then HCTR is a strong pseudorandom permutation. If the same plaintext is encrypted twice with no tweak (or the same tweak), the resultant ciphertexts will match.
+
+If a unique tweak is used for every plaintext and key combination, then HCTR is semantically secure. We make no claims that using randomly generated tweaks or longer tweaks generates additional security.
+
+
+\section{References}
+\nocite{*}
+\subsection{Normative References}
+\printbibliography[heading=none,keyword=normative]
+
+\subsection{Informative References}
+\printbibliography[heading=none,keyword=informative]
+
+\begin{appendices}
+\section{Test Vectors}
+\end{appendices}
+
+\end{document}
