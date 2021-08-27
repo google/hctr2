@@ -15,17 +15,21 @@
 #ifdef __x86_64__
 asmlinkage void clmul_polyhash_mul(ble128 * op1, const ble128 * op2);
 asmlinkage void clmul_polyhash_mul_xor(const ble128 * op1, const ble128 * op2, ble128 * dst);
+asmlinkage void clmul_polyhash_xor_reduction(const le128 *in, le128 *out);
 #define CLMUL(X, Y) clmul_polyhash_mul(X, Y)
+#define CLMUL_REDUCE_XOR(X, Y) clmul_polyhash_xor_reduction(X, Y)
 #define CLMUL_XOR(X, Y, Z) clmul_polyhash_mul_xor(X, Y, Z)
-#define CLMUL_STRIDE(X, Y, Z) clmul_polyhash_mul_xor(X, Y, Z)
-#define STRIDE_SIZE 1
+#define CLMUL_STRIDE(X, Y, Z) clmul_polyhash_mul4_xor(X, Y, Z)
+#define STRIDE_SIZE 4
 #endif
 
 #ifdef __aarch64__
 asmlinkage void pmull_polyhash_mul(ble128 * op1, const ble128 * op2);
 asmlinkage void pmull_polyhash_mul_xor(const ble128 * op1_list, const ble128 * op2_list, ble128 * dst);
 asmlinkage void pmull_polyhash_mul4_xor(const ble128 * op1_list, const ble128 * op2_list, ble128 * dst);
+asmlinkage void pmull_polyhash_xor_reduction(const le128 *in, le128 *out);
 #define CLMUL(X, Y) pmull_polyhash_mul(X, Y)
+#define CLMUL_REDUCE_XOR(X, Y) pmull_polyhash_xor_reduction(X, Y)
 #define CLMUL_XOR(X, Y, Z) pmull_polyhash_mul_xor(X, Y, Z)
 #define CLMUL_STRIDE(X, Y, Z) pmull_polyhash_mul4_xor(X, Y, Z)
 #define STRIDE_SIZE 4
@@ -80,6 +84,7 @@ void polyhash_update_clmulni_internal(const struct polyhash_key *key,
         		size_t nbytes)
 {
     ble128 tmp[STRIDE_SIZE];
+    ble128 unreduced[3];
     u64 exponent;
     size_t nblocks;
     size_t nstrides;
@@ -120,13 +125,14 @@ void polyhash_update_clmulni_internal(const struct polyhash_key *key,
         CLMUL(&state->state, get_key_power(key, nblocks));
     }
 
+    memset(unreduced, 0, POLYHASH_BLOCK_SIZE*3);
     nstrides = (nblocks/STRIDE_SIZE);
     for(int i = 0; i < nstrides; i++) {
         exponent = (nblocks+1) - (i * STRIDE_SIZE);
         CLMUL_STRIDE(
                 data + (i * POLYHASH_BLOCK_SIZE * STRIDE_SIZE), 
                 get_key_power(key, exponent), 
-                &(state->state)
+                unreduced
         );
     }
     for(int i = 0; i < nblocks % STRIDE_SIZE; i++) {
@@ -135,8 +141,10 @@ void polyhash_update_clmulni_internal(const struct polyhash_key *key,
         CLMUL_XOR(
                 data + (index * POLYHASH_BLOCK_SIZE),
                 get_key_power(key, exponent),
-                &state->state);
+                unreduced
+        );
     }
+    CLMUL_REDUCE_XOR(unreduced, &state->state);
     if(nbytes % POLYHASH_BLOCK_SIZE) {
         memcpy(&state->partial_block, data + nblocks*POLYHASH_BLOCK_SIZE, 
                 nbytes % POLYHASH_BLOCK_SIZE);

@@ -84,7 +84,12 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     }
 #endif
 #ifdef __aarch64__
-    memcpy(&CC, MM, BLOCKCIPHER_BLOCK_SIZE);
+    if(encrypt) {
+        ce_aes_ecb_encrypt(&CC, MM, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
+    }
+    else {
+        ce_aes_ecb_decrypt(&CC, MM, &ctx->aes_ctx.aes_ctx.key_dec, 14, 1);
+    }
 #endif
     
     xor(&S, &MM, &CC, BLOCKCIPHER_BLOCK_SIZE);
