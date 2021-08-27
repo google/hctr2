@@ -1,0 +1,18 @@
+% Copyright 2018 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+\tikzset{groupedge/.style={thick}}
+
+\tikzset{XOR/.style={
+	groupedge, draw, circle,
+	append after command={
+	        [shorten >=\pgflinewidth, shorten <=\pgflinewidth,]
+	        (\tikzlastnode.north) edge[groupedge] (\tikzlastnode.south)
+	        (\tikzlastnode.east) edge[groupedge] (\tikzlastnode.west)
+		},
+	},
+}
+
