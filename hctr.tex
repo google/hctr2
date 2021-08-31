@@ -3,46 +3,90 @@
 % Use of this source code is governed by an MIT-style
 % license that can be found in the LICENSE file or at
 % https://opensource.org/licenses/MIT.
-
 %!TeX spellcheck = en-US
-
 \documentclass[letterpaper,11pt]{article}
-
 \usepackage{floatrow}
 \usepackage{algpseudocode}
 \usepackage{amsmath}
 \usepackage[style=alphabetic,backend=biber,alldates=ymd]{biblatex}
 \usepackage[logic,probability,advantage,adversary,landau,sets,operators]{cryptocode}
 \usepackage{tikz}
-
 \usetikzlibrary{groupops}
-
 \newcommand*{\parintro}[1]{\textbf{#1}:}
 \newcommand*{\Concat}{\Vert}
 \newcommand*{\MM}{\mathit{MM}}
 \renewcommand*{\CC}{\mathit{CC}}
-
 \DeclareMathOperator{\XCTR}{XCTR}
 \DeclareMathOperator{\GF}{GF}
 \DeclareMathOperator{\fromint}{bin}
 \DeclareMathOperator{\intify}{int}
 \DeclareMathOperator{\pad}{pad}
+\DeclareMathOperator{\trunc}{trunc}
 \DeclareMathOperator{\Poly}{Poly}
 \DeclareMathOperator{\HCTR}{HCTR2}
-
 \title{HCTR2}
-
 \begin{document}
 \maketitle
-
 \begin{abstract}
-HCTR2
 \end{abstract}
-
 \section{Specification}
+\parintro{Notation}
+Subscripts may denote partial application; if we define $f: A \times B \rightarrow C$ and
+$a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f_a(b)) = b$.
+\begin{itemize}
+    \item $\abs{X}$: length of $X \in \bin^{*}$ in bits
+    \item $\lambda$: the empty string $\abs{\lambda} = 0$
+    \item $\Concat$: bitstring concatenation
+    \item $Y[a;l]$: the subsequence of $Y$ of length $l$ starting at the 0-based index $a$.
+    \item $\pad_l(X) = X \Concat 0^v$
+    where $v$ is the least integer $\geq 0$ such that $l$ divides $\abs{X} + v$
+    \item $\intify: \bin^{*} \rightarrow \ZZ$: the
+    standard little-endian map such that
+    $\intify(\lambda) = 0$, $\intify(0 \Concat X) = 2\intify(X)$, $\intify(1 \Concat X) = 1 + 2\intify(X)$
+    \item $\fromint_l(y) = X$: the unique
+    $l$-bit sequence such that $\intify(X) \equiv y \pmod{2^l}$
+    \item $trunc_l(X)$ - truncation of $X \in \{0,1\}^{\ge l}$ to be exactly $l$ bits long.
+    \item \(\oplus\)
+    \item \(\odot\)
+\end{itemize}
+We map bytes to bitstrings with \(\fromint_8\).
+Where we have eg \(P_0 \Concat \ldots \Concat P_{m-1} \gets P\), 
+\(P_0, \ldots, P_{m-1}\) is the unique sequence of \(\ceil{\abs{P}/n}\) blocks
+such that \(|P_i| = n\) for \(0 \leq i < m-1\).
+Where \(|M| \equiv 0 \pmod n\) we define polynomial evaluation as \(\Poly_h(\lambda) = 0\), \(\Poly_h(M \Concat T) = h \odot (\Poly_h(M) \xor T)\) where \(|T| = n\). This is insensitive to prefixed zeroes \(\Poly_h(0^n \concat M) = \Poly_h(M)\) and linear in the second argument \(\Poly_h(M) \xor \Poly_h(M') = \Poly_h(M \xor M')\).
+Given a hashing key \(h\) and a message \(M_1 \Concat M_2 \Concat \ldots \Concat M_l\) with \(\abs{M_i} = n\) for \(i < l\) and \(0 < \abs{M_i} \leq n\) for \(i = l\)
 \begin{figure}
-    \input{fig.tex}
-    \caption{HCTR2}\label{fig}
+	\begin{floatrow}
+		\input{ctrfig.tex}
+		\caption{Modified CTR}\label{ctrfig}
+	\ffigbox{
+		\begin{algorithmic}[0]
+			\Procedure{$Ctr_S$}{$M$}
+			\State $M_0 \Concat \cdots \Concat \pad_l(M_{n-1})$ \gets M
+			\For{$i \in \{0, \cdots, n-1\}$}
+				\State $S_i \gets Enc_{E_K}(S \oplus (i + 1))$
+				\State $C_i \gets S_i \oplus M_i$
+			\EndFor
+			\State \textbf{return} $\trunc_{|M|}(C_0 \Concat \cdots \Concat C_n)$
+			\EndProcedure
+		\end{algorithmic}
+		}{
+	\caption{
+		Pseudocode for Modified CTR}\label{ctrpseudocode}
+	}
+	\end{floatrow}
+\end{figure}
+
+\subsection{Polynomial Hash Function}
+HCTR2 uses a variation of the original HCTR polynomial hash function. Let $t$ be the number of padded blocks in $T$ and $n$ be the number of padded blocks in $X$.
+\begin{align*}
+	H_h(X, T) = T_0h^{t+n+2} + \cdots + T_th^{n+3} + X_0h^{n+2} + \cdots + X_nh^3 + (|T|+1)h^2 + (|X|+1)h
+\end{align*}
+The security proof of HCTR2 requires $H$ to have the following properties:
+
+\begin{figure}
+    \input{hctr2fig.tex}
+    \caption{HCTR2}\label{hctr2fig}
 \end{figure}
 \begin{figure}
     \begin{floatrow}
@@ -80,40 +124,8 @@ HCTR2
         }{\caption{HCTR2 decryption}\label{pseudocode}}
     \end{floatrow}
 \end{figure}
-
-\parintro{Notation}
-Subscripts may denote partial application; if we define $f: A \times B \rightarrow C$ and
-$a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f_a(b)) = b$.
-\begin{itemize}
-    \item $\abs{X}$: length of $X \in \bin^{*}$ in bits
-    \item $\lambda$: the empty string $\abs{\lambda} = 0$
-    \item $\Concat$: bitstring concatenation
-    \item $Y[a;l]$: the subsequence of $Y$ of length $l$ starting at the 0-based index $a$.
-    \item $\pad_l(X) = X \Concat 0^v$
-    where $v$ is the least integer $\geq 0$ such that $l$ divides $\abs{X} + v$
-    \item $\intify: \bin^{*} \rightarrow \ZZ$: the
-    standard little-endian map such that
-    $\intify(\lambda) = 0$, $\intify(0 \Concat X) = 2\intify(X)$, $\intify(1 \Concat X) = 1 + 2\intify(X)$
-    \item $\fromint_l(y) = X$: the unique
-    $l$-bit sequence such that $\intify(X) \equiv y \pmod{2^l}$
-    \item \(\oplus\)
-    \item \(\odot\)
-\end{itemize}
-We map bytes to bitstrings with \(\fromint_8\).
-Where we have eg \(P_0 \Concat \ldots \Concat P_{m-1} \gets P\), 
-\(P_0, \ldots, P_{m-1}\) is the unique sequence of \(\ceil{\abs{P}/n}\) blocks
-such that \(|P_i| = n\) for \(0 \leq i < m-1\).
-
-Where \(|M| \equiv 0 \pmod n\) we define polynomial evaluation as \(\Poly_h(\lambda) = 0\), \(\Poly_h(M \Concat T) = h \odot (\Poly_h(M) \xor T)\) where \(|T| = n\). This is insensitive to prefixed zeroes \(\Poly_h(0^n \concat M) = \Poly_h(M)\) and linear in the second argument \(\Poly_h(M) \xor \Poly_h(M') = \Poly_h(M \xor M')\).
-
-Given a hashing key \(h\) and a message \(M_1 \Concat M_2 \Concat \ldots \Concat M_l\) with \(\abs{M_i} = n\) for \(i < l\) and \(0 < \abs{M_i} \leq n\) for \(i = l\)
-
 \section{Security bound}
-
 We prove the security of HCTR2 using Patarin's H-coefficient technique. 
-
 We require four properties from our hash function \(H_h\):
-
 \printbibliography[heading=bibintoc]
-
 \end{document}
