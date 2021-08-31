@@ -81,23 +81,25 @@ Where \(|M| \equiv 0 \pmod n\) we define polynomial evaluation as \(\Poly_h(\lam
 Given a hashing key \(h\) and a message \(M_1 \Concat M_2 \Concat \ldots \Concat M_l\) with \(\abs{M_i} = n\) for \(i < l\) and \(0 < \abs{M_i} \leq n\) for \(i = l\)
 \begin{figure}
 	\begin{floatrow}
-		\input{ctrfig.tex}
-		\caption{Modified CTR}\label{ctrfig}
-	\ffigbox{
-		\begin{algorithmic}[0]
-			\Procedure{$Ctr_S$}{$M$}
-			\State $M_0 \Concat \cdots \Concat \pad_l(M_{n-1})$ \gets M
-			\For{$i \in \{0, \cdots, n-1\}$}
-				\State $S_i \gets Enc_{E_K}(S \oplus (i + 1))$
-				\State $C_i \gets S_i \oplus M_i$
-			\EndFor
-			\State \textbf{return} $\trunc_{|M|}(C_0 \Concat \cdots \Concat C_n)$
-			\EndProcedure
-		\end{algorithmic}
-		}{
-	\caption{
-		Pseudocode for Modified CTR}\label{ctrpseudocode}
-	}
+        \ffigbox{
+            \input{ctrfig.tex}
+        }{
+            \caption{Modified CTR}\label{ctrfig}
+        }
+        \ffigbox{
+            \begin{algorithmic}[0]
+                \Procedure{$Ctr_S$}{$M$}
+                \State $M_0 \Concat \cdots \Concat \pad_l(M_{n-1}) \gets M$
+                \For{$i \in \{0, \cdots, n-1\}$}
+                    \State $S_i \gets Enc_{E_K}(S \oplus (i + 1))$
+                    \State $C_i \gets S_i \oplus M_i$
+                \EndFor
+                \State \textbf{return} $\trunc_{|M|}(C_0 \Concat \cdots \Concat C_n)$
+                \EndProcedure
+            \end{algorithmic}
+        }{
+            \caption{Pseudocode for Modified CTR}\label{ctrpseudocode}
+        }
 	\end{floatrow}
 \end{figure}
 
