@@ -35,8 +35,8 @@
   \node[XOR] at (N |- CTR) (X2) {};
   \node[cbox] at (1,-5) (H3) {$H_h$};
   \node[XOR] at (M |- H3) (X3) {};
-  \node[rectangle] at (0,-6) (C) {$C$};
-  \node[rectangle] at (X2 |- C) (D) {$D$};
+  \node[rectangle] at (0,-6) (C) {$Y$};
+  \node[rectangle] at (X2 |- C) (D) {$Z$};
   \draw[wire] (M) -- (X1);
   \draw[wire] (N) -- (X2);
   \draw[wire] ([yshift=-1ex] X2 |- H1) -- ([yshift=-1ex] H1.east);
@@ -46,7 +46,7 @@
   \draw[wire] (XS) -- node[above] {\(S\)} (CTR);
   \draw[wire] (CTR) -- (X2);
   \draw[wire] (0,-4) -| (XS);
-  \draw[wire] (E) -- node[left] {\(\CC\)} (X3);
+  \draw[wire] (E) -- node[left] {\(\YY\)} (X3);
   \draw[wire] (T) -- ++(-0.5, 0) |- ([yshift=+1ex] H1.east);
   \draw[wire] (T) -- ++(-0.5, 0) |- ([yshift=+1ex] H3.east);
   \draw[wire] ([yshift=-1ex] X2 |- H3) -- ([yshift=-1ex] H3.east);

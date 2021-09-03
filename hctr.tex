@@ -13,14 +13,17 @@
 \usepackage{amsmath}
 \usepackage[style=alphabetic,backend=biber,alldates=ymd]{biblatex}
 \usepackage[logic,probability,advantage,adversary,landau,sets,operators]{cryptocode}
+\usepackage{hyperref}
 \usepackage{tikz}
 
 \usetikzlibrary{groupops}
 
+\addbibresource{bib.bib}
+
 \newcommand*{\parintro}[1]{\textbf{#1}:}
 \newcommand*{\Concat}{\Vert}
 \newcommand*{\MM}{\mathit{MM}}
-\renewcommand*{\CC}{\mathit{CC}}
+\newcommand*{\YY}{\mathit{YY}}
 
 \DeclareMathOperator{\XCTR}{XCTR}
 \DeclareMathOperator{\GF}{GF}
@@ -43,7 +46,8 @@
 Changes from HCTR
 \begin{itemize}
     \item When hashing, we write \(\abs{X} + 1\) in the last block, to fix the issue discussed above
-    \item We allow a variable-length tweak; as with GHASH, we include the tweak length in the last block.
+    \item We allow a variable-length tweak; copying GHASH\cite{gcm}, 
+    we include the length of message and tweak in the last block. 
     \item We process the tweak first as a small optimization
     \item We generate \(h \gets E_k(0)\)---note that the security of doing so is very sensitive to our other hashing choices
     \item We specify endianness and the like so that implementations can be interoperable
@@ -52,8 +56,50 @@ Changes from HCTR
     \item We present a new proof, based on the H-coefficient technique, with a slightly tighter bound.
 \end{itemize}
 
+we don't know of any patents etc
+
 \section{Specification}
-\parintro{Notation}
+\begin{figure}
+    \input{hctr2fig.tex}
+    \caption{HCTR2}\label{hctr2fig}
+\end{figure}
+\begin{figure}
+    \begin{floatrow}
+        \ffigbox{
+            \begin{algorithmic}[0]
+                \Procedure{\(HCTR2_{k, T}\)}{$P$}
+                \State $h \gets E_k(0^n)$
+                \State $M \Concat N \gets P$, $|M| = n$
+                \State $\MM \gets M \xor H_h(T, N)$
+                \State $\YY \gets E_k(\MM)$
+                \State $S \gets \MM \xor \YY$
+                \State $Z \gets N \xor \XCTR_k(S)[0;\abs{N}]$
+                \State $Y \gets \YY \xor H_h(T, Z)$
+                \State $C \gets Y \Concat Z$
+                \State \textbf{return} $C$
+                \EndProcedure
+            \end{algorithmic}
+        }{
+            \caption{HCTR2 encryption}\label{pseudocode}
+        }
+        \ffigbox{
+            \begin{algorithmic}[0]
+                \Procedure{\(HCTR2_{k, T}^{-1}\)}{$C$}
+                \State $h \gets E_k(0^n)$
+                \State $Y \Concat Z \gets C$, $|Y| = n$
+                \State $\YY \gets Y \xor H_h(T, Z)$
+                \State $\MM \gets E_k^{-1}(\YY)$
+                \State $S \gets \MM \xor \YY$
+                \State $N \gets Z \xor \XCTR_k(S)[0;\abs{Z}]$
+                \State $M \gets \MM \xor H_h(T, N)$
+                \State $P \gets M \Concat N$
+                \State \textbf{return} $P$
+                \EndProcedure
+            \end{algorithmic}
+        }{\caption{HCTR2 decryption}}
+    \end{floatrow}
+\end{figure}
+\subsection{Notation}
 Subscripts may denote partial application; if we define $f: A \times B \rightarrow C$ and
 $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f_a(b)) = b$.
 \begin{itemize}
@@ -68,93 +114,72 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     $\intify(\lambda) = 0$, $\intify(0 \Concat X) = 2\intify(X)$, $\intify(1 \Concat X) = 1 + 2\intify(X)$
     \item $\fromint_l(y) = X$: the unique
     $l$-bit sequence such that $\intify(X) \equiv y \pmod{2^l}$
-    \item $trunc_l(X)$ - truncation of $X \in \{0,1\}^{\ge l}$ to be exactly $l$ bits long.
-    \item \(\oplus\)
-    \item \(\odot\)
+    \item \(n\): block size in bits. We assume \(n\) is even.
+    \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
+    \(n\)-bit block cipher with keyspace \(\mathcal{K}\);
+    our concrete proposal uses AES, so \(n=128\) and \(\mathcal{K}\) is
+    \(\bin^{128}\), \(\bin^{192}\), or \(\bin^{256}\). 
+    \item \(\xor\): bitwise XOR, addition in \(\GF(2^n)\)
+    \item \(\odot\): multiplication of \(n\)-bit blocks in \(\GF(2^n)\).
+    This is little-endian, so \(010^{n-2}\) is interpreted as the
+    polynomial \(x\). Where \(n=128\) we reduce by the polynomial
+    \(1 + x + x^2 + x^7 + x^{128}\).
 \end{itemize}
 We map bytes to bitstrings with \(\fromint_8\).
-Where we have eg \(P_0 \Concat \ldots \Concat P_{m-1} \gets P\), 
-\(P_0, \ldots, P_{m-1}\) is the unique sequence of \(m = \ceil{\abs{P}/n}\) blocks
-such that \(|P_i| = n\) for \(0 \leq i < m-1\) and \(P_0 \Concat \ldots \Concat P_{m-1} = P\).
 
-Where \(|M| \equiv 0 \pmod n\) we define polynomial evaluation as \(\Poly_h(\lambda) = 0^n\), \(\Poly_h(M \Concat T) = h \odot (\Poly_h(M) \xor T)\) where \(|T| = n\). This is insensitive to prefixed zeroes \(\Poly_h(0^n \concat M) = \Poly_h(M)\) and linear in the second argument \(\Poly_h(M) \xor \Poly_h(M') = \Poly_h(M \xor M')\).
-Given a hashing key \(h\) and a message \(M_1 \Concat M_2 \Concat \ldots \Concat M_l\) with \(\abs{M_i} = n\) for \(i < l\) and \(0 < \abs{M_i} \leq n\) for \(i = l\)
-\begin{figure}
-	\begin{floatrow}
-        \ffigbox{
-            \input{ctrfig.tex}
-        }{
-            \caption{Modified CTR}\label{ctrfig}
-        }
-        \ffigbox{
-            \begin{algorithmic}[0]
-                \Procedure{$Ctr_S$}{$M$}
-                \State $M_0 \Concat \cdots \Concat \pad_l(M_{n-1}) \gets M$
-                \For{$i \in \{0, \cdots, n-1\}$}
-                    \State $S_i \gets Enc_{E_K}(S \oplus (i + 1))$
-                    \State $C_i \gets S_i \oplus M_i$
-                \EndFor
-                \State \textbf{return} $\trunc_{|M|}(C_0 \Concat \cdots \Concat C_n)$
-                \EndProcedure
-            \end{algorithmic}
-        }{
-            \caption{Pseudocode for Modified CTR}\label{ctrpseudocode}
-        }
-	\end{floatrow}
-\end{figure}
+\subsection{Polynomial hash function}
 
-\subsection{Polynomial Hash Function}
-HCTR2 uses a variation of the original HCTR polynomial hash function. Let $t$ be the number of padded blocks in $T$ and $n$ be the number of padded blocks in $X$.
-\begin{align*}
-	H_h(X, T) = T_0h^{t+n+2} + \cdots + T_th^{n+3} + X_0h^{n+2} + \cdots + X_nh^3 + (|T|+1)h^2 + (|X|+1)h
-\end{align*}
-The security proof of HCTR2 requires $H$ to have the following properties:
+Let \(\Poly_h(M)\) refer to polynomial evaluation in \(\GF(2^n)\),
+defined where \(\abs{M} \equiv 0 \pmod n\): then
+\(\Poly_h(\lambda) = 0^n\), \(\Poly_h(M \Concat X) = (h \odot \Poly_h(M)) \xor X\) 
+where \(\abs{X} = n\).
 
-\begin{figure}
-    \input{hctr2fig.tex}
-    \caption{HCTR2}\label{hctr2fig}
-\end{figure}
-\begin{figure}
-    \begin{floatrow}
-        \ffigbox{
-            \begin{algorithmic}[0]
-                \Procedure{\(HCTR2_{k, T}\)}{$P$}
-                \State $h \gets E_k(0^n)$
-                \State $M \Concat N \gets P$, $|M| = n$
-                \State $\MM \gets M \xor H_h(T, N)$
-                \State $\CC \gets E_k(\MM)$
-                \State $S \gets \MM \xor \CC$
-                \State $D \gets N \xor \XCTR_k(S)[0;\abs{N}]$
-                \State $C \gets \CC \xor H_h(T, D)$
-                \State $R \gets C \Concat D$
-                \State \textbf{return} $R$
-                \EndProcedure
-            \end{algorithmic}
-        }{
-            \caption{HCTR2 encryption}
-        }
-        \ffigbox{
-            \begin{algorithmic}[0]
-                \Procedure{\(HCTR2_{k, T}^{-1}\)}{$R$}
-                \State $h \gets E_k(0^n)$
-                \State $C \Concat D \gets R$, $|C| = n$
-                \State $\CC \gets C \xor H_h(T, D)$
-                \State $\MM \gets E_k(\CC)$
-                \State $S \gets \MM \xor \CC$
-                \State $N \gets D \xor \XCTR_k(S)[0;\abs{D}]$
-                \State $M \gets \MM \xor H_h(T, N)$
-                \State $P \gets M \Concat N$
-                \State \textbf{return} $P$
-                \EndProcedure
-            \end{algorithmic}
-        }{\caption{HCTR2 decryption}\label{pseudocode}}
-    \end{floatrow}
-\end{figure}
-\section{Security bound}
+This is insensitive to prefixed zeroes \(\Poly_h(0^n \concat M) = \Poly_h(M)\)
+and linear in the second argument \(\Poly_h(M) \xor \Poly_h(M') = \Poly_h(M \xor M')\).
+Since this is a polynomial in a field,
+for any message \(M\) not all zeroes, there are at most \(\frac{\abs{M}}{n} -1\)
+keys \(h\) such that \(\Poly_h(M) = 0^n\). We then define our hash function for key \(\abs{h} = 2^n\)
+and tweak, message \(\abs{T}, \abs{N} < 2^{n/2}\) as:
+\begin{displaymath}
+    H_h(T, M) = \Poly_h(\pad_n(T) \Concat \pad_n(M) \Concat \fromint_{n/2}(T) \Concat \fromint_{n/2}(M) \Concat 0^n)
+\end{displaymath}
+
+\subsection{XCTR mode}
+
+HCTR depends for its proof of security
+on an unusual mode of stream encryption.
+\cite{hctr,hctr2} note the differences between this mode and CTR mode,
+but use the same name to refer to it; for the avoidance of ambiguity
+we name this mode \emph{XCTR mode}, and define:
+\begin{displaymath}
+    \XCTR_K(S) = E_K(S \xor \fromint(1)) \Concat E_K(S \xor \fromint(2)) \Concat E_K(S \xor \fromint(3)) \Concat \cdots
+\end{displaymath}
+thus generating the first \(m\) bits \(\XCTR_K(S)[0; m]\) takes \(\ceil{\frac{m}{n}}\) block cipher calls.
+
+\subsection{HCTR2 encryption}
+
+From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
+Tweaks may be any length from 0 to \(2^{n/2}-1\) bits, while
+messages may be any length from \(n\) to \(n + 2^{n/2}-1\) bits.
+Note that what is referred to in \cite{hctr,hctr2} as \(C, \mathit{CC}, D\)
+we refer to as \(Y, YY, Z\)
+so that we can use \(P, C\) to refer to plaintext and ciphertext.
+
+\section{Security of HCTR2}
+
+\subsection{Hash function}
+The hash function \(H_h\) has four properties that the proof relies on:
+
+\begin{description}
+    \item[Property 1] For any \(M, T\) and any \(|g| = 2^n\)
+    there are at most \(\ceil{\frac{\abs{T}}{n}} + \ceil{\frac{\abs{M}}{n}} + 1\)
+    values of \(h\) such that \(H_h(M, T) = g\).
+    \item[Property 2] 
+\end{description}
+
+\subsection{Security bound}
 
 We prove the security of HCTR2 using Patarin's H-coefficient technique. 
-
-We require four properties from our hash function \(H_h\):
 
 \printbibliography[heading=bibintoc]
 
