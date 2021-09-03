@@ -130,16 +130,11 @@ We map bytes to bitstrings with \(\fromint_8\).
 \subsection{Polynomial hash function}
 
 Let \(\Poly_h(M)\) refer to polynomial evaluation in \(\GF(2^n)\),
-defined where \(\abs{M} \equiv 0 \pmod n\): then
+defined where \(\abs{M} \equiv 0 \pmod n\) ie
 \(\Poly_h(\lambda) = 0^n\), \(\Poly_h(M \Concat X) = (h \odot \Poly_h(M)) \xor X\) 
 where \(\abs{X} = n\).
-
-This is insensitive to prefixed zeroes \(\Poly_h(0^n \concat M) = \Poly_h(M)\)
-and linear in the second argument \(\Poly_h(M) \xor \Poly_h(M') = \Poly_h(M \xor M')\).
-Since this is a polynomial in a field,
-for any message \(M\) not all zeroes, there are at most \(\frac{\abs{M}}{n} -1\)
-keys \(h\) such that \(\Poly_h(M) = 0^n\). We then define our hash function for key \(\abs{h} = 2^n\)
-and tweak, message \(\abs{T}, \abs{N} < 2^{n/2}\) as:
+Then our hash function for key \(\abs{h} = 2^n\)
+and tweak, message \(\abs{T}, \abs{N} < 2^{n/2}\) is
 \begin{displaymath}
     H_h(T, M) = \Poly_h(\pad_n(T) \Concat \pad_n(M) \Concat \fromint_{n/2}(T) \Concat \fromint_{n/2}(M) \Concat 0^n)
 \end{displaymath}
@@ -159,22 +154,47 @@ thus generating the first \(m\) bits \(\XCTR_K(S)[0; m]\) takes \(\ceil{\frac{m}
 \subsection{HCTR2 encryption}
 
 From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
-Tweaks may be any length from 0 to \(2^{n/2}-1\) bits, while
-messages may be any length from \(n\) to \(n + 2^{n/2}-1\) bits.
 Note that what is referred to in \cite{hctr,hctr2} as \(C, \mathit{CC}, D\)
 we refer to as \(Y, YY, Z\)
 so that we can use \(P, C\) to refer to plaintext and ciphertext.
+Tweaks may be any length from 0 to \(2^{n/2}-1\) bits, while
+messages may be any length from \(n\) to \(n + 2^{n/2}-1\) bits.
 
 \section{Security of HCTR2}
 
 \subsection{Hash function}
-The hash function \(H_h\) has four properties that the proof relies on:
+For a nonempty message \(M\) the polynomial \(\Poly_h(M)\)
+is of degree \(d = \frac{\abs{M}}{n} -1\), and so if
+\(M\) is not all zeroes then there are at most \(d\)
+keys \(h\) such that \(\Poly_h(M) = 0^n\). \(\Poly_h\)
+is also insensitive to prefixed zeroes \(\Poly_h(0^n \concat M) = \Poly_h(M)\)
+and linear in the second argument \(\Poly_h(M) \xor \Poly_h(M') = \Poly_h(M \xor M')\).
+
+Define \(d(T, M) = \ceil{\frac{\abs{T}}{n}} + \ceil{\frac{\abs{M}}{n}} + 1\);
+then the degree of the polynomial in \(h\) represented by \(H_h(T, M)\) is at most \(d(T, M)\).
+The constant term of the polynomial underlying \(H_h(T, M)\) is always zero,
+while the \(x\) term is never 0 or 1, and depends only on the lengths \((\abs{T}, \abs{M})\).
+Then \(H\) has these properties:
 
 \begin{description}
-    \item[Property 1] For any \(M, T\) and any \(|g| = 2^n\)
-    there are at most \(\ceil{\frac{\abs{T}}{n}} + \ceil{\frac{\abs{M}}{n}} + 1\)
-    values of \(h\) such that \(H_h(M, T) = g\).
+    \item[Property 1]
+    For any \(T, M\) and any \(|g| = 2^n\)
+    there are at most \(d(T, M)\)
+    values of \(h\) such that \(H_h(T, M) = g\).
+    Proof: since the \(x\) term of \(H_h(T, M) = g\) is nonzero
+    the polynomial \(H_h(T, M)^ g\) is nonzero.
+    Since the degree is at most \(d(T, M)\), it has
+    at most that many zeroes.
     \item[Property 2] 
+    \(\epsilon\)-almost-XOR-universality: 
+    For any \((T_1, M_1) \neq (T_2, M_2)\) and any \(|g| = 2^n\)
+    there are at most \(\max(d(T_1, M_1), d(T_2, M_2))\)
+    values of \(h\) such that \(H_h(T_1, M_1) \xor H_h(T_2, M_2) = g\).
+    Proof: because the map from \((T, M)\) to polynomial is injective,
+    \(H_h(T_1, M_1)\) and \(H_h(T_2, M_2)\) must map onto distinct
+    polynomials and therefore \(H_h(T_1, M_1) \xor H_h(T_2, M_2)\)
+    must be nonzero. Because the constant term of \(H\) is zero, 
+
 \end{description}
 
 \subsection{Security bound}
