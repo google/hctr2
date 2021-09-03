@@ -28,7 +28,6 @@
 \DeclareMathOperator{\XCTR}{XCTR}
 \DeclareMathOperator{\GF}{GF}
 \DeclareMathOperator{\fromint}{bin}
-\DeclareMathOperator{\intify}{int}
 \DeclareMathOperator{\pad}{pad}
 \DeclareMathOperator{\trunc}{trunc}
 \DeclareMathOperator{\Poly}{Poly}
@@ -109,35 +108,35 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     \item $Y[a;l]$: the subsequence of $Y$ of length $l$ starting at the 0-based index $a$.
     \item $\pad_l(X) = X \Concat 0^v$
     where $v$ is the least integer $\geq 0$ such that $l$ divides $\abs{X} + v$
-    \item $\intify: \bin^{*} \rightarrow \ZZ$: the
-    standard little-endian map such that
-    $\intify(\lambda) = 0$, $\intify(0 \Concat X) = 2\intify(X)$, $\intify(1 \Concat X) = 1 + 2\intify(X)$
-    \item $\fromint_l(y) = X$: the unique
-    $l$-bit sequence such that $\intify(X) \equiv y \pmod{2^l}$
+    \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$: little-endian integer representation.
     \item \(n\): block size in bits. We assume \(n\) is even.
     \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
     \(n\)-bit block cipher with keyspace \(\mathcal{K}\);
     our concrete proposal uses AES, so \(n=128\) and \(\mathcal{K}\) is
     \(\bin^{128}\), \(\bin^{192}\), or \(\bin^{256}\). 
-    \item \(\xor\): bitwise XOR, addition in \(\GF(2^n)\)
-    \item \(\odot\): multiplication of \(n\)-bit blocks in \(\GF(2^n)\).
-    This is little-endian, so \(010^{n-2}\) is interpreted as the
-    polynomial \(x\). Where \(n=128\) we reduce by the polynomial
-    \(1 + x + x^2 + x^7 + x^{128}\).
+    \item \(\xor\): bitwise XOR
 \end{itemize}
 We map bytes to bitstrings with \(\fromint_8\).
 
 \subsection{Polynomial hash function}
 
-Let \(\Poly_h(M)\) refer to polynomial evaluation in \(\GF(2^n)\),
-defined where \(\abs{M} \equiv 0 \pmod n\) ie
-\(\Poly_h(\lambda) = 0^n\), \(\Poly_h(M \Concat X) = (h \odot \Poly_h(M)) \xor X\) 
-where \(\abs{X} = n\).
-Then our hash function for key \(\abs{h} = 2^n\)
-and tweak, message \(\abs{T}, \abs{N} < 2^{n/2}\) is
+Let \(\Poly(M_0 \Concat M_1 \Concat \cdots \Concat M_{l-2} \Concat M_{l-1})\)
+refer to the polynomial
+\(M_0x^{l-1} \xor M_1x^{l-2} \xor \cdots \xor M_{l-2}x \xor M_{l-1}\)
+where each \(n\)-bit \(M_i\) is interpreted as a \(\GF(2^n)\)
+field element in a little-endian fashion
+(so \(0010^{n-3}\) is interpreted as the element \(x^2\)).
+Where \(n=128\) we reduce by the polynomial
+\(1 + x + x^2 + x^7 + x^{128}\).
+
+For tweak, message \(\abs{T}, \abs{N} < 2^{n/2} -1\) we define a polynomial
 \begin{displaymath}
-    H_h(T, M) = \Poly_h(\pad_n(T) \Concat \pad_n(M) \Concat \fromint_{n/2}(T) \Concat \fromint_{n/2}(M) \Concat 0^n)
+    H(T, M) = \Poly(\pad_n(T) \Concat \pad_n(M) \Concat \fromint_{n/2}(\abs{T} + 1) \Concat \fromint_{n/2}(\abs{M} + 1) \Concat 0^n)
 \end{displaymath}
+which is of degree at most
+\(d(T, M) = \ceil{\frac{\abs{T}}{n}} + \ceil{\frac{\abs{M}}{n}} + 1\).
+We then define our hash function \(H_h(T, M)\) as evaluation
+of the polynomial \(H(T, M)\) at \(h\) for key \(h \in \bin^n\).
 
 \subsection{XCTR mode}
 
@@ -160,46 +159,65 @@ so that we can use \(P, C\) to refer to plaintext and ciphertext.
 Tweaks may be any length from 0 to \(2^{n/2}-1\) bits, while
 messages may be any length from \(n\) to \(n + 2^{n/2}-1\) bits.
 
+\section{Implementation}
+
+
 \section{Security of HCTR2}
 
 \subsection{Hash function}
-For a nonempty message \(M\) the polynomial \(\Poly_h(M)\)
-is of degree \(d = \frac{\abs{M}}{n} -1\), and so if
-\(M\) is not all zeroes then there are at most \(d\)
-keys \(h\) such that \(\Poly_h(M) = 0^n\). \(\Poly_h\)
-is also insensitive to prefixed zeroes \(\Poly_h(0^n \concat M) = \Poly_h(M)\)
-and linear in the second argument \(\Poly_h(M) \xor \Poly_h(M') = \Poly_h(M \xor M')\).
-
-Define \(d(T, M) = \ceil{\frac{\abs{T}}{n}} + \ceil{\frac{\abs{M}}{n}} + 1\);
-then the degree of the polynomial in \(h\) represented by \(H_h(T, M)\) is at most \(d(T, M)\).
-The constant term of the polynomial underlying \(H_h(T, M)\) is always zero,
-while the \(x\) term is never 0 or 1, and depends only on the lengths \((\abs{T}, \abs{M})\).
-Then \(H\) has these properties:
-
 \begin{description}
     \item[Property 1]
-    For any \(T, M\) and any \(|g| = 2^n\)
+    For any \(T, M\) and any \(g \in \bin^n\)
     there are at most \(d(T, M)\)
     values of \(h\) such that \(H_h(T, M) = g\).
-    Proof: since the \(x\) term of \(H_h(T, M) = g\) is nonzero
-    the polynomial \(H_h(T, M)^ g\) is nonzero.
+    Proof: since the \(x\) term of \(H(T, M)\) is nonzero
+    the polynomial \(H(T, M) \xor g\) is nonzero.
     Since the degree is at most \(d(T, M)\), it has
     at most that many zeroes.
     \item[Property 2] 
     \(\epsilon\)-almost-XOR-universality: 
-    For any \((T_1, M_1) \neq (T_2, M_2)\) and any \(|g| = 2^n\)
+    For any \((T_1, M_1) \neq (T_2, M_2)\) and any \(g \in \bin^n\)
     there are at most \(\max(d(T_1, M_1), d(T_2, M_2))\)
     values of \(h\) such that \(H_h(T_1, M_1) \xor H_h(T_2, M_2) = g\).
-    Proof: because the map from \((T, M)\) to polynomial is injective,
-    \(H_h(T_1, M_1)\) and \(H_h(T_2, M_2)\) must map onto distinct
-    polynomials and therefore \(H_h(T_1, M_1) \xor H_h(T_2, M_2)\)
-    must be nonzero. Because the constant term of \(H\) is zero, 
-
+    Proof: \(H\) is injective, therefore
+    \(H(T_1, M_1) \neq H(T_2, M_2)\)
+    and \(H(T_1, M_1) \xor H(T_2, M_2) \neq 0\).
+    Because the constant term of \(H\) is zero, 
+    \(H(T_1, M_1) \xor H(T_2, M_2) \xor g \neq 0\).
+    The degree is at most \(\max(d(T_1, M_1), d(T_2, M_2))\)
+    and this limits the number of solutions.
+    \item[Property 3]
+    For any \((T_1, M_1), (T_2, M_2), (T_3, M_3)\) and any \(g \in \bin^n\)
+    such that \(\abs{T_1} = \abs{T_2}\) and \(\abs{M_1} = \abs{M_2}\)
+    there are at most \(\max(d(T_1, M_1), d(T_3, M_3))\)
+    values of \(h\) such that
+    \(H_h(T_1, M_1) \xor H_h(T_2, M_2) \xor H_h(T_3, M_3) = g\).
+    Proof: the \(x\) term of \(H\) depends only on
+    the lengths of the inputs; this term is therefore the same for
+    \(H(T_1, M_1)\) and \(H(T_2, M_2)\) and so zero for 
+    \(H(T_1, M_1) \xor H(T_2, M_2)\). Since this term
+    is nonzero for \(H(T_3, M_3)\) it is therefore
+    nonzero in
+    \(H(T_1, M_1) \xor H(T_2, M_2) \xor H(T_3, M_3) \xor g\).
+    This can therefore have no more solutions than
+    its maximum degree,
+    \(\max(d(T_1, M_1), d(T_3, M_3))\).
+    \item[Property 4]
+    For any \(T, M\) and any \(g \in \bin^n\)
+    there are at most \(d(T, M)\)
+    values of \(h\) such that \(H_h(T, M) \xor g = h\).
+    Proof: the \(x\) coefficient of \(H\) cannot be identity,
+    so \(H_h(T, M) \xor g \xor h\) cannot be zero, and
+    therefore can have at most \(d(T, M)\) zeroes.
 \end{description}
 
-\subsection{Security bound}
+\subsection{Definitions}
+\subsection{H-coefficient technique}
 
 We prove the security of HCTR2 using Patarin's H-coefficient technique. 
+
+\subsection{Main lemma}
+\subsection{Security bound}
 
 \printbibliography[heading=bibintoc]
 
