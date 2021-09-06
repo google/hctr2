@@ -25,13 +25,14 @@
 \newcommand*{\MM}{\mathit{MM}}
 \newcommand*{\YY}{\mathit{YY}}
 
-\DeclareMathOperator{\XCTR}{XCTR}
-\DeclareMathOperator{\GF}{GF}
 \DeclareMathOperator{\fromint}{bin}
-\DeclareMathOperator{\pad}{pad}
-\DeclareMathOperator{\trunc}{trunc}
-\DeclareMathOperator{\Poly}{Poly}
+\DeclareMathOperator{\GF}{GF}
 \DeclareMathOperator{\HCTR}{HCTR2}
+\DeclareMathOperator{\pad}{pad}
+\DeclareMathOperator{\Perm}{Perm}
+\DeclareMathOperator{\Poly}{Poly}
+\DeclareMathOperator{\rnd}{rnd}
+\DeclareMathOperator{\XCTR}{XCTR}
 
 \title{HCTR2}
 
@@ -216,7 +217,41 @@ messages may be any length from \(n\) to \(n + 2^{n/2}-1\) bits.
 
 We prove the security of HCTR2 using Patarin's H-coefficient technique. 
 
-\subsection{Main lemma}
+\subsection{Main lemma} 
+Let world X (the ``real world'') be \(\HCTR[\Perm(n)]\),
+which is HCTR with all calls to the block cipher
+replaced with calls to a random permutation.
+Let world Y (the ``ideal world'') be \(\pm\rnd\),
+in which all queries are answered randomly.
+We forbid ``pointless queries'':
+encryption queries \(P, T\)
+which are identical to previous encryption queries
+or for which the value \(P\) was returned from a prior
+decryption  query \(C, T\), or
+decryption queries \(C, T\)
+which are identical to previous decryption queries
+or for which the value \(C\) was returned from a prior
+encryption  query \(P, T\).
+
+After all queries are complete, we give the attacker
+extra information
+which is included in the transcript;
+this cannot make
+their performance worse. In the ``real world'', 
+this information is:
+\begin{itemize}
+    \item the hash key \(h\)
+    \item the ``leftover block'' for each query:
+    where a query has plaintext/ciphertext
+    that is not a multiple of the block size,
+    this is the extra output from the last
+    blockcipher call that is not used.
+    For query \(i\) this is 
+    \[\XCTR(S^i)[\abs{P}; n\ceil{\frac{\abs{P}}{n}}-\abs{P}]\]
+\end{itemize}
+In the ``ideal world'', random output of the expected
+length is substituted.
+
 \subsection{Security bound}
 
 \printbibliography[heading=bibintoc]
