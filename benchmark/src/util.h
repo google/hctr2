@@ -25,6 +25,8 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
+typedef int64_t s64;
+
 #undef SIMD_IMPL_NAME
 #if defined(__arm__) || defined(__aarch64__)
 #  define SIMD_IMPL_NAME "NEON"
@@ -212,20 +214,21 @@ typedef struct {
 	u64 lo, hi;
 } ble128;
 
-static inline void gf128mul_x_ble(ble128 *x)
-{
-	u64 lo = x->lo;
-	u64 hi = x->hi;
-
-	x->lo = (lo << 1) ^ ((hi & (1ULL << 63)) ? 0x87 : 0);
-	x->hi = (hi << 1) | (lo >> 63);
-}
-
 static inline void ble128_xor(ble128 *dst, const ble128 *src)
 {
 	dst->lo ^= src->lo;
 	dst->hi ^= src->hi;
 }
+
+static inline void __gf128mul_x_ble(ble128 *x)
+{
+       u64 lo = x->lo;
+       u64 hi = x->hi;
+
+       x->lo = (lo << 1) ^ ((hi & (1ULL << 63)) ? 0x87 : 0);
+       x->hi = (hi << 1) | (lo >> 63);
+}
+
 
 typedef union {
 	struct {
@@ -234,6 +237,12 @@ typedef union {
 	};
 	__le32 w32[4];
 } le128;
+
+static inline void le128_xor(le128 *r, const le128 *p, const le128 *q)
+{
+    r->a = p->a ^ q->a;
+    r->b = p->b ^ q->b;
+}
 
 /* Addition in Z/(2^{128}Z) */
 static inline void le128_add(le128 *r, const le128 *v1, const le128 *v2)
