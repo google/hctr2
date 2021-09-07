@@ -465,7 +465,7 @@ and Billet, Olivier"
 ,    urldate = {2018-05-31}
 }
 
-@InProceedings{hctr2
+@InProceedings{hctrquad
 ,    author="Chakraborty, Debrup and Nandi, Mridul"
 ,    editor="Nyberg, Kaisa"
 ,    title="An Improved Security Bound for HCTR"
@@ -988,9 +988,31 @@ and Yung, Moti"
 }
 
 @misc{gcm
-,  title={The Galois/Counter Mode of Operation (GCM)}
-,  author={McGrew, David and Viega, John}
-,  howpublished={Submission to NIST Modes of Operation Process}
-,  year={2004}
-,  url={https://csrc.nist.rip/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-spec.pdf}
+,    title={The Galois/Counter Mode of Operation (GCM)}
+,    author={McGrew, David and Viega, John}
+,    howpublished={Submission to NIST Modes of Operation Process}
+,    year={2004}
+,    url={https://csrc.nist.rip/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-spec.pdf}
+}
+
+@misc{ctr
+,    author = {Lipmaa, Helger and Rogaway, Phillip and Wagner, David}
+,    year = {2000}
+,    title = {CTR-Mode Encryption}
+,    howpublished={Comments to NIST concerning AES modes of operation}
+,    url={https://www.cs.ucdavis.edu/~rogaway/papers/ctr.pdf}
+}
+
+@article{adiantum
+,    title={Adiantum: length-preserving encryption for entry-level processors}
+,    volume={2018}
+,    url={https://tosc.iacr.org/index.php/ToSC/article/view/7360}
+,    doi={10.13154/tosc.v2018.i4.39-61}
+,    abstractNote={&amp;lt;p&amp;gt;We present HBSH, a simple construction for tweakable length-preserving encryption which supports the fastest options for hashing and stream encryption for processors without AES or other crypto instructions, with a provable quadratic advantage bound. Our composition Adiantum uses NH, Poly1305, XChaCha12, and a single AES invocation. On an ARM Cortex-A7 processor, Adiantum decrypts 4096-byte messages at 10.6 cycles per byte, over five times faster than AES-256-XTS, with a constant-time implementation. We also define HPolyC which is simpler and has excellent key agility at 13.6 cycles per byte.&amp;lt;/p&amp;gt;}
+,   number={4}
+,   journal={IACR Transactions on Symmetric Cryptology}
+,   author={Crowley, Paul and Biggers, Eric}
+,   year={2018}
+,   month={Dec.}
+,   pages={39–61}
 }
