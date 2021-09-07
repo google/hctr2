@@ -71,6 +71,30 @@ which can quickly be reached over a fast link.
 
 \cite{hctrquad} presents a much more satisfactory quadratic bound.
 However, it appears the proof of that bound has a critical error.
+At the core of the proof is a bound on the probability that
+the "bad" flag will be set in game RAND2, in which all queries
+get random responses. In this game, the block cipher queries
+and responses that would be present in HCTR to generate the
+responses seen by the attacker are inferred, and the "bad"
+flag is set if either two plaintexts to the block cipher
+are the same, or two ciphertexts are the same.
+
+
+Equation 17 is based on a correct belief that the assertion that
+the inferred ciphertext
+of the block cipher lookup for the first block in query \(s'\) is
+equal to the inferred ciphertext for subsequent block \(i\) in
+query \(s\)
+gives us a nonzero polynomial in \(h\)
+
+assertion that in game RAND2, 
+\(\prob{\mathit{CC}^{s'} = Y_i^s} \leq (m^{s'} + t)/2^n\) - in
+other words, that the probability that
+
+
+grows with the length of query \(s'\)
+, from
+which a quadra
 
 We see no easy fix to the proof
 without modifying the mode itself.
@@ -165,7 +189,7 @@ of the polynomial \(H(T, M)\) at \(h\) for key \(h \in \bin^n\).
 \subsection{XCTR mode}
 
 HCTR uses an unusual mode of stream encryption.
-\cite{hctr,hctr2} note the differences between this mode and CTR mode,
+\cite{hctr,hctrquad} note the differences between this mode and CTR mode,
 but use the same name to refer to it; for the avoidance of ambiguity
 we name this mode \emph{XCTR mode}, and define:
 \begin{displaymath}
@@ -176,13 +200,13 @@ thus generating the first \(m\) bits \(\XCTR_K(S)[0; m]\) takes \(\ceil{\frac{m}
 \subsection{HCTR2 encryption}
 
 From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
-Note that what is referred to in \cite{hctr,hctr2} as \(C, \mathit{CC}, D\)
+Note that what is referred to in \cite{hctr,hctrquad} as \(C, \mathit{CC}, D\)
 we refer to as \(Y, YY, Z\)
 so that we can use \(P, C\) to refer to plaintext and ciphertext.
 Tweaks may be any length from 0 to \(2^{n/2}-1\) bits, while
 messages may be any length from \(n\) to \(n + 2^{n/2}-1\) bits.
 
-\section{Changes from HCTR}
+\section{Design of HCTR2}
 \begin{itemize}
     \item When hashing, we represent the length as \(\abs{X} + 1\)
     \item We mix in an extra constant in the generation of \(S\) as discussed above.
