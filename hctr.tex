@@ -127,9 +127,9 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     our concrete proposal uses AES, so \(n=128\) and \(\mathcal{K}\) is
     \(\bin^{128}\), \(\bin^{192}\), or \(\bin^{256}\)
     \item \(\mathcal{T}\): the set of permissible tweaks
-    \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^{n/2}-2\}}\bin^i\)
+    \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^{n-1}-1\}}\bin^i\)
     \item \(\mathcal{M}\): the set of permissible messages
-    \(\mathcal{M} = \bigcup_{i \in \{n\ldots2^{n/2}-2\}}\bin^i\)
+    \(\mathcal{M} = \bigcup_{i \in \{n\ldots2^{n-1}-1\}}\bin^i\)
 \end{itemize}
 We map bytes to bitstrings with \(\fromint_8\).
 
@@ -146,10 +146,16 @@ refer to the polynomial
     p(h) = M_0h^{l-1} \xor M_1h^{l-2} \xor \cdots \xor M_{l-2}h \xor M_{l-1}
 \end{displaymath}
 
-For tweak \(T\) and  message \(M\) we define a polynomial
+We define a polynomial for tweak \(T\) and message \(M\). Where \(n\) divides
+\(\abs{M}\) this is
 \begin{displaymath}
-    H(T, M) = \poly(\fromint_{n/2}(\abs{T} + 1) \Concat \fromint_{n/2}(\abs{M} + 1) \Concat \pad_n(T) \Concat \pad_n(M) \Concat 0^n)
+    H(T, M) = \poly(\fromint_{n}(2\abs{T} + 2) \Concat \pad_n(T) \Concat M \Concat 0^n)
 \end{displaymath}
+in other instances this is
+\begin{displaymath}
+    H(T, M) = \poly(\fromint_{n}(2\abs{T} + 3) \Concat \pad_n(T) \Concat \pad_n(M \Concat 1) \Concat 0^n)
+\end{displaymath}
+
 We then define our hash function \(H_h(T, M)\) as evaluation
 of the polynomial \(H(T, M)\) at \(h\) for key \(h \in \bin^n\).
 
@@ -250,11 +256,22 @@ in \(GF(2^n)\)
 of degree \(d\), there are at most \(d\) values \(h\)
 such that \(p(h) = 0\), and therefore
 \(\probsub{h\sample{\bin^n}}{p(h) = 0} \leq d/2^n\).
-The first term of \(H(T, M)\) is always nonzero,
-and so the polynomial is of degree exactly
-\begin{displaymath}
-    d(T, M) = 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
-\end{displaymath}
+We depend on the following properties of the map from 
+\(H(T, M)\) to polynomials:
+\begin{itemize}
+    \item The map is injective
+    \item The first term of \(H(T, M)\) is always nonzero,
+    and so the polynomial is of degree exactly
+    \begin{displaymath}
+        d(T, M) = 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
+    \end{displaymath}
+    \item The constant term is always zero
+    \item The polynomial is never \(h\)
+\end{itemize}
+Note that these are all considerations about the polynomial,
+not about the value \(H_h(T, M)\);
+for example we may have \(H_h(T, M) = h\) for some values of \(h\).
+
 From this we infer three properties of \(H_h(T, M)\):
 \begin{description}
     \item[Property 1]
