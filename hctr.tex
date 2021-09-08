@@ -20,10 +20,11 @@
 
 \addbibresource{bib.bib}
 
-\newcommand*{\parintro}[1]{\textbf{#1}:}
 \newcommand*{\Concat}{\Vert}
+\newcommand*{\defeq}{\stackrel{\text{def}}{=}}
 \newcommand*{\MM}{\mathit{MM}}
-\newcommand*{\YY}{\mathit{YY}}
+\newcommand*{\parintro}[1]{\textbf{#1}:}
+\newcommand*{\VV}{\mathit{VV}}
 
 \DeclareMathOperator{\fromint}{bin}
 \DeclareMathOperator{\GF}{GF}
@@ -46,58 +47,21 @@
 The construction HCTR\cite{hctr} is among the most efficient for 
 tweakable length-preserving encryption from a block cipher, using
 a single block cipher invocation and two \(GF(2^n)\) multiplies
-per block. In this paper, we propose HCTR2, which addresses
-two serious issues with HCTR as specified. We know of no
-patents affecting use of HCTR2. \cite{adiantum} includes a detailed history of length-preserving encryption.
+per block. Unfortunately, as presented it has two serious flaws.
+The first, observed in \cite{kumarhctr}, is that the hash function
+is not \(\epsilon\)-almost-XOR-universal\cite{eadu} as claimed.
+The second is that an error in the proof presented in \cite{hctrquad}
+invalidates the claimed quadratic security bound, leaving
+only an unsatisfactory cubic bound. 
 
-\subsection{Hash function}
-HCTR uses a polynomial hash function. To ensure that the map from 
-input to polynomial is injective, the length of the input is appended
-to the input before the polynomial is calculuated. However, applying
-this rule to the zero-length input would yield the zero polynomial,
-which would break properties HCTR relies on, so it specifies that
-in this case the polynomial \(p(x) = x\) is used instead.
+This paper proposes a new revision, HCTR2, fixing these issues.
+We know of no patents affecting use of HCTR2.
+\cite{adiantum} includes a detailed history of length-preserving encryption.
+We begin with the specification and proof for HCTR2, laying
+the groundwork for describing the flaws with HCTR (\autoref{hctrflaws}),
+after which we discuss HCTR2 design decisions
+and report on its implementation on x86 and arm64.
 
-\cite{kumarhctr} shows that this violates the 
-\(\epsilon\)-almost-XOR-universal\cite{eadu} property HCTR needs, because
-the exact same polynomial is used where the input is the single bit 0.
-
-\subsection{Security bound}
-\cite{hctr} was initially presented with a security bound cubic
-in the total size of all queries combined.  This is a little low
-for comfort; if a 128-bit blockcipher is used, it suggests a
-distinguisher can be effective given tens of terabytes of queries,
-which can quickly be reached over a fast link. 
-
-\cite{hctrquad} presents a much more satisfactory quadratic bound.
-However, it appears the proof of that bound has a critical error.
-At the core of the proof is a bound on the probability that
-the "bad" flag will be set in game RAND2, in which all queries
-get random responses. In this game, the block cipher queries
-and responses that would be present in HCTR to generate the
-responses seen by the attacker are inferred, and the "bad"
-flag is set if either two plaintexts to the block cipher
-are the same, or two ciphertexts are the same.
-
-
-Equation 17 is based on a correct belief that the assertion that
-the inferred ciphertext
-of the block cipher lookup for the first block in query \(s'\) is
-equal to the inferred ciphertext for subsequent block \(i\) in
-query \(s\)
-gives us a nonzero polynomial in \(h\)
-
-assertion that in game RAND2, 
-\(\prob{\mathit{CC}^{s'} = Y_i^s} \leq (m^{s'} + t)/2^n\) - in
-other words, that the probability that
-
-
-grows with the length of query \(s'\)
-, from
-which a quadra
-
-We see no easy fix to the proof
-without modifying the mode itself.
 
 \section{Specification}
 \begin{figure}
@@ -110,14 +74,14 @@ without modifying the mode itself.
             \begin{algorithmic}[0]
                 \Procedure{\(HCTR2_{k, T}\)}{$P$}
                 \State $h \gets E_k(0^n)$
-                \State $W \gets E_k(10^{n-1})$
+                \State $L \gets E_k(10^{n-1})$
                 \State $M \Concat N \gets P$, $|M| = n$
                 \State $\MM \gets M \xor H_h(T, N)$
-                \State $\YY \gets E_k(\MM)$
-                \State $S \gets \MM \xor \YY \xor W$
-                \State $Z \gets N \xor \XCTR_k(S)[0;\abs{N}]$
-                \State $Y \gets \YY \xor H_h(T, Z)$
-                \State $C \gets Y \Concat Z$
+                \State $\VV \gets E_k(\MM)$
+                \State $S \gets \MM \xor \VV \xor L$
+                \State $W \gets N \xor \XCTR_k(S)[0;\abs{N}]$
+                \State $V \gets \VV \xor H_h(T, Z)$
+                \State $C \gets V \Concat W$
                 \State \textbf{return} $C$
                 \EndProcedure
             \end{algorithmic}
@@ -128,12 +92,12 @@ without modifying the mode itself.
             \begin{algorithmic}[0]
                 \Procedure{\(HCTR2_{k, T}^{-1}\)}{$C$}
                 \State $h \gets E_k(0^n)$
-                \State $W \gets E_k(10^{n-1})$
-                \State $Y \Concat Z \gets C$, $|Y| = n$
-                \State $\YY \gets Y \xor H_h(T, Z)$
-                \State $\MM \gets E_k^{-1}(\YY)$
-                \State $S \gets \MM \xor \YY \xor W$
-                \State $N \gets Z \xor \XCTR_k(S)[0;\abs{Z}]$
+                \State $L \gets E_k(10^{n-1})$
+                \State $V \Concat W \gets C$, $|V| = n$
+                \State $\VV \gets V \xor H_h(T, W)$
+                \State $\MM \gets E_k^{-1}(\VV)$
+                \State $S \gets \MM \xor \VV \xor L$
+                \State $N \gets W \xor \XCTR_k(S)[0;\abs{W}]$
                 \State $M \gets \MM \xor H_h(T, N)$
                 \State $P \gets M \Concat N$
                 \State \textbf{return} $P$
@@ -167,98 +131,117 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
 We map bytes to bitstrings with \(\fromint_8\).
 
 \subsection{Polynomial hash function}
-
-Let \(\poly(M_0 \Concat M_1 \Concat \cdots \Concat M_{l-2} \Concat M_{l-1})\)
-refer to the polynomial
-\(M_0x^{l-1} \xor M_1x^{l-2} \xor \cdots \xor M_{l-2}x \xor M_{l-1}\)
-where each \(n\)-bit \(M_i\) is interpreted as a \(\GF(2^n)\)
-field element in a little-endian fashion
-(so \(0010^{n-3}\) is interpreted as the element \(x^2\)).
-Where \(n=128\) we reduce by the polynomial
-\(1 + x + x^2 + x^7 + x^{128}\).
-
-For tweak, message \(\abs{T}, \abs{N} < 2^{n/2} -1\) we define a polynomial
+We interpret \(n\)-bit blocks as field elements of \(\GF(2^n)\)
+in a little-endian fashion,
+so \(0010^{n-3}\) is interpreted as the element \(x^2\).
+Where \(n=128\) we reduce by
+\(1 + x + x^2 + x^7 + x^{128}\). Then let
 \begin{displaymath}
-    H(T, M) = \poly(\fromint_{n/2}(\abs{T} + 1) \Concat \fromint_{n/2}(\abs{M} + 1) \Concat \pad_n(T) \Concat \pad_n(M) \Concat 0^n)
+    \poly(M_0 \Concat M_1 \Concat \cdots \Concat M_{l-2} \Concat M_{l-1})
 \end{displaymath}
-which is of degree
-\(d(T, M) = \ceil{\frac{\abs{T}}{n}} + \ceil{\frac{\abs{M}}{n}} + 1\).
+refer to the polynomial
+\begin{displaymath}
+    p(h) = M_0h^{l-1} \xor M_1h^{l-2} \xor \cdots \xor M_{l-2}h \xor M_{l-1}
+\end{displaymath}
+
+For tweak \(T\) and  message \(M\) we define a polynomial
+\begin{displaymath}
+    H(T, M) = \poly(\fromint_{n}(\abs{T} + 2) \Concat \pad_n(T) \Concat \pad_n(M) \Concat 0^n)
+\end{displaymath}
 We then define our hash function \(H_h(T, M)\) as evaluation
 of the polynomial \(H(T, M)\) at \(h\) for key \(h \in \bin^n\).
 
 \subsection{XCTR mode}
 
-HCTR uses an unusual mode of stream encryption.
+HCTR and HCTR2 use an unusual mode of stream encryption.
 \cite{hctr,hctrquad} note the differences between this mode and CTR mode,
 but use the same name to refer to it; for the avoidance of ambiguity
 we name this mode \emph{XCTR mode}, and define:
 \begin{displaymath}
     \XCTR_K(S) = E_K(S \xor \fromint(1)) \Concat E_K(S \xor \fromint(2)) \Concat E_K(S \xor \fromint(3)) \Concat \cdots
 \end{displaymath}
-thus generating the first \(m\) bits \(\XCTR_K(S)[0; m]\) takes \(\ceil{\frac{m}{n}}\) block cipher calls.
+thus generating the first \(m\) bits \(\XCTR_K(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls.
 
 \subsection{HCTR2 encryption}
 
 From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
 Note that what is referred to in \cite{hctr,hctrquad} as \(C, \mathit{CC}, D\)
-we refer to as \(Y, YY, Z\)
+we refer to as \(V, VV, W\)
 so that we can use \(P, C\) to refer to plaintext and ciphertext.
-Tweaks may be any length from 0 to \(2^{n/2}-1\) bits, while
-messages may be any length from \(n\) to \(n + 2^{n/2}-1\) bits.
-
-\section{Design of HCTR2}
-\begin{itemize}
-    \item When hashing, we represent the length as \(\abs{X} + 1\)
-    \item We mix in an extra constant in the generation of \(S\) as discussed above.
-    \item we keep the XCTR mode to avoid unnecessary change and beceause it has efficiency
-    advantages, though we no longer need it for our proof.
-    \item We allow a variable-length tweak; copying GHASH\cite{gcm}, 
-    we include the length of message and tweak in the last block. 
-    \item We process the length and tweak first as a small optimization
-    \item We generate \(h \gets E_k(0)\)---note that the security of doing so is very sensitive to our other hashing choices
-    \item We specify endianness and the like so that implementations can be interoperable
-    \item We provide a sample implementation and test vectors
-    \item We rename some variables in our exposition and proof to allow some more standard usage
-    \item We present a new proof, based on the H-coefficient technique, with a slightly tighter bound.
-\end{itemize}
-\section{Implementation}
+Tweaks may be any length from 0 to \(2^n-2\) bits, while
+messages may be any length \(n\) or greater.
 
 \section{Security of HCTR2}
-To bound the distinguishing advantage of
+
+\subsection{Definitions}
+
+The block cipher
+$E$
+must be a super-pseudorandom permutation~\cite{concsym}:
+%
+\begin{align*}
+    \advantage{\pm \mathrm{prp}}{E}[(A)] \defeq
+    {}&\left\lvert\probsub{K \sample \mathcal{K}_E}{A^{E_K,E_K^{-1}}\Rightarrow 1}\right.
+    \\
+    {}&\left. - \probsub{\pi \sample \Perm(\mathcal{R})}{A^{\pi,\pi^{-1}}\Rightarrow 1}\right\rvert
+    \\
+    \advantage{\pm \mathrm{prp}}{E}[(q, t)] \defeq
+    {}&\max_{A \in \mathcal{A}(q, t)} \advantage{\pm \mathrm{prp}}{E}[(A)]
+\end{align*}
+%
+where $A$ is an adversary,
+$\Perm(S)$ denotes the set of all permutations on a set $S$,
+and
+$\mathcal{A}(q, t)$
+is the set of all adversaries that make at most $q$ queries and take at most $t$ time.
 
 \subsection{Hash function}
+For any nonzero polynomial \(p(h)\)
+in \(GF(2^n)\) 
+of degree \(d\), there are at most \(d\) values \(h\)
+such that \(p(h) = 0\), and therefore
+\(\probsub{h\sample{\bin^n}}{p(h) = 0} \leq d/2^n\).
+The first term of \(H(T, M)\) is always nonzero,
+and so the polynomial is of degree exactly
+\begin{displaymath}
+    d(T, M) = 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
+\end{displaymath}
+From this we infer three properties of \(H_h(T, M)\):
 \begin{description}
     \item[Property 1]
-    For any \(T, M\) and any \(g \in \bin^n\)
-    there are at most \(d(T, M)\)
-    values of \(h\) such that \(H_h(T, M) = g\).
-    Proof: since the \(x\) term of \(H(T, M)\) is nonzero
-    the polynomial \(H(T, M) \xor g\) is nonzero.
-    Since the degree is at most \(d(T, M)\), it has
-    at most that many zeroes.
+    For any \(T, M\) and any \(g \in \bin^n\),
+    \begin{displaymath}
+        \probsub{h\sample{\bin^n}}{H_h(T, M) = g} \leq d(T, M)/2^n
+    \end{displaymath}
+    Proof: since \(d(T, M) \geq 1\)
+    the polynomial \(H(T, M) \xor g\) has the same degree,
+    is nonzero,
+    and therefore has at most that many zeroes.
     \item[Property 2] 
-    \(\epsilon\)-almost-XOR-universality: 
     For any \((T_1, M_1) \neq (T_2, M_2)\) and any \(g \in \bin^n\)
-    there are at most \(\max(d(T_1, M_1), d(T_2, M_2))\)
-    values of \(h\) such that \(H_h(T_1, M_1) \xor H_h(T_2, M_2) = g\).
-    Proof: \(H\) is injective, therefore
-    \(H(T_1, M_1) \neq H(T_2, M_2)\)
-    and \(H(T_1, M_1) \xor H(T_2, M_2) \neq 0\).
-    Because the constant term of \(H\) is zero, 
-    \(H(T_1, M_1) \xor H(T_2, M_2) \xor g \neq 0\).
+    \begin{align*}
+        & \probsub{h\sample{\bin^n}}{H_h(T_1, M_1) \xor H_h(T_2, M_2) = g} \\
+        \leq  & \max(d(T_1, M_1), d(T_2, M_2))/2^n
+    \end{align*}
+    Proof: \(H\) is injective onto polynomials
+    and the constant term is zero, therefore
+    \(H(T_1, M_1) \xor H(T_2, M_2) \xor g\)
+    is not the zero polynomial.
     The degree is at most \(\max(d(T_1, M_1), d(T_2, M_2))\)
     and this limits the number of solutions.
+    This shows that the hash function is
+    \(\epsilon\)-almost-XOR-universal.
     \item[Property 3]
     For any \(T, M\) and any \(g \in \bin^n\)
-    there are at most \(d(T, M)\)
-    values of \(h\) such that \(H_h(T, M) \xor g = h\).
-    Proof: \(H(T, M)\) has a zero constant term and,
-    cannot be equal to the polynomial \(x\),
-    so \(H(T, M) \xor g \xor x\) cannot be zero, and
+    \begin{displaymath}
+        \probsub{h\sample{\bin^n}}{H_h(T, M) \xor h = g} \leq d(T, M)/2^n
+    \end{displaymath}
+    Proof: \(H(T, M)\) has a zero constant term and
+    cannot be equal to the polynomial \(p(h) = h\),
+    so \(H(T, M) \xor g \xor h\) cannot be the zero polynomial, and
     therefore can have at most \(d(T, M)\) zeroes.
 \end{description}
 
-\subsection{Definitions}
 \subsection{H-coefficient technique}
 
 We prove the security of HCTR2 using Patarin's H-coefficient technique. 
@@ -293,12 +276,85 @@ this information is:
     this is the extra output from the last
     blockcipher call that is not used.
     For query \(i\) this is 
-    \[\XCTR(S^i)[\abs{P}; n\ceil{\frac{\abs{P}}{n}}-\abs{P}]\]
+    \begin{displaymath}
+        \XCTR(S^i)[\abs{P}; n\ceil{\abs{P}/n}-\abs{P}]
+    \end{displaymath}
 \end{itemize}
 In the ``ideal world'', random output of the expected
 length is substituted.
 
 \subsection{Security bound}
+
+\section{HCTR issues}\label{hctrflaws}
+\subsection{Hash function}
+HCTR uses a polynomial hash function. To ensure that the map from 
+input to polynomial is injective, the length of the input is appended
+to the input before the polynomial is calculuated. However, applying
+this rule to the zero-length input would yield the zero polynomial,
+which would break properties HCTR relies on, so it specifies that
+in this case the polynomial \(p(x) = x\) is used instead.
+
+\cite{kumarhctr} shows that this violates the 
+\(\epsilon\)-almost-XOR-universal\cite{eadu} property HCTR needs, because
+the exact same polynomial is used where the input is the single bit 0.
+
+\subsection{Security bound}
+\cite{hctr} was initially presented with a security bound cubic
+in the total size of all queries combined.  This is a little low
+for comfort; if a 128-bit blockcipher is used, it suggests a
+distinguisher can be effective given tens of terabytes of queries,
+which can quickly be reached over a fast link. 
+
+\cite{hctrquad} presents a much more satisfactory quadratic bound.
+However, it appears the proof of that bound has a critical error.
+
+At the core of the proof is a bound on the probability that
+the "bad" flag will be set in game RAND2, in which all queries
+get random responses. In this game, the block cipher queries
+and responses that would be present in HCTR to generate the
+responses seen by the attacker are inferred, and the "bad"
+flag is set if either two plaintexts to the block cipher
+are the same, or two ciphertexts are the same.
+
+
+Equation 17 is based on a correct belief that the assertion that
+the inferred ciphertext
+of the block cipher lookup for the first block in query \(s'\) is
+equal to the inferred ciphertext for subsequent block \(i\) in
+query \(s\)
+gives us a nonzero polynomial in \(h\)
+
+assertion that in game RAND2, 
+\(\prob{\mathit{CC}^{s'} = Y_i^s} \leq (m^{s'} + t)/2^n\) - in
+other words, that the probability that
+
+
+grows with the length of query \(s'\)
+, from
+which a quadra
+
+We see no easy fix to the proof
+without modifying the mode itself.
+
+\section{Design of HCTR2}
+\begin{itemize}
+    \item When hashing, we represent the length as \(\abs{X} + 1\)
+    \item We mix in an extra constant in the generation of \(S\) as discussed above.
+    \item we keep the XCTR mode to avoid unnecessary change and beceause it has efficiency
+    advantages, though we no longer need it for our proof.
+    \item We allow a variable-length tweak; copying GHASH\cite{gcm}, 
+    we include the length of message and tweak in the last block. 
+    \item We process the length and tweak first as a small optimization
+    \item We generate \(h \gets E_k(0)\)---note that the security of doing so is very sensitive to our other hashing choices
+    \item We specify endianness and the like so that implementations can be interoperable
+    \item We provide a sample implementation and test vectors
+    \item We rename some variables in our exposition and proof to allow some more standard usage
+    \item We present a new proof, based on the H-coefficient technique, with a slightly tighter bound.
+\end{itemize}
+
+\section{Implementation}
+
+
 
 \printbibliography[heading=bibintoc]
 
