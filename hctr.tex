@@ -119,7 +119,7 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     \item $Y[a;l]$: the subsequence of $Y$ of length $l$ starting at the 0-based index $a$
     \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
     little-endian conversion of integers to binary
-    \item \(n\): block size in bits
+    \item \(n\): block size in bits; we assume \(n\) is even
     \item $\pad_n(X) = X \Concat 0^v$
     where $v$ is the least integer $\geq 0$ such that $n$ divides $\abs{X} + v$
     \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
@@ -127,9 +127,9 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     our concrete proposal uses AES, so \(n=128\) and \(\mathcal{K}\) is
     \(\bin^{128}\), \(\bin^{192}\), or \(\bin^{256}\)
     \item \(\mathcal{T}\): the set of permissible tweaks
-    \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^n-3\}}\bin^i\)
+    \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^{n/2}-2\}}\bin^i\)
     \item \(\mathcal{M}\): the set of permissible messages
-    \(\mathcal{M} = \bigcup_{i \in \{n\ldots2^n-1\}}\bin^i\)
+    \(\mathcal{M} = \bigcup_{i \in \{n\ldots2^{n/2}-2\}}\bin^i\)
 \end{itemize}
 We map bytes to bitstrings with \(\fromint_8\).
 
@@ -148,7 +148,7 @@ refer to the polynomial
 
 For tweak \(T\) and  message \(M\) we define a polynomial
 \begin{displaymath}
-    H(T, M) = \poly(\fromint_{n}(\abs{T} + 2) \Concat \pad_n(T) \Concat \pad_n(M) \Concat 0^n)
+    H(T, M) = \poly(\fromint_{n/2}(\abs{T} + 1) \Concat \fromint_{n/2}(\abs{M} + 1) \Concat \pad_n(T) \Concat \pad_n(M) \Concat 0^n)
 \end{displaymath}
 We then define our hash function \(H_h(T, M)\) as evaluation
 of the polynomial \(H(T, M)\) at \(h\) for key \(h \in \bin^n\).
