@@ -12,6 +12,7 @@
 \usepackage{algpseudocode}
 \usepackage{amsmath}
 \usepackage[style=alphabetic,backend=biber,alldates=ymd]{biblatex}
+\usepackage{bm}
 \usepackage[logic,probability,advantage,adversary,landau,sets,operators]{cryptocode}
 \usepackage{hyperref}
 \usepackage{tikz}
@@ -23,7 +24,6 @@
 \newcommand*{\Concat}{\Vert}
 \newcommand*{\defeq}{\stackrel{\text{def}}{=}}
 \newcommand*{\MM}{\mathit{MM}}
-\newcommand*{\parintro}[1]{\textbf{#1}:}
 \newcommand*{\VV}{\mathit{VV}}
 
 \DeclareMathOperator{\fromint}{bin}
@@ -115,24 +115,26 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     \item $\abs{X}$: length of $X \in \bin^{*}$ in bits
     \item $\lambda$: the empty string $\abs{\lambda} = 0$
     \item $\Concat$: bitstring concatenation
-    \item $Y[a;l]$: the subsequence of $Y$ of length $l$ starting at the 0-based index $a$.
-    \item $\pad_l(X) = X \Concat 0^v$
-    where $v$ is the least integer $\geq 0$ such that $l$ divides $\abs{X} + v$
-    \item 
-    $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
-    little-endian conversion between binary and integers.
-    \item \(n\): block size in bits. We assume \(n\) is even.
+    \item \(\xor\): bitwise XOR
+    \item $Y[a;l]$: the subsequence of $Y$ of length $l$ starting at the 0-based index $a$
+    \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
+    little-endian conversion of integers to binary
+    \item \(n\): block size in bits
+    \item $\pad_n(X) = X \Concat 0^v$
+    where $v$ is the least integer $\geq 0$ such that $n$ divides $\abs{X} + v$
     \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
     \(n\)-bit block cipher with keyspace \(\mathcal{K}\);
     our concrete proposal uses AES, so \(n=128\) and \(\mathcal{K}\) is
-    \(\bin^{128}\), \(\bin^{192}\), or \(\bin^{256}\). 
-    \item \(\xor\): bitwise XOR
+    \(\bin^{128}\), \(\bin^{192}\), or \(\bin^{256}\)
+    \item \(\mathcal{T}\): the set of permissible tweaks
+    \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^n-3\}}\bin^i\)
+    \item \(\mathcal{M}\): the set of permissible messages
+    \(\mathcal{M} = \bigcup_{i \in \{n\ldots2^n-1\}}\bin^i\)
 \end{itemize}
 We map bytes to bitstrings with \(\fromint_8\).
 
 \subsection{Polynomial hash function}
-We interpret \(n\)-bit blocks as field elements of \(\GF(2^n)\)
-in a little-endian fashion,
+We interpret \(n\)-bit blocks as little-endian field elements of \(\GF(2^n)\),
 so \(0010^{n-3}\) is interpreted as the element \(x^2\).
 Where \(n=128\) we reduce by
 \(1 + x + x^2 + x^7 + x^{128}\). Then let
@@ -158,9 +160,9 @@ HCTR and HCTR2 use an unusual mode of stream encryption.
 but use the same name to refer to it; for the avoidance of ambiguity
 we name this mode \emph{XCTR mode}, and define:
 \begin{displaymath}
-    \XCTR_K(S) = E_K(S \xor \fromint(1)) \Concat E_K(S \xor \fromint(2)) \Concat E_K(S \xor \fromint(3)) \Concat \cdots
+    \XCTR_k(S) = E_k(S \xor \fromint(1)) \Concat E_k(S \xor \fromint(2)) \Concat E_k(S \xor \fromint(3)) \Concat \cdots
 \end{displaymath}
-thus generating the first \(m\) bits \(\XCTR_K(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls.
+thus generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls.
 
 \subsection{HCTR2 encryption}
 
@@ -168,8 +170,6 @@ From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
 Note that what is referred to in \cite{hctr,hctrquad} as \(C, \mathit{CC}, D\)
 we refer to as \(V, VV, W\)
 so that we can use \(P, C\) to refer to plaintext and ciphertext.
-Tweaks may be any length from 0 to \(2^n-2\) bits, while
-messages may be any length \(n\) or greater.
 
 \section{Security of HCTR2}
 
@@ -181,9 +181,9 @@ must be a super-pseudorandom permutation~\cite{concsym}:
 %
 \begin{align*}
     \advantage{\pm \mathrm{prp}}{E}[(A)] \defeq
-    {}&\left\lvert\probsub{K \sample \mathcal{K}_E}{A^{E_K,E_K^{-1}}\Rightarrow 1}\right.
+    {}&\left\lvert\probsub{k \sample \mathcal{K}}{A^{E_k,E_k^{-1}}\Rightarrow 1}\right.
     \\
-    {}&\left. - \probsub{\pi \sample \Perm(\mathcal{R})}{A^{\pi,\pi^{-1}}\Rightarrow 1}\right\rvert
+    {}&\left. - \probsub{\pi \sample \Perm(n)}{A^{\pi,\pi^{-1}}\Rightarrow 1}\right\rvert
     \\
     \advantage{\pm \mathrm{prp}}{E}[(q, t)] \defeq
     {}&\max_{A \in \mathcal{A}(q, t)} \advantage{\pm \mathrm{prp}}{E}[(A)]
@@ -191,9 +191,58 @@ must be a super-pseudorandom permutation~\cite{concsym}:
 %
 where $A$ is an adversary,
 $\Perm(S)$ denotes the set of all permutations on a set $S$,
+$\Perm(n)$ is short for $\Perm(\bin^n)$
 and
 $\mathcal{A}(q, t)$
 is the set of all adversaries that make at most $q$ queries and take at most $t$ time.
+
+Let $\Perm^\mathcal{T}(\mathcal{M})$
+denote the set of all
+tweakable length-preserving permutations
+$\bm{\pi} : \mathcal{T} \times \mathcal{M} \rightarrow \mathcal{M}$
+such that for all $T, M \in \mathcal{T} \times \mathcal{M}$,
+$\abs{\bm{\pi}(T, M)} = \abs{M}$, and
+for all $T \in \mathcal{T}$, $\bm{\pi}_{T}$ is a bijection on \(\mathcal{M}\).
+In an abuse of notation
+we use $\bm{\pi}^{-1}$ to refer to the function
+such that $\bm{\pi}^{-1}(T, \bm{\pi}(T, M)) = M$ ie $(\bm{\pi}^{-1})_T = (\bm{\pi}_T)^{-1}$.
+
+Per~\cite{cmc}, for a tweakable super-pseudorandom permutation
+$\bm{E} : \mathcal{K} \times \mathcal{T} \times \mathcal{M} \rightarrow \mathcal{M}$
+the distinguishing advantage of an adversary $A$ is:
+%
+\begin{align*}
+    \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(A)] \defeq
+    {}&\left\lvert\probsub{K \sample \mathcal{K}}{A^{\bm{E}_k,\bm{E}_k^{-1}}\Rightarrow 1}\right.
+    \\
+    {}&\left. - \probsub{\bm{\pi} \sample \Perm^\mathcal{T}(\mathcal{M})}
+        {A^{\bm{\pi},\bm{\pi}^{-1}}\Rightarrow 1}\right\rvert
+    \\
+    \intertext{We then define}
+    \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(\sigma, t)]
+    \defeq {}&
+    \max_{A \in \mathcal{A}(\sigma, t)} \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(A)]
+\end{align*}
+where \(\mathcal{A}(\sigma, t)\)
+is the set of all adversaries taking at most \(t\) time,
+such that the total of all blocks sent in queries is
+at most \(\sigma\) ie
+\begin{displaymath}
+    \sum_i \ceil{|T^i|/n} + \ceil{|M^i|/n} \leq \sigma
+\end{displaymath}
+and \(T^i, M^i\) are the tweak and message
+(plaintext or ciphertext)
+presented in query \(i\).
+
+We use \(\HCTR[\pi]\) to refer to HCTR2 in which invocation
+of the block cipher is replaced with invocation of the
+permutation \(\pi \in \Perm(n)\); thus for key
+\(k \in \mathcal{K}\) regular HCTR2 is \(\HCTR[E_k]\).
+\(\XCTR_\pi\) refers to a similar substitution.
+\(\HCTR[E]\) refers to regular HCTR2,
+ie \(\HCTR[E_k]\) for \(k \sample \mathcal{K}\), while
+\(\HCTR[\Perm(n)]\) refers to \(\HCTR[\pi]\)
+for \(\pi \sample \Perm(n)\).
 
 \subsection{Hash function}
 For any nonzero polynomial \(p(h)\)
@@ -287,16 +336,20 @@ length is substituted.
 
 \section{HCTR issues}\label{hctrflaws}
 \subsection{Hash function}
-HCTR uses a polynomial hash function. To ensure that the map from 
-input to polynomial is injective, the length of the input is appended
-to the input before the polynomial is calculuated. However, applying
-this rule to the zero-length input would yield the zero polynomial,
-which would break properties HCTR relies on, so it specifies that
-in this case the polynomial \(p(x) = x\) is used instead.
+HCTR uses a hash function based on the polynomial
+\begin{displaymath}
+    H(X) = \poly(\pad_n(X) \Concat \fromint_{n}(X) \Concat 0^n)
+\end{displaymath}
+Because it assumes a fixed-length tweak it simply sets \(X = M \Concat T\).
+However, HCTR requires that the resulting polynomial be nonzero
+even when \(X = \lambda\), so as a special case they define
+\(H(\lambda) = h\).
 
-\cite{kumarhctr} shows that this violates the 
-\(\epsilon\)-almost-XOR-universal\cite{eadu} property HCTR needs, because
-the exact same polynomial is used where the input is the single bit 0.
+Unfortunately, as \cite{kumarhctr} observes this is no longer
+an injective map from \(X\) - we also have \(H(0) = h\). This
+straightforwardly leads to an attack in which two encryption queries
+are presented, one of a block width, and the second extending
+the first with a single zero (and assuming a zero length tweak).
 
 \subsection{Security bound}
 \cite{hctr} was initially presented with a security bound cubic
@@ -308,13 +361,12 @@ which can quickly be reached over a fast link.
 \cite{hctrquad} presents a much more satisfactory quadratic bound.
 However, it appears the proof of that bound has a critical error.
 
-At the core of the proof is a bound on the probability that
-the "bad" flag will be set in game RAND2, in which all queries
-get random responses. In this game, the block cipher queries
-and responses that would be present in HCTR to generate the
-responses seen by the attacker are inferred, and the "bad"
-flag is set if either two plaintexts to the block cipher
-are the same, or two ciphertexts are the same.
+While presented in a different way, this proof is very similar
+to that of this paper: in the game RAND2, all queries get random
+responses, the block cipher inputs are inferred, and a collision
+in either the domain or range of the block cipher
+sets the ``bad'' flag.
+
 
 
 Equation 17 is based on a correct belief that the assertion that
