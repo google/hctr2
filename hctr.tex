@@ -368,19 +368,18 @@ all responses of the appropriate length are equally likely,
 and use the H-coefficient technique to bound
 the distinguishing advantage between them.
 
-We use superscripts to distinguish between queries, but
-omit them when we're discussing only a single query.
-
+We use superscripts to distinguish between queries.
+An encryption query \((T^i, P^i)\) yields ciphertext \(C^i\)
+while a decryption query \((T^i, C^i)\)
+yields plaintext \(P^i\).
+For each query \(i\), let \(m^i = \ceil{\abs{P^i}/n} = \ceil{\abs{C^i}/n}\)
+be the number of blocks in the query.
 We forbid ``pointless queries'':
-encryption queries \(P, T\)
-which are identical to previous encryption queries
-or for which the value \(P\) was returned from a prior
-decryption  query \(C, T\), or
-decryption queries \(C, T\)
-which are identical to previous decryption queries
-or for which the value \(C\) was returned from a prior
-encryption query \(P, T\).
-
+encryption queries \((T^j, P^j)\)
+such that \((T^i, P^i) = (T^j, P^j)\) for some \(i < j\), 
+or decryption queries \((T^j, C^j)\)
+such that \((T^i, C^i) = (T^j, C^j)\) for some \(i < j\),
+whether query \(i\) was an encryption or decryption query.
 
 We give the adversary some 
 extra information
@@ -392,9 +391,9 @@ In world X, this information is:
     that is not a multiple of the block size,
     this is the extra output from the last
     blockcipher call that is not used.
-    For each query, this is 
+    For query \(i\), this is 
     \begin{displaymath}
-        B = \XCTR_\pi(S)[\abs{P}; n\ceil{\abs{P}/n}-\abs{P}]
+        B^i = \XCTR_\pi(S^i)[\abs{P^i}; nm^i-\abs{P^i}]
     \end{displaymath}
     \item the hash key \(h\), given after all queries are complete
     \item the mask \(L\), given after all queries are complete
@@ -403,11 +402,14 @@ In the ``ideal world'', random output of the expected
 length is substituted. Since the adversary can always ignore
 this information, giving it to them cannot make their performance worse.
 
-FIXME introduce \(S_i\) and \(Y_i\) somewhere.
+For \(j \in \{1 \ldots m^i-1\}\) we define \(S_j^i = S^i \xor \fromint(j)\),
+the block cipher inputs used in \(\XCTR\), and \(Y_j^i\) the corresponding
+outputs, so that \(Y_j^i = \pi(S_j^i)\) and 
+\(XCTR_\pi(S^i)[0;nm^i] = Y_1^i \Concat \cdots \Concat Y_{m-1}^i\).
 
 Given the full transcript, including \(h\) and \(L\),
-we can infer pairs of block cipher plaintexts and ciphertexts.
-First we infer that \(\pi(0^n) = h\) and \(\pi(10^{n-1}) = L\).
+we can infer all pairs of block cipher plaintexts and ciphertexts.
+First we infer that \(h = \pi(0^n)\) and \(L = \pi(10^{n-1})\).
 Then for each query, we know \(T\), \(P\), \(C\) and \(B\)
 and so can infer:
 \begin{align*}
@@ -415,17 +417,38 @@ and so can infer:
     V \Concat W &= C \\
     \MM &= M \xor H_h(T, N)\\
     \VV &= V \xor H_h(T, W)\\
-    \pi(\MM) &= \VV\\
+    \VV &= \pi(\MM)\\
     S &= \MM \xor \VV \xor L\\ 
     S_i &= S \xor \fromint(i)\\
     Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor W) \Concat B \\
-    \pi(S_i) &= Y_i \\
+    Y_i &= \pi(S_i) \\
 \end{align*}
-where \(m = \ceil{|P|}/n\).  We therefore infer \(\mtot = 2 + \sum_i m^i \) block cipher
+(omitting the query superscript \(i\) for readability).
+We therefore infer \(\mtot = 2 + \sum_i m^i \) block cipher
 plaintext/ciphertext pairs from \(\mtot n\) bits of query response.
 
+A transcript is ``bad'' (\(\tau \in \Tb\)) iff any pair of 
+inferred block cipher plaintexts are the same
+(\(0^n\), \(10^{n-1}\), \(\MM^i\), \(S_j^i\))
+or any pair of inferred block cipher ciphertexts are the same
+(\(h\), \(L\), \(\VV^i\), \(Y_j^i\)). 
 
+FIXME: the below is false as stated: need to introduce
+a notion of ``compatibility''. Simpler to consider
+compatibility with attacker than with world.
 
+Since responses in world Y are coin flips,
+the probability of a particular transcript, good or bad,
+in world Y is always simply \(2^-{\mtot n}\).
+For a ``good'' transcript, the probability in world X
+is the probability of all of those plaintext/ciphertext
+pairs being part of a given random permutation.
+This is 
+\(\prod_{i=0}^{\mtot -1}(1/(2^n - i))\).
+Thus for all \(\tau \in \Tg\)
+\(\prob{Y = \tau} \leq \prob{X = \tau}\). 
+Next we seek to bound
+\(\prob{Y \in \Tb}\).
 
 \subsection{Security bound}
 
