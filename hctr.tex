@@ -24,6 +24,8 @@
 \newcommand*{\Concat}{\Vert}
 \newcommand*{\defeq}{\stackrel{\text{def}}{=}}
 \newcommand*{\MM}{\mathit{MM}}
+\newcommand*{\Tb}{\mathcal{T}_\mathrm{bad}}
+\newcommand*{\Tg}{\mathcal{T}_\mathrm{good}}
 \newcommand*{\VV}{\mathit{VV}}
 
 \DeclareMathOperator{\fromint}{bin}
@@ -312,8 +314,9 @@ The H-coefficient technique was introduced by Patarin in 1991~\cite{ppdes,hco}.
 We highly recommend the exposition of
 \cite{hco2} Section 3,
 ``The H-coefficient Technique in a Nutshell'';
-our use of the technique is simple enough
-that a simpler exposition is possible.
+we here present a simpler exposition that
+does not cover the technique in its full
+generality but only our use of it.
 
 We wish to bound the adversary's ability to distinguish between
 two ``worlds'', world X (the ``real world'') and world Y (the ``ideal world'').
@@ -331,12 +334,27 @@ particular oracles drawn from that world, vary.
 
 When the adversary interacts with the world,
 a transcript of queries and responses is created.
-Each transcript \(\tau\) has a probability \(\prob{X = \tau}\)
+Let random variables \(X\) and \(Y\)
+represent the distribution of transcripts
+in world X and world Y respectively, so that
+each transcript \(\tau\) has a probability \(\prob{X = \tau}\)
 of arising in world X, and similarly \(\prob{Y = \tau}\) in world Y.
-For a given transcript, a deterministic adversary must always
-return the same response. 
+For a given transcript \(\tau\), a deterministic adversary must always
+return the same response; call this response \(A(\tau)\).
+WLOG we assume that \(\prob{A(Y) = 1} \geq \prob{A(X) = 1}\).
+We further assume that \(A\) is optimal:
+\(A(\tau) = 1\)
+when \(\prob{Y = \tau} > \prob{X = \tau}\) and 0 otherwise.
 
-
+In this paper, we partition the set of possible transcripts
+\(\mathcal{T}\) into \(\Tg\) and \(\Tb\). 
+We prove that for all \(\tau \in \Tg\)
+\(\prob{Y = \tau} \leq \prob{X = \tau}\),
+and that \(\prob{Y \in \Tb} \leq \epsilon\).
+It follows that \(A(\tau) = 0\) for all \(\tau \in \Tg\),
+therefore that \(\prob{A(Y) = 1} \leq \epsilon\),
+and therefore that the distinguishing advantage
+\(\prob{A(Y) = 1} - \prob{A(X) = 1} \leq \epsilon\).
 
 \subsection{Main lemma} 
 Let world X (the ``real world'') be \(\HCTR[\Perm(n)]\),
@@ -354,7 +372,7 @@ which are identical to previous decryption queries
 or for which the value \(C\) was returned from a prior
 encryption  query \(P, T\).
 
-After all queries are complete, we give the attacker
+After all queries are complete, we give the adversary
 extra information
 which is included in the transcript;
 this cannot make
