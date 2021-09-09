@@ -24,6 +24,7 @@
 \newcommand*{\Concat}{\Vert}
 \newcommand*{\defeq}{\stackrel{\text{def}}{=}}
 \newcommand*{\MM}{\mathit{MM}}
+\newcommand*{\mtot}{m_{\mathrm{tot}}}
 \newcommand*{\Tb}{\mathcal{T}_\mathrm{bad}}
 \newcommand*{\Tg}{\mathcal{T}_\mathrm{good}}
 \newcommand*{\VV}{\mathit{VV}}
@@ -267,7 +268,7 @@ We depend on the following properties of the map from
         d(T, M) = 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
     \end{displaymath}
     \item The constant term is always zero
-    \item The polynomial is never \(h\)
+    \item The polynomial is never \(h\).
 \end{itemize}
 Note that these are all considerations about the polynomial,
 not about the value \(H_h(T, M)\);
@@ -346,7 +347,7 @@ We further assume that \(A\) is optimal:
 \(A(\tau) = 1\)
 when \(\prob{Y = \tau} > \prob{X = \tau}\) and 0 otherwise.
 
-In this paper, we partition the set of possible transcripts
+In \autoref{mainlemma}, we partition the set of possible transcripts
 \(\mathcal{T}\) into \(\Tg\) and \(\Tb\). 
 We prove that for all \(\tau \in \Tg\)
 \(\prob{Y = \tau} \leq \prob{X = \tau}\),
@@ -356,12 +357,20 @@ therefore that \(\prob{A(Y) = 1} \leq \epsilon\),
 and therefore that the distinguishing advantage
 \(\prob{A(Y) = 1} - \prob{A(X) = 1} \leq \epsilon\).
 
-\subsection{Main lemma} 
-Let world X (the ``real world'') be \(\HCTR[\Perm(n)]\),
-which is HCTR with all calls to the block cipher
-replaced with calls to a random permutation.
-Let world Y (the ``ideal world'') be \(\pm\rnd\),
-in which all queries are answered randomly.
+\subsection{Main lemma}\label{mainlemma}
+In what follows, we take world X (the ``real world'') 
+to be \(\HCTR[\Perm(n)]\),
+ie HCTR with all calls to the block cipher
+replaced with calls to a random permutation,
+and world Y (the ``ideal world'') to be \(\pm\rnd\),
+which maps every query to a random response such that
+all responses of the appropriate length are equally likely,
+and use the H-coefficient technique to bound
+the distinguishing advantage between them.
+
+We use superscripts to distinguish between queries, but
+omit them when we're discussing only a single query.
+
 We forbid ``pointless queries'':
 encryption queries \(P, T\)
 which are identical to previous encryption queries
@@ -370,28 +379,53 @@ decryption  query \(C, T\), or
 decryption queries \(C, T\)
 which are identical to previous decryption queries
 or for which the value \(C\) was returned from a prior
-encryption  query \(P, T\).
+encryption query \(P, T\).
 
-After all queries are complete, we give the adversary
+
+We give the adversary some 
 extra information
-which is included in the transcript;
-this cannot make
-their performance worse. In the ``real world'', 
-this information is:
+which is included in the transcript.
+In world X, this information is:
 \begin{itemize}
-    \item the hash key \(h\)
     \item the ``leftover block'' for each query:
     where a query has plaintext/ciphertext
     that is not a multiple of the block size,
     this is the extra output from the last
     blockcipher call that is not used.
-    For query \(i\) this is 
+    For each query, this is 
     \begin{displaymath}
-        \XCTR(S^i)[\abs{P}; n\ceil{\abs{P}/n}-\abs{P}]
+        B = \XCTR_\pi(S)[\abs{P}; n\ceil{\abs{P}/n}-\abs{P}]
     \end{displaymath}
+    \item the hash key \(h\), given after all queries are complete
+    \item the mask \(L\), given after all queries are complete
 \end{itemize}
 In the ``ideal world'', random output of the expected
-length is substituted.
+length is substituted. Since the adversary can always ignore
+this information, giving it to them cannot make their performance worse.
+
+FIXME introduce \(S_i\) and \(Y_i\) somewhere.
+
+Given the full transcript, including \(h\) and \(L\),
+we can infer pairs of block cipher plaintexts and ciphertexts.
+First we infer that \(\pi(0^n) = h\) and \(\pi(10^{n-1}) = L\).
+Then for each query, we know \(T\), \(P\), \(C\) and \(B\)
+and so can infer:
+\begin{align*}
+    M \Concat N &= P \\
+    V \Concat W &= C \\
+    \MM &= M \xor H_h(T, N)\\
+    \VV &= V \xor H_h(T, W)\\
+    \pi(\MM) &= \VV\\
+    S &= \MM \xor \VV \xor L\\ 
+    S_i &= S \xor \fromint(i)\\
+    Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor W) \Concat B \\
+    \pi(S_i) &= Y_i \\
+\end{align*}
+where \(m = \ceil{|P|}/n\).  We therefore infer \(\mtot = 2 + \sum_i m^i \) block cipher
+plaintext/ciphertext pairs from \(\mtot n\) bits of query response.
+
+
+
 
 \subsection{Security bound}
 
