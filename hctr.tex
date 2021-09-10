@@ -26,6 +26,7 @@
 \newcommand*{\MM}{\mathit{MM}}
 \newcommand*{\mtot}{m_{\mathrm{tot}}}
 \newcommand*{\Tb}{\mathcal{T}_\mathrm{bad}}
+\newcommand*{\Tc}{\mathcal{T}_\mathrm{c}}
 \newcommand*{\Tg}{\mathcal{T}_\mathrm{good}}
 \newcommand*{\VV}{\mathit{VV}}
 
@@ -312,12 +313,14 @@ From this we infer three properties of \(H_h(T, M)\):
 
 \subsection{H-coefficient technique}
 The H-coefficient technique was introduced by Patarin in 1991~\cite{ppdes,hco}.
-We highly recommend the exposition of
-\cite{hco2} Section 3,
+We highly recommend the exposition
+of~\cite{hco2} Section 3,
 ``The H-coefficient Technique in a Nutshell'';
 we here present a simpler exposition that
 does not cover the technique in its full
 generality but only our use of it.
+Our use of the symbol \(\mathcal{T}\) and the term
+``compatible'' differs slightly from~\cite{hco2}.
 
 We wish to bound the adversary's ability to distinguish between
 two ``worlds'', world X (the ``real world'') and world Y (the ``ideal world'').
@@ -333,22 +336,29 @@ the advantage of the randomized adversary. In what follows
 we consider the adversary fixed; only the world, and the
 particular oracles drawn from that world, vary.
 
-When the adversary interacts with the world,
-a transcript of queries and responses is created.
+When the adversary interacts with the oracle,
+a transcript \(\tau\) of queries and responses is created.
+\(\Tc\) is the set of ``compatible transcripts'':
+if \(\tau \in \Tc\) then for the fixed adversary,
+there is some oracle
+that results in its creation. For example,
+since the adversary is deterministic, the first query
+will always be the same; a transcript that
+does not start with this query is not a compatible transcript.
 Let random variables \(X\) and \(Y\)
 represent the distribution of transcripts
 in world X and world Y respectively, so that
 each transcript \(\tau\) has a probability \(\prob{X = \tau}\)
 of arising in world X, and similarly \(\prob{Y = \tau}\) in world Y.
-For a given transcript \(\tau\), a deterministic adversary must always
+For a given \(\tau \in \Tc\),
+a deterministic adversary must always
 return the same response; call this response \(A(\tau)\).
 WLOG we assume that \(\prob{A(Y) = 1} \geq \prob{A(X) = 1}\).
 We further assume that \(A\) is optimal:
 \(A(\tau) = 1\)
 when \(\prob{Y = \tau} > \prob{X = \tau}\) and 0 otherwise.
 
-In \autoref{mainlemma}, we partition the set of possible transcripts
-\(\mathcal{T}\) into \(\Tg\) and \(\Tb\). 
+In \autoref{mainlemma}, we partition \(\Tc\) into \(\Tg\) and \(\Tb\). 
 We prove that for all \(\tau \in \Tg\)
 \(\prob{Y = \tau} \leq \prob{X = \tau}\),
 and that \(\prob{Y \in \Tb} \leq \epsilon\).
@@ -372,8 +382,6 @@ We use superscripts to distinguish between queries.
 An encryption query \((T^i, P^i)\) yields ciphertext \(C^i\)
 while a decryption query \((T^i, C^i)\)
 yields plaintext \(P^i\).
-For each query \(i\), let \(m^i = \ceil{\abs{P^i}/n} = \ceil{\abs{C^i}/n}\)
-be the number of blocks in the query.
 We forbid ``pointless queries'':
 encryption queries \((T^j, P^j)\)
 such that \((T^i, P^i) = (T^j, P^j)\) for some \(i < j\), 
@@ -381,6 +389,8 @@ or decryption queries \((T^j, C^j)\)
 such that \((T^i, C^i) = (T^j, C^j)\) for some \(i < j\),
 whether query \(i\) was an encryption or decryption query.
 
+For each query \(i\), let \(m^i = \ceil{\abs{P^i}/n} = \ceil{\abs{C^i}/n}\)
+be the number of blocks in the query.
 We give the adversary some 
 extra information
 which is included in the transcript.
@@ -405,7 +415,7 @@ this information, giving it to them cannot make their performance worse.
 For \(j \in \{1 \ldots m^i-1\}\) we define \(S_j^i = S^i \xor \fromint(j)\),
 the block cipher inputs used in \(\XCTR\), and \(Y_j^i\) the corresponding
 outputs, so that \(Y_j^i = \pi(S_j^i)\) and 
-\(XCTR_\pi(S^i)[0;nm^i] = Y_1^i \Concat \cdots \Concat Y_{m-1}^i\).
+\(XCTR_\pi(S^i)[0;nm^i] = Y_1^i \Concat \cdots \Concat Y_m^i\).
 
 Given the full transcript, including \(h\) and \(L\),
 we can infer all pairs of block cipher plaintexts and ciphertexts.
@@ -433,14 +443,12 @@ inferred block cipher plaintexts are the same
 or any pair of inferred block cipher ciphertexts are the same
 (\(h\), \(L\), \(\VV^i\), \(Y_j^i\)). 
 
-FIXME: the below is false as stated: need to introduce
-a notion of ``compatibility''. Simpler to consider
-compatibility with attacker than with world.
-
 Since responses in world Y are coin flips,
-the probability of a particular transcript, good or bad,
-in world Y is always simply \(2^-{\mtot n}\).
-For a ``good'' transcript, the probability in world X
+the probability of a 
+particular \(\tau \in \Tc\), good or bad,
+in world Y is always simply \(2^{-\mtot n}\).
+For a transcript \(\tau \in \Tg\),
+the probability in world X
 is the probability of all of those plaintext/ciphertext
 pairs being part of a given random permutation.
 This is 
