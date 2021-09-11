@@ -253,7 +253,7 @@ ie \(\HCTR[E_k]\) for \(k \sample \mathcal{K}\), while
 \(\HCTR[\Perm(n)]\) refers to \(\HCTR[\pi]\)
 for \(\pi \sample \Perm(n)\).
 
-\subsection{Hash function}
+\subsection{Hash function}\label{hproperties}
 For any nonzero polynomial \(p(h)\)
 in \(GF(2^n)\) 
 of degree \(d\), there are at most \(d\) values \(h\)
@@ -374,8 +374,8 @@ ie HCTR with all calls to the block cipher
 replaced with calls to a random permutation,
 and world Y (the ``ideal world'') to be \(\pm\rnd\),
 which maps every query to a random response such that
-all responses of the appropriate length are equally likely,
-and use the H-coefficient technique to bound
+all responses of the appropriate length are equally likely;
+we then use the H-coefficient technique to bound
 the distinguishing advantage between them.
 
 We use superscripts to distinguish between queries.
@@ -403,7 +403,7 @@ In world X, this information is:
     blockcipher call that is not used.
     For query \(i\), this is 
     \begin{displaymath}
-        B^i = \XCTR_\pi(S^i)[\abs{P^i}; nm^i-\abs{P^i}]
+        B^i = \XCTR_\pi(S^i)[\abs{P^i} - n; nm^i-\abs{P^i}]
     \end{displaymath}
     \item the hash key \(h\), given after all queries are complete
     \item the mask \(L\), given after all queries are complete
@@ -415,13 +415,15 @@ this information, giving it to them cannot make their performance worse.
 For \(j \in \{1 \ldots m^i-1\}\) we define \(S_j^i = S^i \xor \fromint(j)\),
 the block cipher inputs used in \(\XCTR\), and \(Y_j^i\) the corresponding
 outputs, so that \(Y_j^i = \pi(S_j^i)\) and 
-\(XCTR_\pi(S^i)[0;nm^i] = Y_1^i \Concat \cdots \Concat Y_m^i\).
+\(Y_1^i \Concat \cdots \Concat Y_{m^i-1}^i = XCTR_\pi(S^i)[0;n(m^i -1)] 
+= (N^i \xor W^i) \Concat B^i\).
 
 Given the full transcript, including \(h\) and \(L\),
 we can infer all pairs of block cipher plaintexts and ciphertexts.
 First we infer that \(h = \pi(0^n)\) and \(L = \pi(10^{n-1})\).
 Then for each query, we know \(T\), \(P\), \(C\) and \(B\)
-and so can infer:
+and so can infer
+(omitting the query superscript \(i\) for readability):
 \begin{align*}
     M \Concat N &= P \\
     V \Concat W &= C \\
@@ -431,9 +433,8 @@ and so can infer:
     S &= \MM \xor \VV \xor L\\ 
     S_i &= S \xor \fromint(i)\\
     Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor W) \Concat B \\
-    Y_i &= \pi(S_i) \\
+    Y_j &= \pi(S_j) \\
 \end{align*}
-(omitting the query superscript \(i\) for readability).
 We therefore infer \(\mtot = 2 + \sum_i m^i \) block cipher
 plaintext/ciphertext pairs from \(\mtot n\) bits of query response.
 
@@ -455,8 +456,13 @@ This is
 \(\prod_{i=0}^{\mtot -1}(1/(2^n - i))\).
 Thus for all \(\tau \in \Tg\)
 \(\prob{Y = \tau} \leq \prob{X = \tau}\). 
-Next we seek to bound
-\(\prob{Y \in \Tb}\).
+
+Next we seek to bound \(\prob{Y \in \Tb}\).
+We consider a case by case analysis of
+each of the kinds of collisions that are
+possible, and bound the probability in each case.
+
+FIXME table and cases go here
 
 \subsection{Security bound}
 
@@ -483,7 +489,6 @@ in the total size of all queries combined.  This is a little low
 for comfort; if a 128-bit blockcipher is used, it suggests a
 distinguisher can be effective given tens of terabytes of queries,
 which can quickly be reached over a fast link. 
-
 \cite{hctrquad} presents a much more satisfactory quadratic bound.
 However, it appears the proof of that bound has a critical error.
 
@@ -491,43 +496,109 @@ While presented in a different way, this proof is very similar
 to that of this paper: in the game RAND2, all queries get random
 responses, the block cipher inputs are inferred, and a collision
 in either the domain or range of the block cipher
-sets the ``bad'' flag.
+sets the ``bad'' flag. Where that paper refers to 
+\(C, \mathit{CC}, D\)
+we refer to as \(V, VV, W\). Where HCTR2 has
+\(S = \MM \xor \VV \xor L\), HCTR simply has
+\(S = \MM \xor \VV\). HCTR uses a fixed-length tweak
+of length \(t\); for simplicity we assume \(t = 0\)
+in what follows.
 
+For equation 17, the paper correctly claims that the collision
+\(Y_i^s = VV^{s'}\) occurs iff \(h\) is one of the zeroes
+of the polynomial \(Y_i^s \xor V^{s'} \xor H(T^{s'}, W^{s'})\).
+This polynomial has degree at most
+\(m^{s'}\), and so can have
+at most that many solutions. From this the paper infers
+a quadratic bound on the probability of any such collision
+given \(\sigma\) input blocks.
 
-
-Equation 17 is based on a correct belief that the assertion that
-the inferred ciphertext
-of the block cipher lookup for the first block in query \(s'\) is
-equal to the inferred ciphertext for subsequent block \(i\) in
-query \(s\)
-gives us a nonzero polynomial in \(h\)
-
-assertion that in game RAND2, 
-\(\prob{\mathit{CC}^{s'} = Y_i^s} \leq (m^{s'} + t)/2^n\) - in
-other words, that the probability that
-
-
-grows with the length of query \(s'\)
-, from
-which a quadra
-
-We see no easy fix to the proof
-without modifying the mode itself.
+In equation 22, the paper considers collisions of the form 
+\(S_i^s = MM^{s'}\) and argues that this is
+quadratically bounded for the same reason. However this equation
+is crucially different: unlike with \(Y_i^s\), the value we
+infer for \(S_i^s\) depends on \(h\). The values of \(h\)
+for which this collision occurs are
+the zeroes of the polynomial
+\(M^s \xor H(T^s, N^s)
+\xor V^s \xor H(T^s, W^s) \xor \fromint(i) 
+\xor M^{s'} \xor H(T^{s'}, N^{s'})\).
+This polynomial can have degree up to 
+\(\max(m^s, m^{s'})\), and so the bound of
+equation 17 does not apply.
+Consider an adversary who
+sends a single query with \(x+1\) blocks, followed by
+\(x\) queries of one block. For each \(i \in \{1\ldots x\}\) and
+for each \(s \in \{2 \ldots x + 1\}\), we have at best
+\(\prob{S_i^s = MM^{s'}} \leq (x + 1)/2^n\). Summing
+all these bounds for each such pair, we find that
+for queries with \(\sigma = 2x + 1\)
+get a bound for the overall probability of such a collision of 
+\((x^3 + x^2)/2^n\)---clearly a cubic, not quadratic bound.
 
 \section{Design of HCTR2}
+HCTR2 is intended as a successor to HCTR and retains several of the
+crucial features that make it an attractive design:
 \begin{itemize}
-    \item When hashing, we represent the length as \(\abs{X} + 1\)
-    \item We mix in an extra constant in the generation of \(S\) as discussed above.
-    \item we keep the XCTR mode to avoid unnecessary change and beceause it has efficiency
-    advantages, though we no longer need it for our proof.
-    \item We allow a variable-length tweak; copying GHASH\cite{gcm}, 
-    we include the length of message and tweak in the last block. 
-    \item We process the length and tweak first as a small optimization
-    \item We generate \(h \gets E_k(0)\)---note that the security of doing so is very sensitive to our other hashing choices
-    \item We specify endianness and the like so that implementations can be interoperable
-    \item We provide a sample implementation and test vectors
-    \item We rename some variables in our exposition and proof to allow some more standard usage
+    \item An unbalanced Feistel-like network based on universal
+    hashing, with a single block encryption on the narrow side.
+    This gives us excellent performance and parallelizability,
+    as well as very natural handling of messages that are not
+    a multiple of the block size.
+    \item Use of \(\MM \xor \VV\) in generating \(S\), which means
+    that an adversary's control over \(S\) is very limited for both
+    encryption and decryption queries; this is important in the
+    proof of security.
+    \item The CTR mode variant \(\XCTR\); while HCTR2 (unlike HCTR)
+    does not require this mode for its security proofs, 
+    we prefer not to change it unnecessarily, and this mode is
+    attractive for performance reasons when using a full-block-sized
+    nonce, since a full-block-sized counter need not be maintained
+    if messages are always short.
+\end{itemize}
+
+In designing HCTR2 we made the following changes from HCTR and design decisions:
+
+\begin{itemize}
+    \item To achieve a quadratic security bound, we introduce the extra
+    key-dependent constant \(L \gets E_k(1)\),
+    so that where HCTR has \(S = \MM \xor \VV\)
+    we have \(S = \MM \xor \VV \xor L\).
+    \item We eliminate the zero-length special case simply by adding one to the 
+    length before processing it, fixing the flaw found by \cite{kumarhctr}.
+    \item We allow a variable-length tweak. It is our intention to specify
+    HCTR2 precisely enough to be standardized, and permitting the tweak length
+    to vary is preferable to either fixing the tweak length for all users,
+    or specifying a family of HCTR2 variants parameterized by tweak length.
+    \item We process the tweak before the message, so that optimized 
+    implementations can process the tweak once instead of twice.
+    \item With the introduction of the constant \(L\)
+    our security proof no longer relies on the hash function
+    having property 2 of \cite[Section~3.3]{hctr}, so
+    we move the length block
+    to the front for further optimization.
+    \item Because the length block is always at the front and never zero, 
+    the number of blocks to be hashed can be precisely inferred from the degree
+    of the polynomial, so the length block precisely encodes only the length of 
+    the tweak. In the least significant bit we encode whether the message
+    is a ``round'' number of bits in length (ie a multiple of the block length)
+    then for messages that are not a ``round'' length, we pad with a 1 followed
+    by zeroes.
+    \item This encoding can eliminate a multiply for implementations that use
+    a fixed-length tweak but handle variable-length messages.
+    If all tweaks are of length \(t\), implementations can store
+    \(\fromint(2t + 2)h\), and use this or \(\fromint(2t + 2)h \xor h\)
+    depending on whether the message is a ``round'' length.
+    \item This encoding also means that the length block cannot be 0 or 1,
+    which is used in the security proof.  See \autoref{hproperties}
+    for the properties we require of the hash function.
+    \item Like AES-GCM, the key for HCTR2 is simply an AES key, and we 
+    generate \(h \gets E_k(0)\)---note that the security of doing so is
+    sensitive to the hashing choices above.
     \item We present a new proof, based on the H-coefficient technique, with a slightly tighter bound.
+    \item We specify endianness and the like so that implementations can be interoperable.
+    \item We rename some variables in our exposition and proof to allow some more standard usage.
+    \item We provide a sample implementation and test vectors.
 \end{itemize}
 
 \section{Implementation}
