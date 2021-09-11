@@ -120,10 +120,11 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     \item $\Concat$: bitstring concatenation
     \item \(\xor\): bitwise XOR
     \item $Y[a;l]$: the subsequence of $Y$ of length $l$ starting at the 0-based index $a$
-    \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
-    little-endian conversion of integers to binary
     \item \(n\): block size in bits; we assume \(n\) is even
-    \item $\pad_n(X) = X \Concat 0^v$
+    \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
+    little-endian conversion of integers to binary. 
+    \(\fromint(X)\) means \(\fromint_n(X)\).
+    \item $\pad(X) = X \Concat 0^v$
     where $v$ is the least integer $\geq 0$ such that $n$ divides $\abs{X} + v$
     \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
     \(n\)-bit block cipher with keyspace \(\mathcal{K}\);
@@ -152,11 +153,11 @@ refer to the polynomial
 We define a polynomial for tweak \(T\) and message \(M\). Where \(n\) divides
 \(\abs{M}\) this is
 \begin{displaymath}
-    H(T, M) = \poly(\fromint_{n}(2\abs{T} + 2) \Concat \pad_n(T) \Concat M \Concat 0^n)
+    H(T, M) = \poly(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat 0^n)
 \end{displaymath}
 in other instances this is
 \begin{displaymath}
-    H(T, M) = \poly(\fromint_{n}(2\abs{T} + 3) \Concat \pad_n(T) \Concat \pad_n(M \Concat 1) \Concat 0^n)
+    H(T, M) = \poly(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n)
 \end{displaymath}
 
 We then define our hash function \(H_h(T, M)\) as evaluation
@@ -470,7 +471,7 @@ FIXME table and cases go here
 \subsection{Hash function}
 HCTR uses a hash function based on the polynomial
 \begin{displaymath}
-    H(X) = \poly(\pad_n(X) \Concat \fromint_{n}(X) \Concat 0^n)
+    H(X) = \poly(\pad(X) \Concat \fromint(X) \Concat 0^n)
 \end{displaymath}
 Because it assumes a fixed-length tweak it simply sets \(X = M \Concat T\).
 However, HCTR requires that the resulting polynomial be nonzero
