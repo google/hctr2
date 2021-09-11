@@ -36,7 +36,6 @@
 \DeclareMathOperator{\pad}{pad}
 \DeclareMathOperator{\Perm}{Perm}
 \DeclareMathOperator{\poly}{poly}
-\DeclareMathOperator{\rnd}{rnd}
 \DeclareMathOperator{\XCTR}{XCTR}
 
 \title{HCTR2}
@@ -373,7 +372,7 @@ In what follows, we take world X (the ``real world'')
 to be \(\HCTR[\Perm(n)]\),
 ie HCTR with all calls to the block cipher
 replaced with calls to a random permutation,
-and world Y (the ``ideal world'') to be \(\pm\rnd\),
+and world Y (the ``ideal world'') to be \(\pm\widetilde{\mathrm{rnd}}\),
 which maps every query to a random response such that
 all responses of the appropriate length are equally likely;
 we then use the H-coefficient technique to bound
@@ -465,7 +464,31 @@ possible, and bound the probability in each case.
 
 FIXME table and cases go here
 
+Applying the H-coefficient technique, we therefore conclude that
+\begin{displaymath}
+    \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(\sigma, t)] \leq
+    \prob{Y \in \Tb} \leq \mathrm{FIXME}
+\end{displaymath}
+
 \subsection{Security bound}
+By a standard substitution argument we have that
+\begin{displaymath}
+    \advantage{\HCTR[\Perm(n)]}{\HCTR[E]}[(\sigma, t)] \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')]
+\end{displaymath}
+where \(t'\) is a small constant
+representing the per-block cost of simulating HCTR2.
+Since \(q < \sigma\), Halevi and Rogaway's PRP-RND lemma
+(\cite{cmc}, Appendix C, Lemma 6) tells us that
+\begin{displaymath}
+    \advantage{\pm \widetilde{\mathrm{prp}}}{\pm\widetilde{\mathrm{rnd}}}[(\sigma, t)] \leq 2^{-n}\binom{\sigma}{2} \leq 2^{-n}\frac{\sigma^2}{2}
+\end{displaymath}
+Putting these together with our main lemma, we have that
+\begin{displaymath}
+    \advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(\sigma, t)] \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')]
+    + 2^{-n}\frac{\sigma^2}{2}
+    + \mathrm{FIXME}
+\end{displaymath}
+
 
 \section{HCTR issues}\label{hctrflaws}
 \subsection{Hash function}
@@ -515,7 +538,7 @@ a quadratic bound on the probability of any such collision
 given \(\sigma\) input blocks.
 
 In equation 22, the paper considers collisions of the form 
-\(S_i^s = MM^{s'}\) and argues that this is
+\(S_i^s = MM^{s'}\) and asserts that they are
 quadratically bounded for the same reason. However this equation
 is crucially different: unlike with \(Y_i^s\), the value we
 infer for \(S_i^s\) depends on \(h\). The values of \(h\)
