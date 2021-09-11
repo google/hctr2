@@ -473,19 +473,22 @@ Applying the H-coefficient technique, we therefore conclude that
 \subsection{Security bound}
 By a standard substitution argument we have that
 \begin{displaymath}
-    \advantage{\HCTR[\Perm(n)]}{\HCTR[E]}[(\sigma, t)] \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')]
+    \advantage{\HCTR[\Perm(n)]}{\HCTR[E]}[(\sigma, t)]
+    \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')]
 \end{displaymath}
 where \(t'\) is a small constant
 representing the per-block cost of simulating HCTR2.
 Since \(q < \sigma\), Halevi and Rogaway's PRP-RND lemma
 (\cite{cmc}, Appendix C, Lemma 6) tells us that
 \begin{displaymath}
-    \advantage{\pm \widetilde{\mathrm{prp}}}{\pm\widetilde{\mathrm{rnd}}}[(\sigma, t)] \leq 2^{-n}\binom{\sigma}{2} \leq 2^{-n}\frac{\sigma^2}{2}
+    \advantage{\pm \widetilde{\mathrm{prp}}}{\pm\widetilde{\mathrm{rnd}}}[(\sigma, t)] 
+    \leq \left.\binom{\sigma}{2}\middle/2^n\right.
+    \leq \sigma^2/2^{n+1}
 \end{displaymath}
 Putting these together with our main lemma, we have that
 \begin{displaymath}
     \advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(\sigma, t)] \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')]
-    + 2^{-n}\frac{\sigma^2}{2}
+    + \sigma^2/2^{n+1}
     + \mathrm{FIXME}
 \end{displaymath}
 
