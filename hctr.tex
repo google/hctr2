@@ -118,7 +118,7 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     \item $\lambda$: the empty string $\abs{\lambda} = 0$
     \item $\Concat$: bitstring concatenation
     \item \(\xor\): bitwise XOR
-    \item $Y[a;l]$: the subsequence of $Y$ of length $l$ starting at the 0-based index $a$
+    \item $Y[a;l]$: the substring of $Y$ of length $l$ starting at the 0-based index $a$
     \item \(n\): block size in bits; we assume \(n\) is even
     \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
     little-endian conversion of integers to binary. 
@@ -154,7 +154,7 @@ We define a polynomial for tweak \(T\) and message \(M\). Where \(n\) divides
 \begin{displaymath}
     H(T, M) = \poly(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat 0^n)
 \end{displaymath}
-in other instances this is
+otherwise this is
 \begin{displaymath}
     H(T, M) = \poly(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n)
 \end{displaymath}
@@ -262,8 +262,7 @@ We depend on the following properties of the map from
 \(H(T, M)\) to polynomials:
 \begin{itemize}
     \item The map is injective
-    \item The first term of \(H(T, M)\) is always nonzero,
-    and so the polynomial is of degree exactly
+    \item The polynomial is of degree at least 1 and at most
     \begin{displaymath}
         d(T, M) = 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
     \end{displaymath}
@@ -281,10 +280,11 @@ From this we infer three properties of \(H_h(T, M)\):
     \begin{displaymath}
         \probsub{h\sample{\bin^n}}{H_h(T, M) = g} \leq d(T, M)/2^n
     \end{displaymath}
-    Proof: since \(d(T, M) \geq 1\)
-    the polynomial \(H(T, M) \xor g\) has the same degree,
+    Proof: since the degree of \(H(T, M)\) is at least 1,
+    the polynomial \(H(T, M) \xor g\) 
     is nonzero,
-    and therefore has at most that many zeroes.
+    has the same degree,
+    and therefore has at most \(d(T, M)\) zeroes.
     \item[Property 2] 
     For any \((T_1, M_1) \neq (T_2, M_2)\) and any \(g \in \bin^n\)
     \begin{align*}
@@ -456,7 +456,7 @@ This is
 Thus for all \(\tau \in \Tg\)
 \(\prob{Y = \tau} \leq \prob{X = \tau}\). 
 
-Next we seek to bound \(\prob{Y \in \Tb}\).
+Next we bound \(\prob{Y \in \Tb}\).
 We consider a case by case analysis of
 each of the kinds of collisions that are
 possible, and bound the probability in each case.
@@ -477,7 +477,7 @@ By a standard substitution argument we have that
 \end{displaymath}
 where \(t'\) is a small constant
 representing the per-block cost of simulating HCTR2.
-Since \(q < \sigma\), Halevi and Rogaway's PRP-RND lemma
+Since \(q \leq \sigma\), Halevi and Rogaway's PRP-RND lemma
 (\cite{cmc}, Appendix C, Lemma 6) tells us that
 \begin{displaymath}
     \advantage{\pm \widetilde{\mathrm{prp}}}{\pm\widetilde{\mathrm{rnd}}}[(\sigma, t)] 
@@ -531,7 +531,7 @@ we refer to as \(V, VV, W\). Where HCTR2 has
 of length \(t\); for simplicity we assume \(t = 0\)
 in what follows.
 
-For equation 17, the paper correctly claims that the collision
+For equation 17, the paper observes that the collision
 \(Y_i^s = VV^{s'}\) occurs iff \(h\) is one of the zeroes
 of the polynomial \(Y_i^s \xor V^{s'} \xor H(T^{s'}, W^{s'})\).
 This polynomial has degree at most
@@ -622,7 +622,7 @@ See \autoref{hproperties}
 for the properties we require of the hash function.
 
 To fix the \cite{kumarhctr} flaw, we eliminate the zero-length special case
-by adding one to the length before processing it.
+by adding one to the length before encoding it.
 
 We swap the tweak and the message, so that implementations need only
 process the tweak once for each block, instead of twice.
