@@ -76,8 +76,8 @@ and report on its implementation on x86-64 and ARM64.
         \ffigbox{
             \begin{algorithmic}[0]
                 \Procedure{\(HCTR2_{k, T}\)}{$P$}
-                \State $h \gets E_k(0^n)$
-                \State $L \gets E_k(10^{n-1})$
+                \State $h \gets E_k(\fromint(0))$
+                \State $L \gets E_k(\fromint(1))$
                 \State $M \Concat N \gets P$, $|M| = n$
                 \State $\MM \gets M \xor H_h(T, N)$
                 \State $\VV \gets E_k(\MM)$
@@ -94,8 +94,8 @@ and report on its implementation on x86-64 and ARM64.
         \ffigbox{
             \begin{algorithmic}[0]
                 \Procedure{\(HCTR2_{k, T}^{-1}\)}{$C$}
-                \State $h \gets E_k(0^n)$
-                \State $L \gets E_k(10^{n-1})$
+                \State $h \gets E_k(\fromint(0))$
+                \State $L \gets E_k(\fromint(1))$
                 \State $V \Concat W \gets C$, $|V| = n$
                 \State $\VV \gets V \xor H_h(T, W)$
                 \State $\MM \gets E_k^{-1}(\VV)$
@@ -420,7 +420,7 @@ outputs, so that \(Y_j^i = \pi(S_j^i)\) and
 
 Given the full transcript, including \(h\) and \(L\),
 we can infer all pairs of block cipher plaintexts and ciphertexts.
-First we infer that \(h = \pi(0^n)\) and \(L = \pi(10^{n-1})\).
+First we infer that \(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\).
 Then for each query, we know \(T\), \(P\), \(C\) and \(B\)
 and so can infer
 (omitting the query superscript \(i\) for readability):
@@ -440,7 +440,7 @@ plaintext/ciphertext pairs from \(\mtot n\) bits of query response.
 
 A transcript is ``bad'' (\(\tau \in \Tb\)) iff any pair of 
 inferred block cipher plaintexts are the same
-(\(0^n\), \(10^{n-1}\), \(\MM^i\), \(S_j^i\))
+(\(\fromint(0)\), \(\fromint(1)\), \(\MM^i\), \(S_j^i\))
 or any pair of inferred block cipher ciphertexts are the same
 (\(h\), \(L\), \(\VV^i\), \(Y_j^i\)). 
 
@@ -561,7 +561,7 @@ In designing HCTR2 we made the following changes from HCTR and design decisions:
 
 \begin{itemize}
     \item To achieve a quadratic security bound, we introduce the extra
-    key-dependent constant \(L \gets E_k(1)\),
+    key-dependent constant \(L \gets E_k(\fromint(1))\),
     so that where HCTR has \(S = \MM \xor \VV\)
     we have \(S = \MM \xor \VV \xor L\).
     \item We eliminate the zero-length special case simply by adding one to the 
@@ -593,7 +593,7 @@ In designing HCTR2 we made the following changes from HCTR and design decisions:
     which is used in the security proof.  See \autoref{hproperties}
     for the properties we require of the hash function.
     \item Like AES-GCM, the key for HCTR2 is simply an AES key, and we 
-    generate \(h \gets E_k(0)\)---note that the security of doing so is
+    generate \(h \gets E_k(\fromint(0))\)---note that the security of doing so is
     sensitive to the hashing choices above.
     \item We present a new proof, based on the H-coefficient technique, with a slightly tighter bound.
     \item We specify endianness and the like so that implementations can be interoperable.
