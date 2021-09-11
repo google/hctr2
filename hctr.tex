@@ -181,7 +181,6 @@ we refer to as \(V, VV, W\)
 so that we can use \(P, C\) to refer to plaintext and ciphertext.
 
 \section{Security of HCTR2}
-
 \subsection{Definitions}
 
 The block cipher
@@ -494,6 +493,7 @@ Putting these together with our main lemma, we have that
 
 
 \section{HCTR issues}\label{hctrflaws}
+Two serious flaws in HCTR motivated the design of HCTR2.
 \subsection{Hash function}
 HCTR uses a hash function based on the polynomial
 \begin{displaymath}
@@ -588,49 +588,75 @@ In designing HCTR2 we made the following changes from HCTR and design decisions:
 
 \begin{itemize}
     \item To achieve a quadratic security bound, we introduce the extra
-    key-dependent constant \(L \gets E_k(\fromint(1))\),
+    key-dependent constant \(L\),
     so that where HCTR has \(S = \MM \xor \VV\)
     we have \(S = \MM \xor \VV \xor L\).
-    \item We eliminate the zero-length special case simply by adding one to the 
-    length before processing it, fixing the flaw found by \cite{kumarhctr}.
     \item We allow a variable-length tweak. It is our intention to specify
     HCTR2 precisely enough to be standardized, and permitting the tweak length
     to vary is preferable to either fixing the tweak length for all users,
     or specifying a family of HCTR2 variants parameterized by tweak length.
-    \item We process the tweak before the message, so that optimized 
-    implementations can process the tweak once instead of twice.
-    \item With the introduction of the constant \(L\)
-    our security proof no longer relies on the hash function
-    having property 2 of \cite[Section~3.3]{hctr}, so
-    we move the length block
-    to the front for further optimization.
-    \item Because the length block is always at the front and never zero, 
-    the number of blocks to be hashed can be precisely inferred from the degree
-    of the polynomial, so the length block precisely encodes only the length of 
-    the tweak. In the least significant bit we encode whether the message
-    is a ``round'' number of bits in length (ie a multiple of the block length)
-    then for messages that are not a ``round'' length, we pad with a 1 followed
-    by zeroes.
-    \item This encoding can eliminate a multiply for implementations that use
-    a fixed-length tweak but handle variable-length messages.
-    If all tweaks are of length \(t\), implementations can store
-    \(\fromint(2t + 2)h\), and use this or \(\fromint(2t + 2)h \xor h\)
-    depending on whether the message is a ``round'' length.
-    \item This encoding also means that the length block cannot be 0 or 1,
-    which is used in the security proof.  See \autoref{hproperties}
-    for the properties we require of the hash function.
-    \item Like AES-GCM, the key for HCTR2 is simply an AES key, and we 
-    generate \(h \gets E_k(\fromint(0))\)---note that the security of doing so is
-    sensitive to the hashing choices above.
+    \item We derive \(h \gets E_k(\fromint(0))\)
+    and \(L \gets E_k(\fromint(1))\) from the AES key, to make use of the
+    mode more convenient.
+    \item We completely redesign the polynomial hash used.
     \item We present a new proof, based on the H-coefficient technique, with a slightly tighter bound.
     \item We specify endianness and the like so that implementations can be interoperable.
     \item We rename some variables in our exposition and proof to allow some more standard usage.
     \item We provide a sample implementation and test vectors.
 \end{itemize}
 
+\subsection{Hash function design}
+
+The polynomial hash used in HCTR2 is significantly different from
+that used in HCTR. Our design goals are:
+
+\begin{itemize}
+    \item fix the flaw described in \cite{kumarhctr}
+    \item allow a variable-length tweak
+    \item guarantee \(H(T, M) \neq h\), required
+    because \(h \gets E_k(\fromint(0))\)
+    \item allow implementations to precalculate as much as possible, to reduce multiplies
+\end{itemize}
+
+See \autoref{hproperties}
+for the properties we require of the hash function.
+
+To fix the \cite{kumarhctr} flaw, we eliminate the zero-length special case
+by adding one to the length before processing it.
+
+We swap the tweak and the message, so that implementations need only
+process the tweak once for each block, instead of twice.
+
+With the introduction of the constant \(L\)
+our security proof no longer relies on the hash function
+having property 2 of \cite[Section~3.3]{hctr}.
+This allows us to move the length block first, so
+that implementations need only process it once per block.
+It is never zero, so its position in the
+polynomial can be inferred from the degree.
+
+This change means that \(\ceil{\abs{T}/n} + \ceil{\abs{M}/n}\)
+can be inferred from the degree of the
+polynomial. So the length block encodes
+only the length of the tweak, 
+with the least significant bit encoding 
+whether the message is
+block-multiple in length. If the message is not
+block-multiple, it is padded with a one followed
+by zeroes to a block-multiple length before hashing.
+
+This encoding can eliminate a multiply for implementations that use
+a fixed-length tweak but handle variable-length messages.
+If all tweaks are of length \(t\), implementations can store
+\(\fromint(2t + 2)h\), and use this or \(\fromint(2t + 2)h \xor h\)
+to start hashing, XORing this value directly with the
+first block of the tweak.
+
+This encoding also guarantees that the length block
+cannot have the value \(\fromint(1)\), which achieves
+our guarantee that \(H(T, M) \neq h\).
+
 \section{Implementation}
-
-
 
 \printbibliography[heading=bibintoc]
 
