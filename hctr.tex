@@ -25,6 +25,7 @@
 \newcommand*{\defeq}{\stackrel{\text{def}}{=}}
 \newcommand*{\MM}{\mathit{MM}}
 \newcommand*{\mtot}{m_{\mathrm{tot}}}
+\newcommand*{\qeq}{\stackrel{\text{?}}{=}}
 \newcommand*{\Tb}{\mathcal{T}_\mathrm{bad}}
 \newcommand*{\Tc}{\mathcal{T}_\mathrm{c}}
 \newcommand*{\Tg}{\mathcal{T}_\mathrm{good}}
@@ -185,7 +186,7 @@ so that we can use \(P, C\) to refer to plaintext and ciphertext.
 
 The block cipher
 $E$
-must be a super-pseudorandom permutation~\cite{concsym}:
+must be a super-pseudorandom permutation~\cite{concrete}:
 %
 \begin{align*}
     \advantage{\pm \mathrm{prp}}{E}[(A)] \defeq
@@ -402,7 +403,7 @@ In world X, this information is:
     blockcipher call that is not used.
     For query \(i\), this is 
     \begin{displaymath}
-        B^i = \XCTR_\pi(S^i)[\abs{P^i} - n; nm^i-\abs{P^i}]
+        D^i = \XCTR_\pi(S^i)[\abs{P^i} - n; nm^i-\abs{P^i}]
     \end{displaymath}
     \item the hash key \(h\), given after all queries are complete
     \item the mask \(L\), given after all queries are complete
@@ -415,12 +416,12 @@ For \(j \in \{1 \ldots m^i-1\}\) we define \(S_j^i = S^i \xor \fromint(j)\),
 the block cipher inputs used in \(\XCTR\), and \(Y_j^i\) the corresponding
 outputs, so that \(Y_j^i = \pi(S_j^i)\) and 
 \(Y_1^i \Concat \cdots \Concat Y_{m^i-1}^i = XCTR_\pi(S^i)[0;n(m^i -1)] 
-= (N^i \xor W^i) \Concat B^i\).
+= (N^i \xor W^i) \Concat D^i\).
 
 Given the full transcript, including \(h\) and \(L\),
 we can infer all pairs of block cipher plaintexts and ciphertexts.
 First we infer that \(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\).
-Then for each query, we know \(T\), \(P\), \(C\) and \(B\)
+Then for each query, we know \(T\), \(P\), \(C\) and \(D\)
 and so can infer
 (omitting the query superscript \(i\) for readability):
 \begin{align*}
@@ -431,7 +432,7 @@ and so can infer
     \VV &= \pi(\MM)\\
     S &= \MM \xor \VV \xor L\\ 
     S_i &= S \xor \fromint(i)\\
-    Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor W) \Concat B \\
+    Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor W) \Concat D \\
     Y_j &= \pi(S_j) \\
 \end{align*}
 We therefore infer \(\mtot = 2 + \sum_i m^i \) block cipher
@@ -439,9 +440,9 @@ plaintext/ciphertext pairs from \(\mtot n\) bits of query response.
 
 A transcript is ``bad'' (\(\tau \in \Tb\)) iff any pair of 
 inferred block cipher plaintexts are the same
-(\(\fromint(0)\), \(\fromint(1)\), \(\MM^i\), \(S_j^i\))
+(\(\MM^i\), \(S_j^i\), \(\fromint(0)\), \(\fromint(1)\))
 or any pair of inferred block cipher ciphertexts are the same
-(\(h\), \(L\), \(\VV^i\), \(Y_j^i\)). 
+(\(\VV^i\), \(Y_j^i\), \(h\), \(L\)).
 
 Since responses in world Y are coin flips,
 the probability of a 
@@ -461,6 +462,40 @@ We consider a case by case analysis of
 each of the kinds of collisions that are
 possible, and bound the probability in each case.
 
+Where we refer to \(s\), \(s'\), we assume that \(s < s'\).
+In the ideal world responses to queries are random,
+but some caution is required.
+If we know the adversary's query \(s'\), then conditioning on that,
+we cannot treat the response to query \(s\) as uniformly random;
+if the choice of later query depends on the earlier response,
+knowing the later query is information about the earlier response.
+However, conditioning on a query and all prior queries and responses,
+in world Y we still have that \(h\), \(L\), and the
+query response are uniformly random and independent,
+and so we can consider them in any order.
+
+\subsection{Range collisions}
+
+FIXME sum across all blocks
+
+\begin{itemize}
+    \item \(\VV^s \qeq \VV^{s'}\): Given both queries and responses,
+    this holds if \(V^s \xor H_h(T^s, C^s) = V^{s'} \xor H_h(T^{s'}, C^{s'})\);
+    by hash function property 2, this holds with probability
+    \(\max(d(T^s, C^s), d(T^{s'}, C^{s'}))/2^n\).
+    \item \(Y_j^s \qeq \VV^{s'}\): Given both queries and responses,
+    this holds if \(Y_j^s = V^{s'} \xor H_h(T^{s'}, C^{s'})\);
+    by hash function property 1, this holds with probability
+    \(\max(d(T^s, C^s), d(T^{s'}, C^{s'}))/2^n\).
+    \item \(VV^s \qeq Y_j^{s'}\): Given \(h\), all possible
+    values of \(Y_j^{s'}\) are equally likely to be inferred
+    from the query response, so this holds with probability
+    \(1/2^n\).
+    \item 
+
+
+\end{itemize}
+
 FIXME table and cases go here
 
 Applying the H-coefficient technique, we therefore conclude that
@@ -470,7 +505,7 @@ Applying the H-coefficient technique, we therefore conclude that
 \end{displaymath}
 
 \subsection{Security bound}
-By a standard substitution argument we have that
+By a standard substitution argument~\cite{cbcsec,concrete} we have that
 \begin{displaymath}
     \advantage{\HCTR[\Perm(n)]}{\HCTR[E]}[(\sigma, t)]
     \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')]
@@ -490,7 +525,6 @@ Putting these together with our main lemma, we have that
     + \sigma^2/2^{n+1}
     + \mathrm{FIXME}
 \end{displaymath}
-
 
 \section{HCTR issues}\label{hctrflaws}
 Two serious flaws in HCTR motivated the design of HCTR2.
