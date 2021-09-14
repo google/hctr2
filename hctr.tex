@@ -28,7 +28,7 @@
 \newcommand*{\Tb}{\mathcal{T}_\mathrm{bad}}
 \newcommand*{\Tc}{\mathcal{T}_\mathrm{c}}
 \newcommand*{\Tg}{\mathcal{T}_\mathrm{good}}
-\newcommand*{\VV}{\mathit{VV}}
+\newcommand*{\UU}{\mathit{UU}}
 
 \DeclareMathOperator{\fromint}{bin}
 \DeclareMathOperator{\GF}{GF}
@@ -79,11 +79,11 @@ and report on its implementation on x86-64 and ARM64.
                 \State $L \gets E_k(\fromint(1))$
                 \State $M \Concat N \gets P$, $|M| = n$
                 \State $\MM \gets M \xor H_h(T, N)$
-                \State $\VV \gets E_k(\MM)$
-                \State $S \gets \MM \xor \VV \xor L$
-                \State $W \gets N \xor \XCTR_k(S)[0;\abs{N}]$
-                \State $V \gets \VV \xor H_h(T, W)$
-                \State $C \gets V \Concat W$
+                \State $\UU \gets E_k(\MM)$
+                \State $S \gets \MM \xor \UU \xor L$
+                \State $V \gets N \xor \XCTR_k(S)[0;\abs{N}]$
+                \State $U \gets \UU \xor H_h(T, V)$
+                \State $C \gets U \Concat V$
                 \State \textbf{return} $C$
                 \EndProcedure
             \end{algorithmic}
@@ -95,11 +95,11 @@ and report on its implementation on x86-64 and ARM64.
                 \Procedure{\(HCTR2_{k, T}^{-1}\)}{$C$}
                 \State $h \gets E_k(\fromint(0))$
                 \State $L \gets E_k(\fromint(1))$
-                \State $V \Concat W \gets C$, $|V| = n$
-                \State $\VV \gets V \xor H_h(T, W)$
-                \State $\MM \gets E_k^{-1}(\VV)$
-                \State $S \gets \MM \xor \VV \xor L$
-                \State $N \gets W \xor \XCTR_k(S)[0;\abs{W}]$
+                \State $U \Concat V \gets C$, $|U| = n$
+                \State $\UU \gets U \xor H_h(T, V)$
+                \State $\MM \gets E_k^{-1}(\UU)$
+                \State $S \gets \MM \xor \UU \xor L$
+                \State $N \gets V \xor \XCTR_k(S)[0;\abs{V}]$
                 \State $M \gets \MM \xor H_h(T, N)$
                 \State $P \gets M \Concat N$
                 \State \textbf{return} $P$
@@ -177,7 +177,7 @@ thus generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) b
 
 From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
 Note that what is referred to in \cite{hctr,hctrquad} as \(C, \mathit{CC}, D\)
-we refer to as \(V, VV, W\)
+we refer to as \(U, UU, V\)
 so that we can use \(P, C\) to refer to plaintext and ciphertext.
 
 \section{Security of HCTR2}
@@ -416,7 +416,7 @@ For \(j \in \{1 \ldots m^i-1\}\) we define \(S_j^i = S^i \xor \fromint(j)\),
 the block cipher inputs used in \(\XCTR\), and \(Y_j^i\) the corresponding
 outputs, so that \(Y_j^i = \pi(S_j^i)\) and 
 \(Y_1^i \Concat \cdots \Concat Y_{m^i-1}^i = \XCTR_\pi(S^i)[0;n(m^i -1)] 
-= (N^i \xor W^i) \Concat D^i\).
+= (N^i \xor V^i) \Concat D^i\).
 
 Given the full transcript, including \(h\) and \(L\),
 we can infer all pairs of block cipher plaintexts and ciphertexts.
@@ -426,13 +426,13 @@ and so can infer
 (omitting the query superscript \(i\) for readability):
 \begin{align*}
     M \Concat N &= P \\
-    V \Concat W &= C \\
+    U \Concat V &= C \\
     \MM &= M \xor H_h(T, N)\\
-    \VV &= V \xor H_h(T, W)\\
-    \VV &= \pi(\MM)\\
-    S &= \MM \xor \VV \xor L\\ 
+    \UU &= U \xor H_h(T, V)\\
+    \UU &= \pi(\MM)\\
+    S &= \MM \xor \UU \xor L\\ 
     S_i &= S \xor \fromint(i)\\
-    Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor W) \Concat D \\
+    Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor V) \Concat D \\
     Y_j &= \pi(S_j) \\
 \end{align*}
 We therefore infer \(\sigma_m = 2 + \sum_i m^i \) block cipher
@@ -442,7 +442,7 @@ A transcript is ``bad'' (\(\tau \in \Tb\)) iff any pair of
 inferred block cipher plaintexts are the same
 (\(\MM^i\), \(S_j^i\), \(\fromint(0)\), \(\fromint(1)\))
 or any pair of inferred block cipher ciphertexts are the same
-(\(\VV^i\), \(Y_j^i\), \(h\), \(L\)).
+(\(\UU^i\), \(Y_j^i\), \(h\), \(L\)).
 
 Since responses in world Y are coin flips,
 the probability of a 
@@ -479,15 +479,15 @@ and so we can consider them in any order.
 FIXME sum across all blocks
 
 \begin{itemize}
-    \item \(\VV^s \qeq \VV^{s'}\): Given both queries and responses,
-    this holds if \(V^s \xor H_h(T^s, C^s) = V^{s'} \xor H_h(T^{s'}, C^{s'})\);
+    \item \(\UU^s \qeq \UU^{s'}\): Given both queries and responses,
+    this holds if \(U^s \xor H_h(T^s, C^s) = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
     by hash function property 2, this holds with probability
     \(\max(d(T^s, C^s), d(T^{s'}, C^{s'}))/2^n\).
-    \item \(Y_j^s \qeq \VV^{s'}\): Given both queries and responses,
-    this holds if \(Y_j^s = V^{s'} \xor H_h(T^{s'}, C^{s'})\);
+    \item \(Y_j^s \qeq \UU^{s'}\): Given both queries and responses,
+    this holds if \(Y_j^s = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
     by hash function property 1, this holds with probability
     \(\max(d(T^s, C^s), d(T^{s'}, C^{s'}))/2^n\).
-    \item \(VV^s \qeq Y_j^{s'}\): Given \(h\), all possible
+    \item \(UU^s \qeq Y_j^{s'}\): Given \(h\), all possible
     values of \(Y_j^{s'}\) are equally likely to be inferred
     from the query response, so this holds with probability
     \(1/2^n\).
@@ -559,15 +559,15 @@ responses, the block cipher inputs are inferred, and a collision
 in either the domain or range of the block cipher
 sets the ``bad'' flag. Where that paper refers to 
 \(C, \mathit{CC}, D\)
-we refer to as \(V, VV, W\). Where HCTR2 has
-\(S = \MM \xor \VV \xor L\), HCTR simply has
-\(S = \MM \xor \VV\). HCTR uses a fixed-length tweak
+we refer to as \(U, UU, V\). Where HCTR2 has
+\(S = \MM \xor \UU \xor L\), HCTR simply has
+\(S = \MM \xor \UU\). HCTR uses a fixed-length tweak
 of length \(t\); for simplicity we assume \(t = 0\)
 in what follows.
 
 For equation 17, the paper observes that the collision
-\(Y_i^s = VV^{s'}\) occurs iff \(h\) is one of the zeroes
-of the polynomial \(Y_i^s \xor V^{s'} \xor H(T^{s'}, W^{s'})\).
+\(Y_i^s = UU^{s'}\) occurs iff \(h\) is one of the zeroes
+of the polynomial \(Y_i^s \xor U^{s'} \xor H(T^{s'}, V^{s'})\).
 This polynomial has degree at most
 \(m^{s'}\), and so can have
 at most that many solutions. From this the paper infers
@@ -582,7 +582,7 @@ infer for \(S_i^s\) depends on \(h\). The values of \(h\)
 for which this collision occurs are
 the zeroes of the polynomial
 \(M^s \xor H(T^s, N^s)
-\xor V^s \xor H(T^s, W^s) \xor \fromint(i) 
+\xor U^s \xor H(T^s, V^s) \xor \fromint(i) 
 \xor M^{s'} \xor H(T^{s'}, N^{s'})\).
 This polynomial can have degree up to 
 \(\max(m^s, m^{s'})\), and so the bound of
@@ -606,7 +606,7 @@ crucial features that make it an attractive design:
     This gives us excellent performance and parallelizability,
     as well as very natural handling of messages that are not
     a multiple of the block size.
-    \item Use of \(\MM \xor \VV\) in generating \(S\), which means
+    \item Use of \(\MM \xor \UU\) in generating \(S\), which means
     that an adversary's control over \(S\) is very limited for both
     encryption and decryption queries; this is important in the
     proof of security.
@@ -623,8 +623,8 @@ In designing HCTR2 we made the following changes from HCTR and design decisions:
 \begin{itemize}
     \item To achieve a quadratic security bound, we introduce the extra
     key-dependent constant \(L\),
-    so that where HCTR has \(S = \MM \xor \VV\)
-    we have \(S = \MM \xor \VV \xor L\).
+    so that where HCTR has \(S = \MM \xor \UU\)
+    we have \(S = \MM \xor \UU \xor L\).
     \item We allow a variable-length tweak. It is our intention to specify
     HCTR2 precisely enough to be standardized, and permitting the tweak length
     to vary is preferable to either fixing the tweak length for all users,
