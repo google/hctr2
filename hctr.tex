@@ -236,11 +236,11 @@ is the set of all adversaries taking at most \(t\) time,
 such that the total of all blocks sent in queries is
 at most \(\sigma\) ie
 \begin{displaymath}
-    \sum_i \ceil{|T^i|/n} + \ceil{|M^i|/n} \leq \sigma
+    \sum_s \ceil{|T^s|/n} + \ceil{|M^s|/n} \leq \sigma
 \end{displaymath}
-and \(T^i, M^i\) are the tweak and message
+and \(T^s, M^s\) are the tweak and message
 (plaintext or ciphertext)
-presented in query \(i\).
+presented in query \(s\).
 
 We use \(\HCTR[\pi]\) to refer to HCTR2 in which invocation
 of the block cipher is replaced with invocation of the
@@ -378,18 +378,19 @@ all responses of the appropriate length are equally likely;
 we then use the H-coefficient technique to bound
 the distinguishing advantage between them.
 
-We use superscripts to distinguish between queries.
-An encryption query \((T^i, P^i)\) yields ciphertext \(C^i\)
-while a decryption query \((T^i, C^i)\)
-yields plaintext \(P^i\).
+We use superscripts to distinguish between queries;
+where we refer to \(s\), \(s'\), we assume that \(s < s'\).
+An encryption query \((T^s, P^s)\) yields ciphertext \(C^s\)
+while a decryption query \((T^s, C^s)\)
+yields plaintext \(P^s\).
 We forbid ``pointless queries'':
-encryption queries \((T^j, P^j)\)
-such that \((T^i, P^i) = (T^j, P^j)\) for some \(i < j\), 
-or decryption queries \((T^j, C^j)\)
-such that \((T^i, C^i) = (T^j, C^j)\) for some \(i < j\),
-whether query \(i\) was an encryption or decryption query.
+encryption queries \((T^{s'}, P^{s'})\)
+such that \((T^s, P^s) = (T^{s'}, P^{s'})\) for some \(s < s'\), 
+or decryption queries \((T^{s'}, C^{s'})\)
+such that \((T^s, C^s) = (T^{s'}, C^{s'})\) for some \(s < s'\),
+whether query \(s\) was an encryption or decryption query.
 
-For each query \(i\), let \(m^i = \ceil{\abs{P^i}/n} = \ceil{\abs{C^i}/n}\)
+For each query \(s\), let \(m^s = \ceil{\abs{P^s}/n} = \ceil{\abs{C^s}/n}\)
 be the number of blocks in the query.
 We give the adversary some 
 extra information
@@ -401,9 +402,9 @@ In world X, this information is:
     that is not a multiple of the block size,
     this is the extra output from the last
     blockcipher call that is not used.
-    For query \(i\), this is 
+    For query \(s\), this is 
     \begin{displaymath}
-        D^i = \XCTR_\pi(S^i)[\abs{P^i} - n; nm^i-\abs{P^i}]
+        D^s = \XCTR_\pi(S^s)[\abs{P^s} - n; nm^s-\abs{P^s}]
     \end{displaymath}
     \item the hash key \(h\), given after all queries are complete
     \item the mask \(L\), given after all queries are complete
@@ -412,11 +413,11 @@ In the ``ideal world'', random output of the expected
 length is substituted. Since the adversary can always ignore
 this information, giving it to them cannot make their performance worse.
 
-For \(j \in \{1 \ldots m^i-1\}\) we define \(S_j^i = S^i \xor \fromint(j)\),
-the block cipher inputs used in \(\XCTR\), and \(Y_j^i\) the corresponding
-outputs, so that \(Y_j^i = \pi(S_j^i)\) and 
-\(Y_1^i \Concat \cdots \Concat Y_{m^i-1}^i = \XCTR_\pi(S^i)[0;n(m^i -1)] 
-= (N^i \xor V^i) \Concat D^i\).
+For \(j \in \{1 \ldots m^s-1\}\) we define \(S_j^s = S^s \xor \fromint(j)\),
+the block cipher inputs used in \(\XCTR\), and \(Y_j^s\) the corresponding
+outputs, so that \(Y_j^s = \pi(S_j^s)\) and 
+\(Y_1^s \Concat \cdots \Concat Y_{m^s-1}^s = \XCTR_\pi(S^s)[0;n(m^s -1)] 
+= (N^s \xor V^s) \Concat D^s\).
 
 Given the full transcript, including \(h\) and \(L\),
 we can infer all pairs of block cipher plaintexts and ciphertexts.
@@ -435,14 +436,14 @@ and so can infer
     Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor V) \Concat D \\
     Y_j &= \pi(S_j) \\
 \end{align*}
-We therefore infer \(\sigma_m = 2 + \sum_i m^i \) block cipher
+We therefore infer \(\sigma_m = 2 + \sum_s m^s \) block cipher
 plaintext/ciphertext pairs from \(\sigma_m n\) bits of query response.
 
 A transcript is ``bad'' (\(\tau \in \Tb\)) iff any pair of 
 inferred block cipher plaintexts are the same
-(\(\MM^i\), \(S_j^i\), \(\fromint(0)\), \(\fromint(1)\))
+(\(\MM^s\), \(S_j^s\), \(\fromint(0)\), \(\fromint(1)\))
 or any pair of inferred block cipher ciphertexts are the same
-(\(\UU^i\), \(Y_j^i\), \(h\), \(L\)).
+(\(\UU^s\), \(Y_j^s\), \(h\), \(L\)).
 
 Since responses in world Y are coin flips,
 the probability of a 
@@ -462,7 +463,6 @@ We consider a case by case analysis of
 each of the kinds of collisions that are
 possible, and bound the probability in each case.
 
-Where we refer to \(s\), \(s'\), we assume that \(s < s'\).
 In the ideal world responses to queries are random,
 but some caution is required.
 If we know the adversary's query \(s'\), then conditioning on that,
