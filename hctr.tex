@@ -24,7 +24,6 @@
 \newcommand*{\Concat}{\Vert}
 \newcommand*{\defeq}{\stackrel{\text{def}}{=}}
 \newcommand*{\MM}{\mathit{MM}}
-\newcommand*{\mtot}{m_{\mathrm{tot}}}
 \newcommand*{\qeq}{\stackrel{\text{?}}{=}}
 \newcommand*{\Tb}{\mathcal{T}_\mathrm{bad}}
 \newcommand*{\Tc}{\mathcal{T}_\mathrm{c}}
@@ -83,7 +82,7 @@ and report on its implementation on x86-64 and ARM64.
                 \State $\VV \gets E_k(\MM)$
                 \State $S \gets \MM \xor \VV \xor L$
                 \State $W \gets N \xor \XCTR_k(S)[0;\abs{N}]$
-                \State $V \gets \VV \xor H_h(T, Z)$
+                \State $V \gets \VV \xor H_h(T, W)$
                 \State $C \gets V \Concat W$
                 \State \textbf{return} $C$
                 \EndProcedure
@@ -122,8 +121,8 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     \item $Y[a;l]$: the substring of $Y$ of length $l$ starting at the 0-based index $a$
     \item \(n\): block size in bits; we assume \(n\) is even
     \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
-    little-endian conversion of integers to binary. 
-    \(\fromint(X)\) means \(\fromint_n(X)\).
+    little-endian conversion of integers to binary; 
+    \(\fromint(X)\) means \(\fromint_n(X)\)
     \item $\pad(X) = X \Concat 0^v$
     where $v$ is the least integer $\geq 0$ such that $n$ divides $\abs{X} + v$
     \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
@@ -263,12 +262,12 @@ We depend on the following properties of the map from
 \(H(T, M)\) to polynomials:
 \begin{itemize}
     \item The map is injective
-    \item The polynomial is of degree at least 1 and at most
+    \item The constant term is always zero
+    \item The polynomial is never \(p(h) = 0\) or \(p(h) = h\).
+    \item The polynomial is of degree at most
     \begin{displaymath}
         d(T, M) = 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
     \end{displaymath}
-    \item The constant term is always zero
-    \item The polynomial is never \(h\).
 \end{itemize}
 Note that these are all considerations about the polynomial,
 not about the value \(H_h(T, M)\);
@@ -281,7 +280,8 @@ From this we infer three properties of \(H_h(T, M)\):
     \begin{displaymath}
         \probsub{h\sample{\bin^n}}{H_h(T, M) = g} \leq d(T, M)/2^n
     \end{displaymath}
-    Proof: since the degree of \(H(T, M)\) is at least 1,
+    Proof: since \(H(T, M)\) is nonzero and has
+    a zero constant term,
     the polynomial \(H(T, M) \xor g\) 
     is nonzero,
     has the same degree,
@@ -363,8 +363,8 @@ We prove that for all \(\tau \in \Tg\)
 \(\prob{Y = \tau} \leq \prob{X = \tau}\),
 and that \(\prob{Y \in \Tb} \leq \epsilon\).
 It follows that \(A(\tau) = 0\) for all \(\tau \in \Tg\),
-therefore that \(\prob{A(Y) = 1} \leq \epsilon\),
-and therefore that the distinguishing advantage
+and therefore that \(\prob{A(Y) = 1} \leq \epsilon\),
+from which we bound the distinguishing advantage:
 \(\prob{A(Y) = 1} - \prob{A(X) = 1} \leq \epsilon\).
 
 \subsection{Main lemma}\label{mainlemma}
@@ -415,7 +415,7 @@ this information, giving it to them cannot make their performance worse.
 For \(j \in \{1 \ldots m^i-1\}\) we define \(S_j^i = S^i \xor \fromint(j)\),
 the block cipher inputs used in \(\XCTR\), and \(Y_j^i\) the corresponding
 outputs, so that \(Y_j^i = \pi(S_j^i)\) and 
-\(Y_1^i \Concat \cdots \Concat Y_{m^i-1}^i = XCTR_\pi(S^i)[0;n(m^i -1)] 
+\(Y_1^i \Concat \cdots \Concat Y_{m^i-1}^i = \XCTR_\pi(S^i)[0;n(m^i -1)] 
 = (N^i \xor W^i) \Concat D^i\).
 
 Given the full transcript, including \(h\) and \(L\),
@@ -435,8 +435,8 @@ and so can infer
     Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor W) \Concat D \\
     Y_j &= \pi(S_j) \\
 \end{align*}
-We therefore infer \(\mtot = 2 + \sum_i m^i \) block cipher
-plaintext/ciphertext pairs from \(\mtot n\) bits of query response.
+We therefore infer \(\sigma_m = 2 + \sum_i m^i \) block cipher
+plaintext/ciphertext pairs from \(\sigma_m n\) bits of query response.
 
 A transcript is ``bad'' (\(\tau \in \Tb\)) iff any pair of 
 inferred block cipher plaintexts are the same
@@ -447,13 +447,13 @@ or any pair of inferred block cipher ciphertexts are the same
 Since responses in world Y are coin flips,
 the probability of a 
 particular \(\tau \in \Tc\), good or bad,
-in world Y is always simply \(2^{-\mtot n}\).
+in world Y is always simply \(2^{-\sigma_m n}\).
 For a transcript \(\tau \in \Tg\),
 the probability in world X
 is the probability of all of those plaintext/ciphertext
 pairs being part of a given random permutation.
 This is 
-\(\prod_{i=0}^{\mtot -1}(1/(2^n - i))\).
+\(\prod_{i=0}^{\sigma_m -1}(1/(2^n - i))\).
 Thus for all \(\tau \in \Tg\)
 \(\prob{Y = \tau} \leq \prob{X = \tau}\). 
 
@@ -508,7 +508,7 @@ Applying the H-coefficient technique, we therefore conclude that
 By a standard substitution argument~\cite{cbcsec,concrete} we have that
 \begin{displaymath}
     \advantage{\HCTR[\Perm(n)]}{\HCTR[E]}[(\sigma, t)]
-    \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')]
+    \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')]
 \end{displaymath}
 where \(t'\) is a small constant
 representing the per-block cost of simulating HCTR2.
