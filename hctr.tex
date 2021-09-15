@@ -426,6 +426,7 @@ outputs, so that \(Y_j^s = \pi(S_j^s)\) and
 \(Y_1^s \Concat \cdots \Concat Y_{m^s-1}^s = \XCTR_\pi(S^s)[0;n(m^s -1)] 
 = (N^s \xor V^s) \Concat D^s\).
 
+\subsubsection{Good and bad transcripts}
 Given the full transcript, including \(h\) and \(L\),
 we can infer all pairs of block cipher plaintexts and ciphertexts.
 First we infer that \(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\).
@@ -465,6 +466,7 @@ This is
 Thus for all \(\tau \in \Tg\)
 \(\prob{Y = \tau} \leq \prob{X = \tau}\). 
 
+\subsubsection{Case analysis of collisions}
 Next we bound \(\prob{Y \in \Tb}\).
 We consider a case by case analysis of
 each of the kinds of collisions that are
@@ -593,14 +595,17 @@ are equally likely and a single value causes
 the equation to hold, for a probability of
 \(1/2^n\).
 
+\subsubsection{Summing collision bounds}
 Given that most pairs have a probability of
-colliding of \(1/2^n\), we apply a strategy
-of starting from the assumption that all such
-pairs have this probability bound, and then
-applying a correction for the ones that don't,
-as we illustrate below.
+colliding of \(1/2^n\), 
+to establish an upper bound that any pair
+will collide across all of these cases,
+we start with the bound that would result
+if all pairs had a bound of \(1/2^n\),
+and then apply a correction for the ones that don't.
 
-To bound the probability an encryption query \(s'\)
+For example,
+to bound the probability an encryption query \(s'\)
 has some collision with the fixed values
 \(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\)
 we observe first that
@@ -667,18 +672,23 @@ is -1, reflecting the impossibility of the collision
 \(\fromint(0) \qeq \fromint(1)\).
 
 Thus our total correction factor is
+\(2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\), 
+giving an upper bound
+on the probability of a bad transcript of
 
 \begin{align*}
-    & 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1 \\
-    = & \sigma - 2q + q\sigma +  \frac{\sigma^2 - \sigma}{2} \\
-    \leq & \frac{1}{2}\sigma(\sigma + 2q + 1) \\
+    & \left.\left(2\binom{\sigma_m}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
+    \leq & \left.\left(2\binom{\sigma + 2}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
+    = & \left.\left(2\binom{\sigma}{2} + 4\sigma + 2 + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
+    = & \left.\left(3\sigma(\sigma - 1)/2 + (q + 5)\sigma - 2q + 1\right)\middle/2^n\right. \\
+    \leq & \left.\left(3\sigma^2 + (2q + 10)\sigma + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
 
 Applying the H-coefficient technique, we therefore conclude that
 \begin{align*}
     & \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(q, \sigma, t)] \\
     \leq & \prob{Y \in \Tb} \\
-    \leq & \sigma(\sigma + 2q + 1)/2^{n+ 1}
+    \leq & \left.\left(3\sigma^2 + (2q + 10)\sigma + 2\right)\middle/2^{n+1}\right.
 \end{align*}
 
 \subsection{Security bound}
@@ -698,10 +708,11 @@ Since \(q \leq \sigma\), Halevi and Rogaway's PRP-RND lemma
     \leq q^2/2^{n+1}
 \end{displaymath}
 Putting these together with our main lemma, we have that
-\begin{displaymath}
-    \advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(\sigma, t)] \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')]
-    + \sigma(\sigma + q + 1)/2^n
-\end{displaymath}
+\begin{align*}
+    &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(\sigma, t)] \\
+    \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')] \\
+    &+ \left.\left(3\sigma^2 + (2q + 10)\sigma + q^2 + 2\right)\middle/2^{n+1}\right. \\
+\end{align*}
 
 \section{HCTR issues}\label{hctrflaws}
 Two serious flaws in HCTR motivated the design of HCTR2.
@@ -809,7 +820,7 @@ In designing HCTR2 we made the following changes from HCTR and design decisions:
     to vary is preferable to either fixing the tweak length for all users,
     or specifying a family of HCTR2 variants parameterized by tweak length.
     \item We derive \(h \gets E_k(\fromint(0))\)
-    and \(L \gets E_k(\fromint(1))\) from the AES key, to make use of the
+    and \(L \gets E_k(\fromint(1))\) from the block cipher key, to make use of the
     mode more convenient.
     \item We completely redesign the polynomial hash used.
     \item We present a new proof, based on the H-coefficient technique, with a slightly tighter bound.
