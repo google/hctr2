@@ -390,10 +390,14 @@ or decryption queries \((T^{s'}, C^{s'})\)
 such that \((T^s, C^s) = (T^{s'}, C^{s'})\) for some \(s < s'\),
 whether query \(s\) was an encryption or decryption query.
 
-For each query \(s\), let \(m^s = \ceil{\abs{P^s}/n} = \ceil{\abs{C^s}/n}\)
+For each query \(s\), 
+let \(m^s = \ceil{\abs{P^s}/n} = \ceil{\abs{C^s}/n}\)
+be the number of blocks in the response,
+and let \(d^s = \ceil{\abs{T^s}/n} + m^s\)
 be the number of blocks in the query.
-We give the adversary some 
-extra information
+Note that \(d^s\) is the degree of the hash
+function polynomial used in query \(s\).
+We give the adversary some extra information
 which is included in the transcript.
 In world X, this information is:
 \begin{itemize}
@@ -537,8 +541,7 @@ In two cases, a collision is impossible.
 \end{itemize}
 
 There are a handful of cases where the probability may
-be greater than \(1/2^n\). FIXME assign queries
-a degree.
+be greater than \(1/2^n\).
 
 Considering first collisions with \(\MM^{s'}\) where
 query \(s'\) is an encryption query:
@@ -547,11 +550,11 @@ query \(s'\) is an encryption query:
     \item \(\MM^s \qeq \MM^{s'}\):
     this holds if \(M^s \xor H_h(T^s, N^s) = M^{s'} \xor H_h(T^{s'}, N^{s'})\);
     by hash function property 2, this holds with probability
-    \(\max(d(T^s, N^s), d(T^{s'}, N^{s'}))/2^n\).
+    \(\max(d^s, d^{s'})/2^n\).
     \item \(\fromint(0) \qeq \MM^{s'}\):
     this holds if \(\fromint(0) = M^{s'} \xor H_h(T^{s'}, N^{s'})\);
     by hash function property 1, this holds with probability
-    \(\d(T^{s'}, C^{s'})/2^n\).
+    \(d^{s'}/2^n\).
     \item \(\fromint(1) \qeq \MM^{s'}\): as above.
 \end{itemize}
 
@@ -569,15 +572,15 @@ query \(s'\) is a decryption query:
     \item \(\UU^s \qeq \UU^{s'}\): 
     this holds if \(U^s \xor H_h(T^s, V^s) = U^{s'} \xor H_h(T^{s'}, V^{s'})\);
     by hash function property 2, this holds with probability
-    \(\max(d(T^s, V^s), d(T^{s'}, V^{s'}))/2^n\).
+    \(\max(d^s, d^{s'})/2^n\).
     \item \(Y_j^s \qeq \UU^{s'}\):
     this holds if \(Y_j^s = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
     by hash function property 1, this holds with probability
-    \(\d(T^{s'}, C^{s'})/2^n\).
+    \(d^{s'}/2^n\).
     \item \(h \qeq \UU^{s'}\):
     this holds if \(h = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
     by hash function property 3, this holds with probability
-    \(\d(T^{s'}, C^{s'})/2^n\).
+    \(d^{s'}/2^n\).
 \end{itemize}
 
 As above, if query \(s'\) is an encryption query,
