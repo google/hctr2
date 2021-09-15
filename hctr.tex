@@ -393,7 +393,7 @@ whether query \(s\) was an encryption or decryption query.
 For each query \(s\), 
 let \(m^s = \ceil{\abs{P^s}/n} = \ceil{\abs{C^s}/n}\)
 be the number of blocks in the response,
-and let \(d^s = \ceil{\abs{T^s}/n} + m^s\)
+and let \(d^s = m^s + \ceil{\abs{T^s}/n}\)
 be the number of blocks in the query.
 Note that \(d^s\) is the degree of the hash
 function polynomial used in query \(s\).
@@ -589,6 +589,72 @@ queries and responses, all values of \(U^{s'}\)
 are equally likely and a single value causes
 the equation to hold, for a probability of
 \(1/2^n\).
+
+Since most pairs of blocks have probability \(1/2^n\) of
+colliding, to bound the total probability of collision,
+in each formula we start with twice the number of pairs 
+of blocks being considered
+(since we consider both plaintext and ciphertext collisions)
+multiplied by the base probability \(1/2^n\).
+We then correct this by subtracting
+the pairs where the probability is zero, and adding
+a correction factor for pairs where
+the probability is greater.
+
+The probability of two blocks within query \(s'\) colliding
+is bounded above by
+\begin{displaymath}
+    \frac{2\binom{m^{s'}}{2} - \binom{m^{s'} -1}{2}}{2^n}
+\end{displaymath}
+
+The probability an encryption query \(s'\)
+has some collision with the fixed values
+\(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\)
+is bounded above by
+\begin{displaymath}
+    \frac{4m^{s'} + 2(d^{s'} - 1)}{2^n}
+\end{displaymath}
+while the probability for a decryption query
+is bounded above by
+\begin{displaymath}
+    \frac{4m^{s'} + d^{s'} -1}{2^n}
+\end{displaymath}
+The max of these two formulas
+is the first formula, and we take that as our bound
+for the probability of fixed-value collisions.
+
+The probability that an encryption query \(s'\)
+has some collision with query \(s\) is bounded above by
+\begin{displaymath}
+    \frac{2m^sm^{s'} + \max(d^s, d^{s'}) -1}{2^n}
+\end{displaymath}
+while the probability for a decryption query
+is bounded above by
+\begin{displaymath}
+    \frac{2m^sm^{s'} + \max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)}{2^n}
+\end{displaymath}
+The first term of these formulas represents the 
+number of pairs of plaintexts and ciphertexts across
+the two queries, while the later terms are
+correction factors for collisions that have
+higher probabilities. The max of these two formulas
+is the second formula, and we take that as our bound
+for the probability of cross-query collisions.
+
+The probability of a collision within the fixed values
+is \(2 - 1\).
+
+Thus our overall bound on the probability the transcript is bad is
+
+\begin{displaymath}
+    \frac{
+        2\binom{\sigma_m}{2}
+        - \left(\sum_{s'}\binom{m^{s'}-1}{2}\right) 
+        + \left(\sum_{s'}2(d^{s'} - 1)\right) 
+        + \left(\sum_{s < s'} \max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)\right)
+        - 1
+    }{2^n}
+\end{displaymath}
 
 FIXME
 
