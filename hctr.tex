@@ -177,7 +177,7 @@ thus generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) b
 
 From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
 Note that what is referred to in \cite{hctr,hctrquad} as \(C, \mathit{CC}, D\)
-we refer to as \(U, UU, V\)
+we refer to as \(U, \UU, V\)
 so that we can use \(P, C\) to refer to plaintext and ciphertext.
 
 \section{Security of HCTR2}
@@ -474,29 +474,120 @@ in world Y we still have that \(h\), \(L\), and the
 query response are uniformly random and independent,
 and so we can consider them in any order.
 
-\subsection{Range collisions}
-
-FIXME sum across all blocks
+In most cases, the probability of a collision
+between two specific blocks is bounded by \(1/2^n\).
 
 \begin{itemize}
-    \item \(\UU^s \qeq \UU^{s'}\): Given both queries and responses,
-    this holds if \(U^s \xor H_h(T^s, C^s) = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
-    by hash function property 2, this holds with probability
-    \(\max(d(T^s, C^s), d(T^{s'}, C^{s'}))/2^n\).
-    \item \(Y_j^s \qeq \UU^{s'}\): Given both queries and responses,
-    this holds if \(Y_j^s = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
-    by hash function property 1, this holds with probability
-    \(\max(d(T^s, C^s), d(T^{s'}, C^{s'}))/2^n\).
-    \item \(UU^s \qeq Y_j^{s'}\): Given \(h\), all possible
-    values of \(Y_j^{s'}\) are equally likely to be inferred
-    from the query response, so this holds with probability
-    \(1/2^n\).
+    \item \(h \qeq L\): trivially has probability \(1/2^n\).
+    \item
+    \(h \qeq Y_j^{s'}\),
+    \(L \qeq Y_j^{s'}\),
+    \(\UU^s \qeq Y_j^{s'}\),
+    \(Y_i^s \qeq Y_j^{s'}\):
+    in each case, given \(h\), \(L\), query \(s'\), 
+    and all prior queries and responses, 
+    \(1/2^n\) possible responses to query \(s'\)
+    result in the desired equation holding.
+    \item
+    \(\UU^{s'} \qeq Y_j^{s'}\), 
+    \(Y_i{s'} \qeq Y_j^{s'}\): 
+    if \(s'\) is an encryption query
+    then given \(h\), \(L\), query \(s'\), and 
+    \(C^{s'}[0;jn]\), there is exactly one value of
+    \(C^{s'}[jn;n]\) that results in the equation holding.
+    If \(s'\) is a decryption query, the same reasoning holds
+    with \(P^{s'}\), \(C^{s'}\) swapped.
     \item 
-
-
+    \(\fromint(0) \qeq S_j^{s'}\),
+    \(\fromint(1) \qeq S_j^{s'}\),
+    \(\MM^s \qeq S_j^{s'}\),
+    \(S_i^s \qeq S_j^{s'}\):
+    if query \(s'\) is an encryption query,
+    then given \(h\), \(L\), query \(s'\), 
+    and all prior queries and responses,
+    there is exactly one response value \(U^{s'}\)
+    that results in the equation holding.
+    For a decryption query, 
+    there is exactly one response value \(M^{s'}\)
+    that results in the equation holding.
+    \item
+    \(\MM^{s'} \qeq S_j^{s'}\):
+    given \(h\), \(T^{s'}\), \(P^{s'}\), \(C^{s'}\),
+    there is exactly one value of \(L\)
+    which causes this equation to hold.
+    \item 
+    \(S_i^s \qeq \MM^{s'}\):
+    given \(h\) and all queries and responses,
+    there is exactly one value of \(L\)
+    which causes the equation to hold.
+    \item \(L \qeq \UU^{s'}\):
+    given \(h\) and all queries and responses,
+    there is exactly one value of \(L\)
+    which causes the equation to hold.
 \end{itemize}
 
-FIXME table and cases go here
+In two cases, a collision is impossible.
+
+\begin{itemize}
+    \item \(\fromint(0) \qeq \fromint(1)\): trivially impossible.
+    \item 
+    \(S_i^{s'} \qeq S_j^{s'}\):
+    this is impossible, 
+    \(S_i^{s'} \xor S_j^{s'} = \fromint(i) \xor \fromint(j)\).
+\end{itemize}
+
+There are a handful of cases where the probability may
+be greater than \(1/2^n\). FIXME assign queries
+a degree.
+
+Considering first collisions with \(\MM^{s'}\) where
+query \(s'\) is an encryption query:
+
+\begin{itemize}
+    \item \(\MM^s \qeq \MM^{s'}\):
+    this holds if \(M^s \xor H_h(T^s, N^s) = M^{s'} \xor H_h(T^{s'}, N^{s'})\);
+    by hash function property 2, this holds with probability
+    \(\max(d(T^s, N^s), d(T^{s'}, N^{s'}))/2^n\).
+    \item \(\fromint(0) \qeq \MM^{s'}\):
+    this holds if \(\fromint(0) = M^{s'} \xor H_h(T^{s'}, N^{s'})\);
+    by hash function property 1, this holds with probability
+    \(\d(T^{s'}, C^{s'})/2^n\).
+    \item \(\fromint(1) \qeq \MM^{s'}\): as above.
+\end{itemize}
+
+In each case, if query \(s'\) is a decryption query,
+then given \(h\), query \(s'\), and all prior
+queries and responses, all values of \(M^{s'}\)
+are equally likely and a single value causes
+the equation to hold, for a probability of
+\(1/2^n\).
+
+Similarly, considering collisions with \(\UU^{s'}\) where
+query \(s'\) is a decryption query:
+
+\begin{itemize}
+    \item \(\UU^s \qeq \UU^{s'}\): 
+    this holds if \(U^s \xor H_h(T^s, V^s) = U^{s'} \xor H_h(T^{s'}, V^{s'})\);
+    by hash function property 2, this holds with probability
+    \(\max(d(T^s, V^s), d(T^{s'}, V^{s'}))/2^n\).
+    \item \(Y_j^s \qeq \UU^{s'}\):
+    this holds if \(Y_j^s = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
+    by hash function property 1, this holds with probability
+    \(\d(T^{s'}, C^{s'})/2^n\).
+    \item \(h \qeq \UU^{s'}\):
+    this holds if \(h = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
+    by hash function property 3, this holds with probability
+    \(\d(T^{s'}, C^{s'})/2^n\).
+\end{itemize}
+
+As above, if query \(s'\) is an encryption query,
+then given \(h\), query \(s'\), and all prior
+queries and responses, all values of \(U^{s'}\)
+are equally likely and a single value causes
+the equation to hold, for a probability of
+\(1/2^n\).
+
+FIXME
 
 Applying the H-coefficient technique, we therefore conclude that
 \begin{displaymath}
@@ -559,14 +650,14 @@ responses, the block cipher inputs are inferred, and a collision
 in either the domain or range of the block cipher
 sets the ``bad'' flag. Where that paper refers to 
 \(C, \mathit{CC}, D\)
-we refer to as \(U, UU, V\). Where HCTR2 has
+we refer to as \(U, \UU, V\). Where HCTR2 has
 \(S = \MM \xor \UU \xor L\), HCTR simply has
 \(S = \MM \xor \UU\). HCTR uses a fixed-length tweak
 of length \(t\); for simplicity we assume \(t = 0\)
 in what follows.
 
 For equation 17, the paper observes that the collision
-\(Y_i^s = UU^{s'}\) occurs iff \(h\) is one of the zeroes
+\(Y_i^s = \UU^{s'}\) occurs iff \(h\) is one of the zeroes
 of the polynomial \(Y_i^s \xor U^{s'} \xor H(T^{s'}, V^{s'})\).
 This polynomial has degree at most
 \(m^{s'}\), and so can have
@@ -575,7 +666,7 @@ a quadratic bound on the probability of any such collision
 given \(\sigma\) input blocks.
 
 In equation 22, the paper considers collisions of the form 
-\(S_i^s = MM^{s'}\) and asserts that they are
+\(S_i^s = \MM^{s'}\) and asserts that they are
 quadratically bounded for the same reason. However this equation
 is crucially different: unlike with \(Y_i^s\), the value we
 infer for \(S_i^s\) depends on \(h\). The values of \(h\)
@@ -591,7 +682,7 @@ Consider an adversary who
 sends a single query with \(x+1\) blocks, followed by
 \(x\) queries of one block. For each \(i \in \{1\ldots x\}\) and
 for each \(s \in \{2 \ldots x + 1\}\), we have at best
-\(\prob{S_i^s = MM^{s'}} \leq (x + 1)/2^n\). Summing
+\(\prob{S_i^s = \MM^{s'}} \leq (x + 1)/2^n\). Summing
 all these bounds for each such pair, we find that
 for queries with \(\sigma = 2x + 1\)
 get a bound for the overall probability of such a collision of 
