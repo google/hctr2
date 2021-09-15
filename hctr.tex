@@ -130,15 +130,15 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     our concrete proposal uses AES, so \(n=128\) and \(\mathcal{K}\) is
     \(\bin^{128}\), \(\bin^{192}\), or \(\bin^{256}\)
     \item \(\mathcal{T}\): the set of permissible tweaks
-    \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^{n-1}-1\}}\bin^i\)
+    \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^{n-1}-2\}}\bin^i\)
     \item \(\mathcal{M}\): the set of permissible messages
-    \(\mathcal{M} = \bigcup_{i \in \{n\ldots2^{n-1}-1\}}\bin^i\)
+    \(\mathcal{M} = \bigcup_{i \in \{n\ldots2^{n-1}-2\}}\bin^i\)
 \end{itemize}
 We map bytes to bitstrings with \(\fromint_8\).
 
 \subsection{Polynomial hash function}
 We interpret \(n\)-bit blocks as little-endian field elements of \(\GF(2^n)\),
-so \(0010^{n-3}\) is interpreted as the element \(x^2\).
+so \(001 \Concat 0^{n-3}\) is interpreted as the element \(x^2\).
 Where \(n=128\) we reduce by
 \(1 + x + x^2 + x^7 + x^{128}\). Then let
 \begin{displaymath}
@@ -227,12 +227,14 @@ the distinguishing advantage of an adversary $A$ is:
         {A^{\bm{\pi},\bm{\pi}^{-1}}\Rightarrow 1}\right\rvert
     \\
     \intertext{We then define}
-    \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(\sigma, t)]
+    \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(q, \sigma, t)]
     \defeq {}&
-    \max_{A \in \mathcal{A}(\sigma, t)} \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(A)]
+    \max_{A \in \mathcal{A}(q, \sigma, t)} \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(A)]
 \end{align*}
-where \(\mathcal{A}(\sigma, t)\)
-is the set of all adversaries taking at most \(t\) time,
+where \(\mathcal{A}(q, \sigma, t)\)
+is the set of all adversaries 
+making at most \(q\) queries
+and taking at most \(t\) time,
 such that the total of all blocks sent in queries is
 at most \(\sigma\) ie
 \begin{displaymath}
@@ -396,7 +398,8 @@ be the number of blocks in the response,
 and let \(d^s = m^s + \ceil{\abs{T^s}/n}\)
 be the number of blocks in the query.
 Note that \(d^s\) is the degree of the hash
-function polynomial used in query \(s\).
+function polynomial used in query \(s\),
+and that \(\sigma = \sum_s d^s\).
 We give the adversary some extra information
 which is included in the transcript.
 In world X, this information is:
@@ -549,11 +552,11 @@ query \(s'\) is an encryption query:
 \begin{itemize}
     \item \(\MM^s \qeq \MM^{s'}\):
     this holds if \(M^s \xor H_h(T^s, N^s) = M^{s'} \xor H_h(T^{s'}, N^{s'})\);
-    by hash function property 2, this holds with probability
+    by hash function property 2, this holds with probability at most
     \(\max(d^s, d^{s'})/2^n\).
     \item \(\fromint(0) \qeq \MM^{s'}\):
     this holds if \(\fromint(0) = M^{s'} \xor H_h(T^{s'}, N^{s'})\);
-    by hash function property 1, this holds with probability
+    by hash function property 1, this holds with probability at most
     \(d^{s'}/2^n\).
     \item \(\fromint(1) \qeq \MM^{s'}\): as above.
 \end{itemize}
@@ -571,15 +574,15 @@ query \(s'\) is a decryption query:
 \begin{itemize}
     \item \(\UU^s \qeq \UU^{s'}\): 
     this holds if \(U^s \xor H_h(T^s, V^s) = U^{s'} \xor H_h(T^{s'}, V^{s'})\);
-    by hash function property 2, this holds with probability
+    by hash function property 2, this holds with probability at most
     \(\max(d^s, d^{s'})/2^n\).
     \item \(Y_j^s \qeq \UU^{s'}\):
     this holds if \(Y_j^s = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
-    by hash function property 1, this holds with probability
+    by hash function property 1, this holds with probability at most
     \(d^{s'}/2^n\).
     \item \(h \qeq \UU^{s'}\):
     this holds if \(h = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
-    by hash function property 3, this holds with probability
+    by hash function property 3, this holds with probability at most
     \(d^{s'}/2^n\).
 \end{itemize}
 
@@ -590,100 +593,114 @@ are equally likely and a single value causes
 the equation to hold, for a probability of
 \(1/2^n\).
 
-Since most pairs of blocks have probability \(1/2^n\) of
-colliding, to bound the total probability of collision,
-in each formula we start with twice the number of pairs 
-of blocks being considered
-(since we consider both plaintext and ciphertext collisions)
-multiplied by the base probability \(1/2^n\).
-We then correct this by subtracting
-the pairs where the probability is zero, and adding
-a correction factor for pairs where
-the probability is greater.
+Given that most pairs have a probability of
+colliding of \(1/2^n\), we apply a strategy
+of starting from the assumption that all such
+pairs have this probability bound, and then
+applying a correction for the ones that don't,
+as we illustrate below.
 
-The probability of two blocks within query \(s'\) colliding
-is bounded above by
-\begin{displaymath}
-    \frac{2\binom{m^{s'}}{2} - \binom{m^{s'} -1}{2}}{2^n}
-\end{displaymath}
-
-The probability an encryption query \(s'\)
+To bound the probability an encryption query \(s'\)
 has some collision with the fixed values
 \(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\)
-is bounded above by
+we observe first that
+there are two blocks in the fixed values
+and \(m^{s'}\) in query \(s'\), so there are
+\(2m^{s'}\) pairs of blocks across the two,
+and \(4m^{s'}\) opportunities for a collision, 
+considering both plaintext and ciphertext.
+If all pairs had collision probability \(1/2^n\),
+then the overall collision probability bound
+would be \(4m^{s'}/2^n\). However, there are
+two exceptions: the pairs
+\(\fromint(0) \qeq \MM^{s'}\) and
+\(\fromint(1) \qeq \MM^{s'}\). In each of these
+cases the probability bound is not \(1/2^n\) but
+\(d^{s'}/2^n\), We therefore apply a correction
+of \(2(d^{s'} - 1)\) to get a final probability bound of
 \begin{displaymath}
     \frac{4m^{s'} + 2(d^{s'} - 1)}{2^n}
 \end{displaymath}
-while the probability for a decryption query
+
+Similarly, the correction for a decryption query is
+\(d^{s'} - 1\) and therefore  the probability 
 is bounded above by
 \begin{displaymath}
     \frac{4m^{s'} + d^{s'} -1}{2^n}
 \end{displaymath}
-The max of these two formulas
-is the first formula, and we take that as our bound
-for the probability of fixed-value collisions.
+The largest of the two correction formulas is
+the first one, so we use that for our overall bound.
+Across all queries, the total
+correction will be
+\begin{align*}
+    &\sum_{s'} 2(d^{s'} - 1) \\
+    = & 2(\sigma - q)
+\end{align*}
 
-The probability that an encryption query \(s'\)
-has some collision with query \(s\) is bounded above by
-\begin{displaymath}
-    \frac{2m^sm^{s'} + \max(d^s, d^{s'}) -1}{2^n}
-\end{displaymath}
-while the probability for a decryption query
-is bounded above by
-\begin{displaymath}
-    \frac{2m^sm^{s'} + \max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)}{2^n}
-\end{displaymath}
-The first term of these formulas represents the 
-number of pairs of plaintexts and ciphertexts across
-the two queries, while the later terms are
-correction factors for collisions that have
-higher probabilities. The max of these two formulas
-is the second formula, and we take that as our bound
-for the probability of cross-query collisions.
+For a collision of two blocks within query \(s'\)
+the correction formula is negative:
+\(S_i^{s'} \qeq S_j^{s'}\) is an impossible collision, 
+so we subtract the number of such blocks:
+\(-\binom{m^{s'} -1}{2}\). However we have no good way
+to impose a useful lower bound on the negative sum
+\(\sum_{s'}-\binom{m^{s'} -1}{2}\) so we use the
+trivial lower bound of 0.
 
-The probability of a collision within the fixed values
-is \(2 - 1\).
+Where an encryption query \(s'\)
+may collide with query \(s\), the correction factor is 
+\(\max(d^s, d^{s'}) -1\), whereas for a decryption query
+it is \(\max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)\).
+Taking the max of these formulas and summing across
+all queries gives us a total correction of
+\begin{align*}
+    &\sum_{s < s'} \max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)\\
+    \leq & \sum_{s < s'} d^s + d^{s'} -1 + (m^s -1 )(d^{s'} -1)\\
+    = & (q-1)\sigma - \binom{q}{2} + \sum_{s < s'} (m^s -1 )(d^{s'} -1) \\
+    \leq & (q-1)\sigma - \binom{q}{2} + \sum_{s < s'} d^sd^{s'} \\
+    % fixme last step seems a bit loose
+    \leq & (q-1)\sigma - \binom{q}{2} + \binom{\sigma}{2} \\
+   \leq & (q-1)\sigma + \binom{\sigma}{2} \\
+\end{align*}
 
-Thus our overall bound on the probability the transcript is bad is
+The correction factor for collision between fixed values
+is -1, reflecting the impossibility of the collision
+\(\fromint(0) \qeq \fromint(1)\).
 
-\begin{displaymath}
-    \frac{
-        2\binom{\sigma_m}{2}
-        - \left(\sum_{s'}\binom{m^{s'}-1}{2}\right) 
-        + \left(\sum_{s'}2(d^{s'} - 1)\right) 
-        + \left(\sum_{s < s'} \max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)\right)
-        - 1
-    }{2^n}
-\end{displaymath}
+Thus our total correction factor is
 
-FIXME
+\begin{align*}
+    & 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1 \\
+    = & \sigma - 2q + q\sigma +  \frac{\sigma^2 - \sigma}{2} \\
+    \leq & \frac{1}{2}\sigma(\sigma + 2q + 1) \\
+\end{align*}
 
 Applying the H-coefficient technique, we therefore conclude that
-\begin{displaymath}
-    \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(\sigma, t)] \leq
-    \prob{Y \in \Tb} \leq \mathrm{FIXME}
-\end{displaymath}
+\begin{align*}
+    & \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(q, \sigma, t)] \\
+    \leq & \prob{Y \in \Tb} \\
+    \leq & \sigma(\sigma + 2q + 1)/2^{n+ 1}
+\end{align*}
 
 \subsection{Security bound}
 By a standard substitution argument~\cite{cbcsec,concrete} we have that
 \begin{displaymath}
-    \advantage{\HCTR[\Perm(n)]}{\HCTR[E]}[(\sigma, t)]
+    \advantage{\HCTR[\Perm(n)]}{\HCTR[E]}[(q, \sigma, t)]
     \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')]
 \end{displaymath}
 where \(t'\) is a small constant
-representing the per-block cost of simulating HCTR2.
+representing the per-block cost of simulating HCTR2, and
+\(\sigma + 2\) bounds the number of block cipher calls made by the simulator.
 Since \(q \leq \sigma\), Halevi and Rogaway's PRP-RND lemma
 (\cite{cmc}, Appendix C, Lemma 6) tells us that
 \begin{displaymath}
-    \advantage{\pm \widetilde{\mathrm{prp}}}{\pm\widetilde{\mathrm{rnd}}}[(\sigma, t)] 
-    \leq \left.\binom{\sigma}{2}\middle/2^n\right.
-    \leq \sigma^2/2^{n+1}
+    \advantage{\pm \widetilde{\mathrm{prp}}}{\pm\widetilde{\mathrm{rnd}}}[(q, \sigma, t)] 
+    \leq \left.\binom{q}{2}\middle/2^n\right.
+    \leq q^2/2^{n+1}
 \end{displaymath}
 Putting these together with our main lemma, we have that
 \begin{displaymath}
     \advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(\sigma, t)] \leq \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')]
-    + \sigma^2/2^{n+1}
-    + \mathrm{FIXME}
+    + \sigma(\sigma + q + 1)/2^n
 \end{displaymath}
 
 \section{HCTR issues}\label{hctrflaws}
@@ -741,9 +758,11 @@ is crucially different: unlike with \(Y_i^s\), the value we
 infer for \(S_i^s\) depends on \(h\). The values of \(h\)
 for which this collision occurs are
 the zeroes of the polynomial
-\(M^s \xor H(T^s, N^s)
-\xor U^s \xor H(T^s, V^s) \xor \fromint(i) 
-\xor M^{s'} \xor H(T^{s'}, N^{s'})\).
+\begin{displaymath}
+    M^s \xor H(T^s, N^s)
+    \xor U^s \xor H(T^s, V^s) \xor \fromint(i) 
+    \xor M^{s'} \xor H(T^{s'}, N^{s'})        
+\end{displaymath}
 This polynomial can have degree up to 
 \(\max(m^s, m^{s'})\), and so the bound of
 equation 17 does not apply.
