@@ -129,7 +129,7 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     \item $\Concat$: bitstring concatenation
     \item \(\xor\): bitwise XOR
     \item $Y[a;l]$: the substring of $Y$ of length $l$ starting at the 0-based index $a$
-    \item \(n\): block size in bits; we assume \(n\) is even
+    \item \(n\): block size in bits
     \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
     little-endian conversion of integers to binary; 
     \(\fromint(X)\) means \(\fromint_n(X)\)
@@ -280,10 +280,12 @@ We depend on the following properties of the map from
     \begin{displaymath}
         d(T, M) = 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
     \end{displaymath}
+    % FIXME nhuck@ comments that this is potentially confusing
 \end{itemize}
 Note that these are all considerations about the polynomial,
 not about the value \(H_h(T, M)\);
 for example we may have \(H_h(T, M) = h\) for some values of \(h\).
+% FIXME prove that the map is injective
 
 From this we infer three properties of \(H_h(T, M)\):
 \begin{description}
@@ -678,16 +680,16 @@ on the probability of a bad transcript of
 \begin{align*}
     & \left.\left(2\binom{\sigma_m}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
     \leq & \left.\left(2\binom{\sigma + 2}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
-    = & \left.\left(2\binom{\sigma}{2} + 4\sigma + 2 + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
-    = & \left.\left(3\sigma(\sigma - 1)/2 + (q + 5)\sigma - 2q + 1\right)\middle/2^n\right. \\
-    \leq & \left.\left(3\sigma^2 + (2q + 10)\sigma + 2\right)\middle/2^{n+1}\right. \\
+    = & \left.\left(2\left(\binom{\sigma}{2} + 2\sigma + 1\right) + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
+    = & \left.\left(3\sigma(\sigma - 1)/2 + q\sigma + 5\sigma - 2q + 1\right)\middle/2^n\right. \\
+    \leq & \left.\left(3\sigma^2 + 2q\sigma + 10\sigma + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
 
 Applying the H-coefficient technique, we therefore conclude that
 \begin{align*}
     & \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(q, \sigma, t)] \\
     \leq & \prob{Y \in \Tb} \\
-    \leq & \left.\left(3\sigma^2 + (2q + 10)\sigma + 2\right)\middle/2^{n+1}\right.
+    \leq & \left.\left(3\sigma^2 + 2q\sigma + 10\sigma + 2\right)\middle/2^{n+1}\right.
 \end{align*}
 
 \subsection{Security bound}
@@ -710,7 +712,7 @@ Putting these together with our main lemma, we have that
 \begin{align*}
     &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(\sigma, t)] \\
     \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')] \\
-    &+ \left.\left(3\sigma^2 + (2q + 10)\sigma + q^2 + 2\right)\middle/2^{n+1}\right. \\
+    &+ \left.\left(3\sigma^2 + 2q\sigma + 10\sigma + q^2 + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
 
 \section{HCTR issues}\label{hctrflaws}
@@ -794,7 +796,12 @@ crucial features that make it an attractive design:
     hashing, with a single block encryption on the narrow side.
     This gives us excellent performance and parallelizability,
     as well as very natural handling of messages that are not
-    a multiple of the block size.
+    a multiple of the block size. Contrast with eg HEH\cite{heh}:
+    while HCTR requires three passes, or two if passes are
+    run in parallel, HEH requires five, or three if run in parallel.
+    HEH also requires a ciphertext-stealing-like trick to
+    handle odd-sized messages, further increasing
+    latency especially for small messages.
     \item Use of \(\MM \xor \UU\) in generating \(S\), which means
     that an adversary's control over \(S\) is very limited for both
     encryption and decryption queries; this is important in the
@@ -822,7 +829,8 @@ In designing HCTR2 we made the following changes from HCTR and design decisions:
     and \(L \gets E_k(\fromint(1))\) from the block cipher key, to make use of the
     mode more convenient.
     \item We completely redesign the polynomial hash used.
-    \item We present a new proof, based on the H-coefficient technique, with a slightly tighter bound.
+    \item We present a new proof, based on the H-coefficient technique,
+    with a tighter bound.
     \item We specify endianness and the like so that implementations can be interoperable.
     \item We rename some variables in our exposition and proof to allow some more standard usage.
     \item We provide a sample implementation and test vectors.
