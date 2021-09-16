@@ -48,18 +48,35 @@
 \DeclareMathOperator{\poly}{poly}
 \DeclareMathOperator{\XCTR}{XCTR}
 
-\title{HCTR2}
+\title{Length-preserving encryption with HCTR2}
+\author{Paul Crowley and Nathan Huckleberry}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
+On modern processors HCTR\cite{hctr} is
+one of the most efficient constructions
+for building a tweakable super-pseudorandom permutation. However,
+a bug in the specification and another in the proof of\cite{hctrquad}
+invalidate the claimed security bound. We here present HCTR2,
+which fixes these issues and improves the
+security bound, performance and flexibility.
 \end{abstract}
 
 \section{Introduction}
-The construction HCTR\cite{hctr} is among the most efficient for 
-tweakable length-preserving encryption from a block cipher, using
-a single block cipher invocation and two \(GF(2^n)\) multiplies
+A symmetric encryption construction such as AES-GCM\cite{gcm}
+will produce a ciphertext which is several bytes larger than
+the plaintext, once the IV and MAC are included. However,
+there are several situations such as disk sector encryption
+where the ciphertext must be the exact same size as the
+plaintext, and what is required is a tweakable
+super-pseudorandom permutation\cite{cmc}. 
+\cite{adiantum} includes a detailed history of length-preserving encryption.
+Where AES and multiplication in \(GF(2^n)\) are hardware-accelerated,
+the construction HCTR\cite{hctr} is among the most efficient for 
+tweakable length-preserving encryption, using
+a single block cipher invocation and two multiplies
 per block. In this paper, we present a revised version, HCTR2.
 This revision addresses the following issues:
 \begin{itemize}
@@ -81,7 +98,6 @@ This revision addresses the following issues:
 \end{itemize}
 
 We know of no patents affecting use of HCTR2.
-\cite{adiantum} includes a detailed history of length-preserving encryption.
 We begin with the specification and proof for HCTR2, laying
 the groundwork for describing the issues with HCTR (\autoref{hctrissues}),
 after which we discuss HCTR2 design decisions
