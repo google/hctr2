@@ -60,18 +60,30 @@
 The construction HCTR\cite{hctr} is among the most efficient for 
 tweakable length-preserving encryption from a block cipher, using
 a single block cipher invocation and two \(GF(2^n)\) multiplies
-per block. Unfortunately, as presented it has two serious flaws.
-The first, observed in \cite{kumarhctr}, is that the hash function
-is not \(\epsilon\)-almost-XOR-universal\cite{eadu} as claimed.
-The second is that an error in the proof presented in \cite{hctrquad}
-invalidates the claimed quadratic security bound, leaving
-only an unsatisfactory cubic bound. 
+per block. In this paper, we present a revised version, HCTR2.
+This revision addresses the following issues:
+\begin{itemize}
+    \item \cite{kumarhctr} observes that the HCTR polynomial hash function
+    is not \(\epsilon\)-almost-XOR-universal\cite{eadu} as claimed.
+    HCTR2's hash function fixes this property.
+    \item An error in the proof presented in \cite{hctrquad}
+    invalidates the claimed security bound; with our revised
+    mode we can claim a tighter bound.
+    \item HCTR uses a fixed-length tweak. To make standardization
+    easier, HCTR2 handles a variable-length tweak.
+    \item HCTR's key is a block cipher key, plus an \(n\)-bit
+    hash key. To simplify deployment, HCTR2's key is simply
+    the block cipher key.
+    \item We modify the hash function to allow more precalculation
+    for greater performance.
+    \item We specify endianness and the like for interoperability.
+    \item We provide a sample implementation and test vectors.
+\end{itemize}
 
-This paper proposes a new revision, HCTR2, fixing these issues.
 We know of no patents affecting use of HCTR2.
 \cite{adiantum} includes a detailed history of length-preserving encryption.
 We begin with the specification and proof for HCTR2, laying
-the groundwork for describing the flaws with HCTR (\autoref{hctrflaws}),
+the groundwork for describing the issues with HCTR (\autoref{hctrissues}),
 after which we discuss HCTR2 design decisions
 and report on its implementation on x86-64 and ARM64.
 
@@ -715,8 +727,8 @@ Putting these together with our main lemma, we have that
     &+ \left.\left(3\sigma^2 + 2q\sigma + 10\sigma + q^2 + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
 
-\section{HCTR issues}\label{hctrflaws}
-Two serious flaws in HCTR motivated the design of HCTR2.
+\section{HCTR issues}\label{hctrissues}
+Two errors in previous work on HCTR are addressed in HCTR2.
 \subsection{Hash function}
 HCTR uses a hash function based on the polynomial
 \begin{displaymath}
@@ -739,8 +751,8 @@ in the total size of all queries combined.  This is a little low
 for comfort; if a 128-bit blockcipher is used, it suggests a
 distinguisher can be effective given tens of terabytes of queries,
 which can quickly be reached over a fast link. 
-\cite{hctrquad} presents a much more satisfactory quadratic bound.
-However, it appears the proof of that bound has a critical error.
+\cite{hctrquad} presents a much more satisfactory quadratic bound,
+but the proof has an error that invalidates the claimed bound.
 
 While presented in a different way, this proof is very similar
 to that of this paper: in the game RAND2, all queries get random
@@ -778,6 +790,8 @@ the zeroes of the polynomial
 This polynomial can have degree up to 
 \(\max(m^s, m^{s'})\), and so the bound of
 equation 17 does not apply.
+If queries are permitted to be of any length,
+this leads to a cubic security bound.
 Consider an adversary who
 sends a single query with \(x+1\) blocks, followed by
 \(x\) queries of one block. For each \(i \in \{1\ldots x\}\) and
@@ -786,7 +800,12 @@ for each \(s \in \{2 \ldots x + 1\}\), we have at best
 all these bounds for each such pair, we find that
 for queries with \(\sigma = 2x + 1\)
 get a bound for the overall probability of such a collision of 
-\((x^3 + x^2)/2^n\)---clearly a cubic, not quadratic bound.
+\((x^3 + x^2)/2^n\).
+
+\cite{nandimail} observes that a quadratic bound can be recovered
+if a bound \(l_\mathrm{max}\) is set on the maximum size of
+a single query; in this case we get a bound
+which is some small multiple of \(l_\mathrm{max}q\sigma/2^n\).
 
 \section{Design of HCTR2}
 HCTR2 is intended as a successor to HCTR and retains several of the
@@ -817,7 +836,9 @@ crucial features that make it an attractive design:
 In designing HCTR2 we made the following changes from HCTR and design decisions:
 
 \begin{itemize}
-    \item To achieve a quadratic security bound, we introduce the extra
+    \item To achieve a quadratic security bound
+    on queries of unbounded size,
+    we introduce the extra
     key-dependent constant \(L\),
     so that where HCTR has \(S = \MM \xor \UU\)
     we have \(S = \MM \xor \UU \xor L\).
