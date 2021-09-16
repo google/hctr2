@@ -4,6 +4,8 @@
 % license that can be found in the LICENSE file or at
 % https://opensource.org/licenses/MIT.
 
+%!BIB program = biber
+%!TeX program = lualatex
 %!TeX spellcheck = en-US
 
 \documentclass[letterpaper,11pt]{article}
@@ -16,6 +18,14 @@
 \usepackage[logic,probability,advantage,adversary,landau,sets,operators]{cryptocode}
 \usepackage{hyperref}
 \usepackage{tikz}
+
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Schola}
+\setsansfont{TeX Gyre Heros}
+\setmathrm{Latin Modern Roman}
+\setmathsf{Latin Modern Sans}
+\defaultfontfeatures{}
+\setmonofont{TeX Gyre Cursor}[Ligatures={NoCommon,NoRequired,NoContextual},Scale=0.9]
 
 \usetikzlibrary{groupops}
 
