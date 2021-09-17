@@ -382,7 +382,7 @@ particular oracles drawn from that world, vary.
 
 When the adversary interacts with the oracle,
 a transcript \(\tau\) of queries and responses is created.
-\(\Tc\) is the set of ``compatible transcripts'':
+\(\Tc\) is the set of ``compatible transcriptXXX':
 if \(\tau \in \Tc\) then for the fixed adversary,
 there is some oracle
 that results in its creation. For example,
@@ -431,16 +431,16 @@ we then use the H-coefficient technique to bound
 the distinguishing advantage between them.
 
 We use superscripts to distinguish between queries;
-where we refer to \(s\), \(s'\), we assume that \(s < s'\).
+where we refer to \(r\), \(s\), we assume that \(r < s\).
 An encryption query \((T^s, P^s)\) yields ciphertext \(C^s\)
 while a decryption query \((T^s, C^s)\)
 yields plaintext \(P^s\).
 We forbid ``pointless queries'':
-encryption queries \((T^{s'}, P^{s'})\)
-such that \((T^s, P^s) = (T^{s'}, P^{s'})\) for some \(s < s'\), 
-or decryption queries \((T^{s'}, C^{s'})\)
-such that \((T^s, C^s) = (T^{s'}, C^{s'})\) for some \(s < s'\),
-whether query \(s\) was an encryption or decryption query.
+encryption queries \((T^s, P^s)\)
+such that \((T^r, P^r) = (T^s, P^s)\) for some \(r < s\), 
+or decryption queries \((T^s, C^s)\)
+such that \((T^r, C^r) = (T^s, C^s)\) for some \(r < s\),
+whether query \(r\) was an encryption or decryption query.
 
 For each query \(s\), 
 let \(m^s = \ceil{\abs{P^s}/n} = \ceil{\abs{C^s}/n}\)
@@ -525,8 +525,8 @@ possible, and bound the probability in each case.
 
 In the ideal world responses to queries are random,
 but some caution is required.
-If we know the adversary's query \(s'\), then conditioning on that,
-we cannot treat the response to query \(s\) as uniformly random;
+If we know the adversary's query \(s\), then conditioning on that,
+we cannot treat the response to query \(r\) as uniformly random;
 if the choice of later query depends on the earlier response,
 knowing the later query is information about the earlier response.
 However, conditioning on a query and all prior queries and responses,
@@ -540,40 +540,40 @@ between two specific blocks is bounded by \(1/2^n\).
 \begin{itemize}
     \item \(h \qeq L\): trivially has probability \(1/2^n\).
     \item
-    \(h \qeq Y_j^{s'}\),
-    \(L \qeq Y_j^{s'}\),
-    \(\UU^s \qeq Y_j^{s'}\),
-    \(Y_i^s \qeq Y_j^{s'}\),
-    \(\UU^{s'} \qeq Y_j^{s'}\), 
-    \(Y_i^{s'} \qeq Y_j^{s'}\): 
-    if query \(s'\) is an encryption query,
-    then given \(h\), \(L\), query \(s'\), 
+    \(h \qeq Y_j^s\),
+    \(L \qeq Y_j^s\),
+    \(\UU^r \qeq Y_j^s\),
+    \(Y_i^r \qeq Y_j^s\),
+    \(\UU^s \qeq Y_j^s\), 
+    \(Y_i^s \qeq Y_j^s\): 
+    if query \(s\) is an encryption query,
+    then given \(h\), \(L\), query \(s\), 
     all prior queries and responses, and
-    \(C^{s'}[0;jn]\), there is exactly one value of
-    \(C^{s'}[jn;n]\) that results in the equation holding.
-    If \(s'\) is a decryption query, the same reasoning holds
-    with \(P^{s'}\), \(C^{s'}\) swapped.
+    \(C^s[0;jn]\), there is exactly one value of
+    \(C^s[jn;n]\) that results in the equation holding.
+    If \(s\) is a decryption query, the same reasoning holds
+    with \(P^s\), \(C^s\) swapped.
     \item 
-    \(\fromint(0) \qeq S_j^{s'}\),
-    \(\fromint(1) \qeq S_j^{s'}\),
-    \(\MM^s \qeq S_j^{s'}\),
-    \(S_i^s \qeq S_j^{s'}\):
-    if query \(s'\) is an encryption query,
-    then given \(h\), \(L\), \(T^{s'}\),
-    \(P^{s'}\), \(V^{s'}\)
+    \(\fromint(0) \qeq S_j^s\),
+    \(\fromint(1) \qeq S_j^s\),
+    \(\MM^r \qeq S_j^s\),
+    \(S_i^r \qeq S_j^s\):
+    if query \(s\) is an encryption query,
+    then given \(h\), \(L\), \(T^s\),
+    \(P^s\), \(V^s\)
     and all prior queries and responses,
-    there is exactly one response value \(U^{s'}\)
+    there is exactly one response value \(U^s\)
     that results in the equation holding.
     For a decryption query, 
-    given \(h\), \(L\), \(T^{s'}\),
-    \(C^{s'}\), \(N^{s'}\)
+    given \(h\), \(L\), \(T^s\),
+    \(C^s\), \(N^s\)
     and all prior queries and responses,
-    there is exactly one response value \(M^{s'}\)
+    there is exactly one response value \(M^s\)
     that results in the equation holding.
     \item
-    \(\MM^{s'} \qeq S_j^{s'}\),
-    \(S_i^s \qeq \MM^{s'}\),
-    \(L \qeq \UU^{s'}\):
+    \(\MM^s \qeq S_j^s\),
+    \(S_i^r \qeq \MM^s\),
+    \(L \qeq \UU^s\):
     given \(h\) and all queries and responses,
     there is exactly one value of \(L\)
     which causes the equation to hold.
@@ -584,60 +584,60 @@ In two cases, a collision is impossible.
 \begin{itemize}
     \item \(\fromint(0) \qeq \fromint(1)\): trivially impossible.
     \item 
-    \(S_i^{s'} \qeq S_j^{s'}\):
+    \(S_i^s \qeq S_j^s\):
     this is impossible, 
-    \(S_i^{s'} \xor S_j^{s'} = \fromint(i) \xor \fromint(j)\).
+    \(S_i^s \xor S_j^s = \fromint(i) \xor \fromint(j)\).
 \end{itemize}
 
 There are a handful of cases where the probability may
 be greater than \(1/2^n\).
 
-Considering first collisions with \(\MM^{s'}\) where
-query \(s'\) is an encryption query:
+Considering first collisions with \(\MM^s\) where
+query \(s\) is an encryption query:
 
 \begin{itemize}
-    \item \(\MM^s \qeq \MM^{s'}\):
-    this holds if \(M^s \xor H_h(T^s, N^s) = M^{s'} \xor H_h(T^{s'}, N^{s'})\);
+    \item \(\MM^r \qeq \MM^s\):
+    this holds if \(M^r \xor H_h(T^r, N^r) = M^s \xor H_h(T^s, N^s)\);
     by hash function property 2, this holds with probability at most
-    \(\max(d^s, d^{s'})/2^n\).
-    \item \(\fromint(0) \qeq \MM^{s'}\):
-    this holds if \(\fromint(0) = M^{s'} \xor H_h(T^{s'}, N^{s'})\);
+    \(\max(d^r, d^s)/2^n\).
+    \item \(\fromint(0) \qeq \MM^s\):
+    this holds if \(\fromint(0) = M^s \xor H_h(T^s, N^s)\);
     by hash function property 1, this holds with probability at most
-    \(d^{s'}/2^n\).
-    \item \(\fromint(1) \qeq \MM^{s'}\): as above.
+    \(d^s/2^n\).
+    \item \(\fromint(1) \qeq \MM^s\): as above.
 \end{itemize}
 
-In each case, if query \(s'\) is a decryption query,
-then given \(h\), query \(s'\), and all prior
-queries and responses, all values of \(M^{s'}\)
-are equally likely and a single value causes
-the equation to hold, for a probability of
-\(1/2^n\).
+In each case, if query \(s\) is a decryption query,
+then given \(h\), \(T^s\), \(C^s\), \(N^s\),
+and all prior queries and responses,
+all values of \(M^s\) are equally likely 
+and a single value causes the equation to hold,
+for a probability of\(1/2^n\).
 
-Similarly, considering collisions with \(\UU^{s'}\) where
-query \(s'\) is a decryption query:
+Similarly, considering collisions with \(\UU^s\) where
+query \(s\) is a decryption query:
 
 \begin{itemize}
-    \item \(\UU^s \qeq \UU^{s'}\): 
-    this holds if \(U^s \xor H_h(T^s, V^s) = U^{s'} \xor H_h(T^{s'}, V^{s'})\);
+    \item \(\UU^r \qeq \UU^s\): 
+    this holds if \(U^r \xor H_h(T^r, V^r) = U^s \xor H_h(T^s, V^s)\);
     by hash function property 2, this holds with probability at most
-    \(\max(d^s, d^{s'})/2^n\).
-    \item \(Y_j^s \qeq \UU^{s'}\):
-    this holds if \(Y_j^s = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
+    \(\max(d^r, d^s)/2^n\).
+    \item \(Y_j^r \qeq \UU^s\):
+    this holds if \(Y_j^r = U^s \xor H_h(T^s, C^s)\);
     by hash function property 1, this holds with probability at most
-    \(d^{s'}/2^n\).
-    \item \(h \qeq \UU^{s'}\):
-    this holds if \(h = U^{s'} \xor H_h(T^{s'}, C^{s'})\);
+    \(d^s/2^n\).
+    \item \(h \qeq \UU^s\):
+    this holds if \(h = U^s \xor H_h(T^s, C^s)\);
     by hash function property 3, this holds with probability at most
-    \(d^{s'}/2^n\).
+    \(d^s/2^n\).
 \end{itemize}
 
-As above, if query \(s'\) is an encryption query,
-then given \(h\), query \(s'\), and all prior
-queries and responses, all values of \(U^{s'}\)
-are equally likely and a single value causes
-the equation to hold, for a probability of
-\(1/2^n\).
+As above, if query \(s\) is an encryption query,
+then given \(h\), \(T^s\), \(P^s\), \(V's\),
+and all prior queries and responses,
+all values of \(U^s\) are equally likely
+and a single value causes the equation to hold,
+for a probability of \(1/2^n\).
 
 \subsubsection{Summing collision bounds}
 Given that most pairs have a probability of
@@ -649,65 +649,66 @@ if all pairs had a bound of \(1/2^n\),
 and then apply a correction for the ones that don't.
 
 For example,
-to bound the probability an encryption query \(s'\)
+to bound the probability an encryption query \(s\)
 has some collision with the fixed values
 \(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\)
 we observe first that
 there are two blocks in the fixed values
-and \(m^{s'}\) blocks in query \(s'\), so there are
-\(2m^{s'}\) pairs of blocks across the two,
-and \(4m^{s'}\) opportunities for a collision, 
+and \(m^s\) blocks in query \(s\), so there are
+\(2m^s\) pairs of blocks across the two,
+and \(4m^s\) opportunities for a collision, 
 considering both plaintext and ciphertext.
 If all pairs had collision probability \(1/2^n\),
 then the overall collision probability bound
-would be \(4m^{s'}/2^n\). However, there are
+would be \(4m^s/2^n\). However, there are
 two exceptions: the pairs
-\(\fromint(0) \qeq \MM^{s'}\) and
-\(\fromint(1) \qeq \MM^{s'}\). In each of these
+\(\fromint(0) \qeq \MM^s\) and
+\(\fromint(1) \qeq \MM^s\). In each of these
 cases the probability bound is not \(1/2^n\) but
-\(d^{s'}/2^n\), We therefore apply a correction
-of \(2(d^{s'} - 1)\) to get a final probability bound of
+\(d^s/2^n\), We therefore apply a correction
+of \(2(d^s - 1)\) to get a final probability bound of
 \begin{displaymath}
-    \frac{4m^{s'} + 2(d^{s'} - 1)}{2^n}
+    \frac{4m^s + 2(d^s - 1)}{2^n}
 \end{displaymath}
 
 Similarly, the correction for a decryption query is
-\(d^{s'} - 1\) and therefore  the probability 
+\(d^s - 1\) and therefore  the probability 
 is bounded above by
 \begin{displaymath}
-    \frac{4m^{s'} + d^{s'} -1}{2^n}
+    \frac{4m^s + d^s -1}{2^n}
 \end{displaymath}
 The largest of the two correction formulas is
 the first one, so we use that for our overall bound.
 Across all queries, the total
 correction will be
 \begin{align*}
-    &\sum_{s'} 2(d^{s'} - 1) \\
+    &\sum_{s} 2(d^s - 1) \\
     = & 2(\sigma - q)
 \end{align*}
 
-For a collision of two blocks within query \(s'\)
+For a collision of two blocks within query \(s\)
 the correction formula is negative:
-\(S_i^{s'} \qeq S_j^{s'}\) is an impossible collision, 
+\(S_i^s \qeq S_j^s\) is an impossible collision, 
 so we subtract the number of such blocks:
-\(-\binom{m^{s'} -1}{2}\). However we have no good way
-to impose a useful lower bound on the negative sum
-\(\sum_{s'}-\binom{m^{s'} -1}{2}\) so we use the
-trivial lower bound of 0.
+\(-\binom{m^s -1}{2}\). However we have no good way
+to impose a useful upper bound on the negative sum
+\(\sum_{s}-\binom{m^s -1}{2}\) so we use the
+trivial upper bound of 0.
 
-Where an encryption query \(s'\)
-may collide with query \(s\), the correction is 
-\(\max(d^s, d^{s'}) -1\)
-(because of \(\MM^s \qeq \MM^{s'}\)), whereas for a decryption query
-it is \(\max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)\)
-(because of \(\UU^s \qeq \UU^{s'}\) and \(Y_j^s \qeq \UU^{s'}\)).
+Where an encryption query \(s\)
+may collide with query \(r\), the correction is 
+\(\max(d^r, d^s) -1\)
+(because of \(\MM^r \qeq \MM^s\)), whereas for a decryption query
+it is \(\max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\)
+(because of \(\UU^r \qeq \UU^s\) and \(Y_j^r \qeq \UU^s\)).
+
 Taking the max of these formulas and summing across
 all queries gives us a total correction of
 \begin{align*}
-    &\sum_{s < s'} \max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)\\
-    \leq & \sum_{s < s'} d^s + d^{s'} -1 + (m^s -1 )(d^{s'} -1)\\
-    = & (q-1)\sigma - \binom{q}{2} + \sum_{s < s'} (m^s -1 )(d^{s'} -1) \\
-    \leq & (q-1)\sigma - \binom{q}{2} + \sum_{s < s'} d^sd^{s'} \\
+    &\sum_{r < s} \max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\\
+    \leq & \sum_{r < s} d^r + d^s -1 + (m^r -1 )(d^s -1)\\
+    = & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (m^r -1 )(d^s -1) \\
+    \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} d^rd^s \\
     % fixme last step seems a bit loose
     \leq & (q-1)\sigma - \binom{q}{2} + \binom{\sigma}{2} \\
    \leq & (q-1)\sigma + \binom{\sigma}{2} \\
@@ -802,28 +803,28 @@ of length \(t\); for simplicity we assume \(t = 0\)
 in what follows.
 
 For equation 17, the paper observes that the collision
-\(Y_i^s = \UU^{s'}\) occurs iff \(h\) is one of the zeroes
-of the polynomial \(Y_i^s \xor U^{s'} \xor H(T^{s'}, V^{s'})\).
+\(Y_i^r = \UU^s\) occurs iff \(h\) is one of the zeroes
+of the polynomial \(Y_i^r \xor U^s \xor H(T^s, V^s)\).
 This polynomial has degree at most
-\(m^{s'}\), and so can have
+\(m^s\), and so can have
 at most that many solutions. From this the paper infers
 a quadratic bound on the probability of any such collision
 given \(\sigma\) input blocks.
 
 In equation 22, the paper considers collisions of the form 
-\(S_i^s = \MM^{s'}\) and asserts that they are
+\(S_i^r = \MM^s\) and asserts that they are
 quadratically bounded for the same reason. However this equation
-is crucially different: unlike with \(Y_i^s\), the value we
-infer for \(S_i^s\) depends on \(h\). The values of \(h\)
+is crucially different: unlike with \(Y_i^r\), the value we
+infer for \(S_i^r\) depends on \(h\). The values of \(h\)
 for which this collision occurs are
 the zeroes of the polynomial
 \begin{displaymath}
-    M^s \xor H(T^s, N^s)
-    \xor U^s \xor H(T^s, V^s) \xor \fromint(i) 
-    \xor M^{s'} \xor H(T^{s'}, N^{s'})        
+    M^r \xor H(T^r, N^r)
+    \xor U^r \xor H(T^r, V^r) \xor \fromint(i) 
+    \xor M^s \xor H(T^s, N^s)        
 \end{displaymath}
 This polynomial can have degree up to 
-\(\max(m^s, m^{s'})\), and so the bound of
+\(\max(m^r, m^s)\), and so the bound of
 equation 17 does not apply.
 If queries are permitted to be of any length,
 this leads to a cubic security bound.
@@ -831,7 +832,7 @@ Consider an adversary who
 sends a single query with \(x+1\) blocks, followed by
 \(x\) queries of one block. For each \(i \in \{1\ldots x\}\) and
 for each \(s \in \{2 \ldots x + 1\}\), we have at best
-\(\prob{S_i^s = \MM^{s'}} \leq (x + 1)/2^n\). Summing
+\(\prob{S_i^r = \MM^s} \leq (x + 1)/2^n\). Summing
 all these bounds for each such pair, we find that
 for queries with \(\sigma = 2x + 1\)
 get a bound for the overall probability of such a collision of 
