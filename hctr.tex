@@ -696,9 +696,11 @@ to impose a useful lower bound on the negative sum
 trivial lower bound of 0.
 
 Where an encryption query \(s'\)
-may collide with query \(s\), the correction factor is 
-\(\max(d^s, d^{s'}) -1\), whereas for a decryption query
-it is \(\max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)\).
+may collide with query \(s\), the correction is 
+\(\max(d^s, d^{s'}) -1\)
+(because of \(\MM^s \qeq \MM^{s'}\)), whereas for a decryption query
+it is \(\max(d^s, d^{s'}) -1 + (m^s -1 )(d^{s'} -1)\)
+(because of \(\UU^s \qeq \UU^{s'}\) and \(Y_j^s \qeq \UU^{s'}\)).
 Taking the max of these formulas and summing across
 all queries gives us a total correction of
 \begin{align*}
@@ -711,12 +713,13 @@ all queries gives us a total correction of
    \leq & (q-1)\sigma + \binom{\sigma}{2} \\
 \end{align*}
 
-The correction factor for collision between fixed values
+The correction for collision between fixed values
 is -1, reflecting the impossibility of the collision
 \(\fromint(0) \qeq \fromint(1)\).
 
-Thus our total correction factor is
-\(2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\), 
+Thus our total correction is
+\(2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\)
+and the number of pairs of blocks is \(\binom{\sigma_m}{2}\), 
 giving an upper bound
 on the probability of a bad transcript of
 
