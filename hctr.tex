@@ -159,7 +159,7 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     \item \(n\): block size in bits
     \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
     little-endian conversion of integers to binary; 
-    \(\fromint(X)\) means \(\fromint_n(X)\)
+    \(\fromint(x)\) means \(\fromint_n(x)\)
     \item $\pad(X) = X \Concat 0^v$
     where $v$ is the least integer $\geq 0$ such that $n$ divides $\abs{X} + v$
     \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
@@ -219,6 +219,10 @@ so that we can use \(P, C\) to refer to plaintext and ciphertext.
 
 \section{Security of HCTR2}
 \subsection{Definitions}
+We use \(x \sample S\) to mean ``\(x\) is sampled from \(S\) such that
+each element of \(S\) is equally likely'', and we write
+\(A^{\mathcal{O}, \mathcal{O}'}\) to refer to algorithm \(A\)
+given access to oracles \(\mathcal{O}, \mathcal{O}'\).
 
 The block cipher
 $E$
@@ -257,7 +261,7 @@ the distinguishing advantage of an adversary $A$ is:
 %
 \begin{align*}
     \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(A)] \defeq
-    {}&\left\lvert\probsub{K \sample \mathcal{K}}{A^{\bm{E}_k,\bm{E}_k^{-1}}\Rightarrow 1}\right.
+    {}&\left\lvert\probsub{k \sample \mathcal{K}}{A^{\bm{E}_k,\bm{E}_k^{-1}}\Rightarrow 1}\right.
     \\
     {}&\left. - \probsub{\bm{\pi} \sample \Perm^\mathcal{T}(\mathcal{M})}
         {A^{\bm{\pi},\bm{\pi}^{-1}}\Rightarrow 1}\right\rvert
@@ -301,7 +305,7 @@ We depend on the following properties of the map from
 \begin{itemize}
     \item The map is injective
     \item The constant term is always zero
-    \item The polynomial is never \(p(h) = 0\) or \(p(h) = h\).
+    \item The polynomial is never \(p(h) = 0\) or \(p(h) = h\)
     \item The polynomial is of degree at most
     \begin{displaymath}
         d(T, M) = 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
@@ -455,7 +459,7 @@ In world X, this information is:
     where a query has plaintext/ciphertext
     that is not a multiple of the block size,
     this is the extra output from the last
-    blockcipher call that is not used.
+    block cipher call that is not used.
     For query \(s\), this is 
     \begin{displaymath}
         D^s = \XCTR_\pi(S^s)[\abs{P^s} - n; nm^s-\abs{P^s}]
@@ -555,11 +559,15 @@ between two specific blocks is bounded by \(1/2^n\).
     \(\MM^s \qeq S_j^{s'}\),
     \(S_i^s \qeq S_j^{s'}\):
     if query \(s'\) is an encryption query,
-    then given \(h\), \(L\), query \(s'\), 
+    then given \(h\), \(L\), \(T^{s'}\),
+    \(P^{s'}\), \(V^{s}\)
     and all prior queries and responses,
     there is exactly one response value \(U^{s'}\)
     that results in the equation holding.
     For a decryption query, 
+    given \(h\), \(L\), \(T^{s'}\),
+    \(C^{s'}\), \(N^{s}\)
+    and all prior queries and responses,
     there is exactly one response value \(M^{s'}\)
     that results in the equation holding.
     \item
@@ -755,7 +763,7 @@ Two errors in previous work on HCTR are addressed in HCTR2.
 \subsection{Hash function}
 HCTR uses a hash function based on the polynomial
 \begin{displaymath}
-    H(X) = \poly(\pad(X) \Concat \fromint(X) \Concat 0^n)
+    H(X) = \poly(\pad(X) \Concat \fromint(\abs{X}) \Concat 0^n)
 \end{displaymath}
 Because it assumes a fixed-length tweak it simply sets \(X = M \Concat T\).
 However, HCTR requires that the resulting polynomial be nonzero
@@ -771,13 +779,14 @@ the first with a single zero (and assuming a zero length tweak).
 \subsection{Security bound}
 \cite{hctr} was initially presented with a security bound cubic
 in the total size of all queries combined.  This is a little low
-for comfort; if a 128-bit blockcipher is used, it suggests a
+for comfort; if a 128-bit block cipher is used, it suggests a
 distinguisher can be effective given tens of terabytes of queries,
 which can quickly be reached over a fast link. 
 \cite{hctrquad} presents a much more satisfactory quadratic bound,
 but the proof has an error that invalidates the claimed bound.
 
-While presented in a different way, this proof is very similar
+While presented in a different way, 
+the proof of~\cite{hctrquad} is very similar
 to that of this paper: in the game RAND2, all queries get random
 responses, the block cipher inputs are inferred, and a collision
 in either the domain or range of the block cipher
@@ -851,9 +860,11 @@ crucial features that make it an attractive design:
     \item The CTR mode variant \(\XCTR\); HCTR2, unlike HCTR,
     does not require this mode for its security proofs, 
     but we prefer not to change it unnecessarily.
-    In any case, standard CTR mode is unattractive
-    when the nonce is 128 bits,
-    since it must be incremented as a 128-bit integer.
+    XCTR is also considerably easier to correctly
+    implement than standard CTR, which invites
+    implementations that appear correct
+    until the counter must roll over into 
+    the next word.
 \end{itemize}
 
 In designing HCTR2 we made the following changes from HCTR and design decisions:
@@ -900,13 +911,13 @@ To fix the \cite{kumarhctr} flaw, we eliminate the zero-length special case
 by adding one to the length before encoding it.
 
 We swap the tweak and the message, so that implementations need only
-process the tweak once for each block, instead of twice.
+process the tweak once for each encryption/decryption, instead of twice.
 
 With the introduction of the constant \(L\)
 our security proof no longer relies on the hash function
 having property 2 of \cite[Section~3.3]{hctr}.
 This allows us to move the length block first, so
-that implementations need only process it once per block.
+that implementations need only process it once per encryption/decryption.
 It is never zero, so its position in the
 polynomial can be inferred from the degree.
 
@@ -919,6 +930,9 @@ whether the message is
 block-multiple in length. If the message is not
 block-multiple, it is padded with a one followed
 by zeroes to a block-multiple length before hashing.
+This trick, using special treatment of block-multiple
+lengths to avoid unnecessarily extending processing,
+is drawn from \cite{xcbc}.
 
 This encoding can eliminate a multiply for implementations that use
 a fixed-length tweak but handle variable-length messages.
@@ -930,6 +944,8 @@ first block of the tweak.
 This encoding also guarantees that the length block
 cannot have the value \(\fromint(1)\), which achieves
 our guarantee that \(H(T, M) \neq h\).
+
+% mention BRW?
 
 \section{Implementation}
 

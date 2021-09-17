@@ -998,3 +998,19 @@ and Yung, Moti"
 ,   year = {2021}
 ,   month = {9}
 }
+
+@InProceedings{xcbc,
+author="Black, John
+and Rogaway, Phillip",
+editor="Bellare, Mihir",
+title="CBC MACs for Arbitrary-Length Messages: The Three-Key Constructions",
+booktitle="Advances in Cryptology --- CRYPTO 2000",
+year="2000",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="197--215",
+abstract="We suggest some simple variants of the CBC MAC that let you efficiently MAC messages of arbitrary lengths. Our constructions use three keys, K1, K2, K3, to avoid unnecessary padding and MAC any message M ∈ {\{}0,1{\}}* using max{\{}1, ⌈|M|/n⌉{\}} applications of the underlying n-bit block cipher. Our favorite construction, XCBC, works like this: if |M| is a positive multiple of n then XOR the n-bit key K2 with the last block of M and compute the CBC MAC keyed with K1; otherwise, extend M's length to the next multiple of n by appending minimal 10i padding (i ≥ 0), XOR the n-bit key K3 with the last block of the padded message, and compute the CBC MAC keyed with K1. We prove the security of this and other constructions, giving concrete bounds on an adversary's inability to forge in terms of her inability to distinguish the block cipher from a random permutation. Our analysis exploits new ideas which simplify proofs compared to prior work.",
+isbn="978-3-540-44598-2",
+url={https://www.cs.ucdavis.edu/~rogaway/papers/3k.pdf}
+}
+
