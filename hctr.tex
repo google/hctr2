@@ -58,7 +58,7 @@
 On modern processors HCTR\cite{hctr} is
 one of the most efficient constructions
 for building a tweakable super-pseudorandom permutation. However,
-a bug in the specification and another in the proof of\cite{hctrquad}
+a bug in the specification and another in the proof of~\cite{hctrquad}
 invalidate the claimed security bound. We here present HCTR2,
 which fixes these issues and improves the
 security bound, performance and flexibility.
@@ -86,10 +86,9 @@ This revision addresses the following issues:
     \item An error in the proof presented in \cite{hctrquad}
     invalidates the claimed security bound; with our revised
     mode we can claim a tighter bound.
-    \item HCTR uses a fixed-length tweak. To make standardization
-    easier, HCTR2 handles a variable-length tweak.
+    \item HCTR2 supports using tweaks of any length with a single key.
     \item HCTR's key is a block cipher key, plus an \(n\)-bit
-    hash key. To simplify deployment, HCTR2's key is simply
+    hash key. HCTR2's key is simply
     the block cipher key.
     \item We modify the hash function to allow more precalculation
     for greater performance.
@@ -236,8 +235,7 @@ must be a super-pseudorandom permutation~\cite{concrete}:
 \end{align*}
 %
 where $A$ is an adversary,
-$\Perm(S)$ denotes the set of all permutations on a set $S$,
-$\Perm(n)$ is short for $\Perm(\bin^n)$
+$\Perm(n)$ denotes the set of all permutations on \(\bin^n\),
 and
 $\mathcal{A}(q, t)$
 is the set of all adversaries that make at most $q$ queries and take at most $t$ time.
@@ -248,7 +246,7 @@ tweakable length-preserving permutations
 $\bm{\pi} : \mathcal{T} \times \mathcal{M} \rightarrow \mathcal{M}$
 such that for all $T, M \in \mathcal{T} \times \mathcal{M}$,
 $\abs{\bm{\pi}(T, M)} = \abs{M}$, and
-for all $T \in \mathcal{T}$, $\bm{\pi}_{T}$ is a bijection on \(\mathcal{M}\).
+for all $T \in \mathcal{T}$, $\bm{\pi}_{T}$ is a permutation on \(\mathcal{M}\).
 In an abuse of notation
 we use $\bm{\pi}^{-1}$ to refer to the function
 such that $\bm{\pi}^{-1}(T, \bm{\pi}(T, M)) = M$ ie $(\bm{\pi}^{-1})_T = (\bm{\pi}_T)^{-1}$.
@@ -387,16 +385,24 @@ that results in its creation. For example,
 since the adversary is deterministic, the first query
 will always be the same; a transcript that
 does not start with this query is not a compatible transcript.
+Note that \(\Tc\) will have some structure
+no matter how the adversary behaves:
+in a simple example where the adversary
+queries for bits until it terminates,
+every possible sequence of bits 
+either has exactly one prefix in \(\Tc\),
+or is a proper prefix of two or more transcripts in \(\Tc\).
+For a given \(\tau \in \Tc\),
+a deterministic adversary must always
+return the same response; call this response \(A(\tau)\).
+
 Let random variables \(X\) and \(Y\)
 represent the distribution of transcripts
 in world X and world Y respectively, so that
 each transcript \(\tau\) has a probability \(\prob{X = \tau}\)
 of arising in world X, and similarly \(\prob{Y = \tau}\) in world Y.
-For a given \(\tau \in \Tc\),
-a deterministic adversary must always
-return the same response; call this response \(A(\tau)\).
 WLOG we assume that \(\prob{A(Y) = 1} \geq \prob{A(X) = 1}\).
-We further assume that \(A\) is optimal:
+We further assume that \(A(\tau)\) is optimal:
 \(A(\tau) = 1\)
 when \(\prob{Y = \tau} > \prob{X = \tau}\) and 0 otherwise.
 
@@ -438,7 +444,8 @@ be the number of blocks in the response,
 and let \(d^s = m^s + \ceil{\abs{T^s}/n}\)
 be the number of blocks in the query.
 Note that \(d^s\) is the degree of the hash
-function polynomial used in query \(s\),
+function polynomial used in query \(s\)
+(since all but one block of the message is hashed),
 and that \(\sigma = \sum_s d^s\).
 We give the adversary some extra information
 which is included in the transcript.
@@ -472,7 +479,7 @@ we can infer all pairs of block cipher plaintexts and ciphertexts.
 First we infer that \(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\).
 Then for each query, we know \(T\), \(P\), \(C\) and \(D\)
 and so can infer
-(omitting the query superscript \(i\) for readability):
+(omitting the query superscript \(s\) for readability):
 \begin{align*}
     M \Concat N &= P \\
     U \Concat V &= C \\
@@ -534,7 +541,7 @@ between two specific blocks is bounded by \(1/2^n\).
     \(\UU^s \qeq Y_j^{s'}\),
     \(Y_i^s \qeq Y_j^{s'}\),
     \(\UU^{s'} \qeq Y_j^{s'}\), 
-    \(Y_i{s'} \qeq Y_j^{s'}\): 
+    \(Y_i^{s'} \qeq Y_j^{s'}\): 
     if query \(s'\) is an encryption query,
     then given \(h\), \(L\), query \(s'\), 
     all prior queries and responses, and
@@ -740,7 +747,7 @@ Putting these together with our main lemma, we have that
 \begin{align*}
     &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(\sigma, t)] \\
     \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')] \\
-    &+ \left.\left(3\sigma^2 + 2q\sigma + 10\sigma + q^2 + 2\right)\middle/2^{n+1}\right. \\
+    &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 10\sigma + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
 
 \section{HCTR issues}\label{hctrissues}
@@ -756,7 +763,7 @@ even when \(X = \lambda\), so as a special case they define
 \(H(\lambda) = h\).
 
 Unfortunately, as \cite{kumarhctr} observes this is no longer
-an injective map from \(X\) - we also have \(H(0) = h\). This
+an injective map from \(X\)---we also have \(H(0) = h\). This
 straightforwardly leads to an attack in which two encryption queries
 are presented, one of a block width, and the second extending
 the first with a single zero (and assuming a zero length tweak).
@@ -841,12 +848,12 @@ crucial features that make it an attractive design:
     that an adversary's control over \(S\) is very limited for both
     encryption and decryption queries; this is important in the
     proof of security.
-    \item The CTR mode variant \(\XCTR\); while HCTR2 (unlike HCTR)
+    \item The CTR mode variant \(\XCTR\); HCTR2, unlike HCTR,
     does not require this mode for its security proofs, 
-    we prefer not to change it unnecessarily, and this mode is
-    attractive for performance reasons when using a full-block-sized
-    nonce, since a full-block-sized counter need not be maintained
-    if messages are always short.
+    but we prefer not to change it unnecessarily.
+    In any case, standard CTR mode is unattractive
+    when the nonce is 128 bits,
+    since it must be incremented as a 128-bit integer.
 \end{itemize}
 
 In designing HCTR2 we made the following changes from HCTR and design decisions:
