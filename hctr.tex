@@ -639,6 +639,105 @@ all values of \(U^s\) are equally likely
 and a single value causes the equation to hold,
 for a probability of \(1/2^n\).
 
+\begin{figure}
+    \begin{floatrow}
+        \ffigbox{
+            \begin{tikzpicture}[anchor=mid,rule/.style={draw=black,very thick}]
+                \node at (1.5, -0.5) {\(1\)};
+                \node at (2.5, -0.5) {\(\MM^s\)};
+                \node at (3.5, -0.5) {\(S^s_j\)};
+                \node at (0.5, -1.5) {\(0\)};
+                \node at (0.5, -2.5) {\(1\)};
+                \node at (0.5, -3.5) {\(\MM^r\)};
+                \node at (0.5, -4.5) {\(S^r_i\)};
+                \node at (0.5, -5.5) {\(\MM^s\)};
+                \node at (0.5, -6.5) {\(S^s_i\)};
+                \path[rule,fill=gray] (3, -1) rectangle +(1, -4);
+                \path[rule,fill=gray] (3, -5) rectangle +(1, -1);
+                \path[rule,fill=gray] (2, -4) rectangle +(1, -1);
+                \path[rule,fill=red] (1, -1) rectangle +(1, -1);
+                \path[rule,fill=red] (3, -6) rectangle +(1, -1);
+                \path[rule,fill=green] (2, -1) rectangle +(1, -2);
+                \path[rule,fill=green] (2, -3) rectangle +(1, -1);
+                \node[text=white] at (1.5, -1.5) {0};
+                \node at (2.5, -2) {\(d^s\)};
+                \node at (2.5, -3.5) {\(d^s\)};
+                \node[text=white] at (2.5, -4.5) {1};
+                \node[text=white] at (3.5, -3) {1};
+                \node[text=white] at (3.5, -5.5) {1};
+                \node[text=white] at (3.5, -6.5) {0};
+            \end{tikzpicture}
+        }{
+            \caption{Domain collision cases}\label{domaincollision}
+        }
+        \ffigbox{
+            \begin{tikzpicture}[anchor=mid,rule/.style={draw=black,very thick}]
+                \node at (1.5, -0.5) {\(L\)};
+                \node at (2.5, -0.5) {\(\UU^s\)};
+                \node at (3.5, -0.5) {\(Y^s_j\)};
+                \node at (0.5, -1.5) {\(h\)};
+                \node at (0.5, -2.5) {\(L\)};
+                \node at (0.5, -3.5) {\(\UU^r\)};
+                \node at (0.5, -4.5) {\(Y^r_i\)};
+                \node at (0.5, -5.5) {\(\UU^s\)};
+                \node at (0.5, -6.5) {\(Y^s_i\)};
+                \path[rule,fill=gray] (1, -1) rectangle +(1, -1);
+                \path[rule,fill=gray] (3, -1) rectangle +(1, -6);
+                \path[rule,fill=gray] (2, -2) rectangle +(1, -1);
+                \path[rule,fill=green] (2, -3) rectangle +(1, -1);
+                \path[rule,fill=green] (2, -4) rectangle +(1, -1);
+                \path[rule,fill=green] (2, -1) rectangle +(1, -1);
+                \node[text=white] at (1.5, -1.5) {1};
+                \node at (2.5, -1.5) {\(d^s\)};
+                \node[text=white] at (2.5, -2.5) {1};
+                \node at (2.5, -3.5) {\(\max\)};
+                \node at (2.5, -4.5) {\(d^s\)};
+                \node[text=white] at (3.5, -4) {1};
+            \end{tikzpicture}
+        }{
+            \caption{Range collision cases}\label{rangecollision}
+        }
+    \end{floatrow}
+\end{figure}
+
+\autoref{domaincollision} illustrates the various cases
+we consider for domain collisions.
+Columns represent the terms
+on the left hand side of the collision, while
+rows represent the terms on the right; 
+for example, the top left box represents
+\(h \qeq L\). Where a square is left blank
+it is either because it represents
+comparing a term to itself (eg \(L \qeq L\))
+or because it represents something that
+is already handled elsewhere
+(eg considering \(L \qeq \UU^s\)
+handles the \(\UU^r \qeq L\) case).
+A square is colored red
+and marked \(0\) if the
+probability of a particular instance
+if that kind is zero, grey
+and marked \(1\) if
+the probability is always \(1/2^n\),
+and green if the probability may be
+greater than \(1/2^n\) and depends
+on the number of solutions to a
+particular polynomial;
+\(\max\) where there are
+\(\max(d^r, d^s)\) solutions.
+Even where a square is green,
+if query \(s\) is a decryption query,
+the probability of a particular collision of
+that kind is \(1/2^n\).
+Where a rectangle covers
+multiple squares, a single argument
+covering all those cases is presented.
+\autoref{rangecollision} covers
+range collisions; in this case,
+it is only decryption queries where
+probabilities may be above \(1/2^n\).
+
+
 \subsubsection{Summing collision bounds}
 Given that most pairs have a probability of
 colliding of \(1/2^n\), 
