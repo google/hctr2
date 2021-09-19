@@ -382,7 +382,7 @@ particular oracles drawn from that world, vary.
 
 When the adversary interacts with the oracle,
 a transcript \(\tau\) of queries and responses is created.
-\(\Tc\) is the set of ``compatible transcriptXXX':
+\(\Tc\) is the set of ``compatible transcripts'':
 if \(\tau \in \Tc\) then for the fixed adversary,
 there is some oracle
 that results in its creation. For example,
@@ -682,7 +682,7 @@ the first one, so we use that for our overall bound.
 Across all queries, the total
 correction will be
 \begin{align*}
-    &\sum_{s} 2(d^s - 1) \\
+    &\sum_s 2(d^s - 1) \\
     = & 2(\sigma - q)
 \end{align*}
 
@@ -692,7 +692,7 @@ the correction formula is negative:
 so we subtract the number of such blocks:
 \(-\binom{m^s -1}{2}\). However we have no good way
 to impose a useful upper bound on the negative sum
-\(\sum_{s}-\binom{m^s -1}{2}\) so we use the
+\(\sum_s-\binom{m^s -1}{2}\) so we use the
 trivial upper bound of 0.
 
 Where an encryption query \(s\)
