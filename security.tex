@@ -10,7 +10,7 @@
 
 \documentclass[hctr.tex]{subfiles}
 \begin{document}
-\section{Security of HCTR2}
+\section{Security of HCTR2}\label{security}
 \subsection{Definitions}
 We use \(x \sample S\) to mean ``\(x\) is sampled from \(S\) such that
 each element of \(S\) is equally likely'', and we write
@@ -265,7 +265,7 @@ length is substituted. Since the adversary can always ignore
 this information, giving it to them cannot make their performance worse.
 
 For \(j \in \{1 \ldots m^s-1\}\) we define \(S_j^s = S^s \xor \fromint(j)\),
-the block cipher inputs used in \(\XCTR\), and \(Y_j^s\) the corresponding
+the block cipher inputs used in XCTR, and \(Y_j^s\) the corresponding
 outputs, so that \(Y_j^s = \pi(S_j^s)\) and 
 \(Y_1^s \Concat \cdots \Concat Y_{m^s-1}^s = \XCTR_\pi(S^s)[0;n(m^s -1)] 
 = (N^s \xor V^s) \Concat D^s\).
@@ -589,7 +589,7 @@ Since \(q \leq \sigma\), Halevi and Rogaway's PRP-RND lemma
 \end{displaymath}
 Putting these together with our main lemma, we have that
 \begin{align*}
-    &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(\sigma, t)] \\
+    &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
     \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')] \\
     &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 10\sigma + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
