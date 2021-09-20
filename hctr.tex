@@ -10,14 +10,22 @@
 
 \documentclass[letterpaper,11pt]{article}
 
+\usepackage[svgnames]{xcolor}
 \usepackage{floatrow}
 \usepackage{algpseudocode}
 \usepackage{amsmath}
 \usepackage[style=alphabetic,backend=biber,alldates=ymd]{biblatex}
 \usepackage{bm}
 \usepackage[logic,probability,advantage,adversary,landau,sets,operators]{cryptocode}
+\usepackage{hyperxmp}
 \usepackage{hyperref}
 \usepackage{tikz}
+
+\usepackage[parfill]{parskip}
+\usepackage[style]{abstract}
+\usepackage{titling}
+\usepackage{sectsty}
+\usepackage{authblk}
 
 \usepackage{fontspec}
 \setmainfont{TeX Gyre Schola}
@@ -28,6 +36,28 @@
 \setmonofont{TeX Gyre Cursor}[Ligatures={NoCommon,NoRequired,NoContextual},Scale=0.9]
 
 \usetikzlibrary{groupops}
+
+\pretitle{\begin{center}\LARGE\bfseries\sffamily} % sf title
+\renewcommand{\abstitlestyle}{\sffamily\bfseries\centering} % sf abstract
+\allsectionsfont{\sffamily} % sf sections
+
+\raggedright
+\raggedbottom
+
+\author{Paul~Crowley}
+\author{Nathan~Huckleberry}
+\affil{Google LLC}
+
+\usepackage{hyperref}
+\hypersetup{breaklinks}
+\hypersetup{colorlinks}
+\hypersetup{urlcolor=DarkBlue}
+\hypersetup{linkcolor=DarkRed}
+\hypersetup{citecolor=DarkGreen}
+\hypersetup{unicode}
+\hypersetup{pdfencoding=unicode}
+\hypersetup{pdfauthor={Paul Crowley, Nathan Huckleberry}}
+
 
 \addbibresource{bib.bib}
 
@@ -49,7 +79,6 @@
 \DeclareMathOperator{\XCTR}{XCTR}
 
 \title{Length-preserving encryption with HCTR2}
-\author{Paul Crowley and Nathan Huckleberry}
 
 \usepackage{subfiles}
 \begin{document}
