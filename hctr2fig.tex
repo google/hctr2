@@ -3,6 +3,13 @@
 % Use of this source code is governed by an MIT-style
 % license that can be found in the LICENSE file or at
 % https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr.tex]{subfiles}
+\begin{document}
 \begin{tikzpicture}
   [line width=0.6,
    box/.style = {
@@ -56,3 +63,4 @@
   \draw[wire] (X3) -- (U);
   \draw[wire] (X2) -- (V);
 \end{tikzpicture}
+\end{document}
