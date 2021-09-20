@@ -1,0 +1,120 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr.tex]{subfiles}
+\begin{document}
+\section{Design of HCTR2}
+HCTR2 is intended as a successor to HCTR and retains several of the
+crucial features that make it an attractive design:
+\begin{itemize}
+    \item An unbalanced Feistel-like network based on universal
+    hashing, with a single block encryption on the narrow side.
+    This gives us excellent performance and parallelizability,
+    as well as very natural handling of messages that are not
+    a multiple of the block size. Contrast with eg HEH\cite{heh}:
+    while HCTR requires three passes, or two if passes are
+    run in parallel, HEH requires five, or three if run in parallel.
+    HEH also requires a ciphertext-stealing-like trick to
+    handle odd-sized messages, further increasing
+    latency especially for small messages.
+    \item Use of \(\MM \xor \UU\) in generating \(S\), which means
+    that an adversary's control over \(S\) is very limited for both
+    encryption and decryption queries; this is important in the
+    proof of security.
+    \item The CTR mode variant \(\XCTR\); HCTR2, unlike HCTR,
+    does not require this mode for its security proofs, 
+    but we prefer not to change it unnecessarily.
+    XCTR is also considerably easier to correctly
+    implement than standard CTR, which invites
+    implementations that appear correct
+    until the counter must roll over into 
+    the next word.
+\end{itemize}
+
+In designing HCTR2 we made the following changes from HCTR and design decisions:
+
+\begin{itemize}
+    \item To achieve a quadratic security bound
+    on queries of unbounded size,
+    we introduce the extra
+    key-dependent constant \(L\),
+    so that where HCTR has \(S = \MM \xor \UU\)
+    we have \(S = \MM \xor \UU \xor L\).
+    \item We allow a variable-length tweak. It is our intention to specify
+    HCTR2 precisely enough to be standardized, and permitting the tweak length
+    to vary is preferable to either fixing the tweak length for all users,
+    or specifying a family of HCTR2 variants parameterized by tweak length.
+    \item We derive \(h \gets E_k(\fromint(0))\)
+    and \(L \gets E_k(\fromint(1))\) from the block cipher key, to make use of the
+    mode more convenient.
+    \item We completely redesign the polynomial hash used.
+    \item We present a new proof, based on the H-coefficient technique,
+    with a tighter bound.
+    \item We specify endianness and the like so that implementations can be interoperable.
+    \item We rename some variables in our exposition and proof to allow some more standard usage.
+    \item We provide a sample implementation and test vectors.
+\end{itemize}
+
+\subsection{Hash function design}
+
+The polynomial hash used in HCTR2 is significantly different from
+that used in HCTR. Our design goals are:
+
+\begin{itemize}
+    \item fix the flaw described in \cite{kumarhctr}
+    \item allow a variable-length tweak
+    \item guarantee \(H(T, M) \neq h\), required
+    because \(h \gets E_k(\fromint(0))\)
+    \item allow implementations to precalculate as much as possible, to reduce multiplies
+\end{itemize}
+
+See \autoref{hproperties}
+for the properties we require of the hash function.
+
+To fix the \cite{kumarhctr} flaw, we eliminate the zero-length special case
+by adding one to the length before encoding it.
+
+We swap the tweak and the message, so that implementations need only
+process the tweak once for each encryption/decryption, instead of twice.
+
+With the introduction of the constant \(L\)
+our security proof no longer relies on the hash function
+having property 2 of \cite[Section~3.3]{hctr}.
+This allows us to move the length block first, so
+that implementations need only process it once per encryption/decryption.
+It is never zero, so its position in the
+polynomial can be inferred from the degree.
+
+This change means that \(\ceil{\abs{T}/n} + \ceil{\abs{M}/n}\)
+can be inferred from the degree of the
+polynomial. So the length block encodes
+only the length of the tweak, 
+with the least significant bit encoding 
+whether the message is
+block-multiple in length. If the message is not
+block-multiple, it is padded with a one followed
+by zeroes to a block-multiple length before hashing.
+This trick, using special treatment of block-multiple
+lengths to avoid unnecessarily extending processing,
+is drawn from \cite{xcbc}.
+
+This encoding can eliminate a multiply for implementations that use
+a fixed-length tweak but handle variable-length messages.
+If all tweaks are of length \(t\), implementations can store
+\(\fromint(2t + 2)h\), and use this or \(\fromint(2t + 2)h \xor h\)
+to start hashing, XORing this value directly with the
+first block of the tweak.
+
+This encoding also guarantees that the length block
+cannot have the value \(\fromint(1)\), which achieves
+our guarantee that \(H(T, M) \neq h\).
+
+% mention BRW?
+\end{document}

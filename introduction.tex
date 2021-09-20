@@ -1,0 +1,50 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr.tex]{subfiles}
+\begin{document}
+\section{Introduction}
+A symmetric encryption construction such as AES-GCM\cite{gcm}
+will produce a ciphertext which is several bytes larger than
+the plaintext, once the IV and MAC are included. However,
+there are several situations such as disk sector encryption
+where the ciphertext must be the exact same size as the
+plaintext, and what is required is a tweakable
+super-pseudorandom permutation\cite{cmc}. 
+\cite{adiantum} includes a detailed history of length-preserving encryption.
+Where AES and multiplication in \(GF(2^n)\) are hardware-accelerated,
+the construction HCTR\cite{hctr} is among the most efficient for 
+tweakable length-preserving encryption, using
+a single block cipher invocation and two multiplies
+per block. In this paper, we present a revised version, HCTR2.
+This revision addresses the following issues:
+\begin{itemize}
+    \item \cite{kumarhctr} observes that the HCTR polynomial hash function
+    is not \(\epsilon\)-almost-XOR-universal\cite{eadu} as claimed.
+    HCTR2's hash function fixes this property.
+    \item An error in the proof presented in \cite{hctrquad}
+    invalidates the claimed security bound; with our revised
+    mode we can claim a tighter bound.
+    \item HCTR2 supports using tweaks of any length with a single key.
+    \item HCTR's key is a block cipher key, plus an \(n\)-bit
+    hash key. HCTR2's key is simply
+    the block cipher key.
+    \item We modify the hash function to allow more precalculation
+    for greater performance.
+    \item We specify endianness and the like for interoperability.
+    \item We provide a sample implementation and test vectors.
+\end{itemize}
+
+We know of no patents affecting use of HCTR2.
+We begin with the specification and proof for HCTR2, laying
+the groundwork for describing the issues with HCTR (\autoref{hctrissues}),
+after which we discuss HCTR2 design decisions
+and report on its implementation on x86-64 and ARM64.
+\end{document}
