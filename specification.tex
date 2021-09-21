@@ -94,14 +94,15 @@ refer to the polynomial
     p(h) = M_0h^{l-1} \xor M_1h^{l-2} \xor \cdots \xor M_{l-2}h \xor M_{l-1}
 \end{displaymath}
 
-We define a polynomial for tweak \(T\) and message \(M\). Where \(n\) divides
-\(\abs{M}\) this is
+We define a polynomial for tweak \(T\) and message \(M\):
 \begin{displaymath}
-    H(T, M) = \poly(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat 0^n)
-\end{displaymath}
-otherwise this is
-\begin{displaymath}
-    H(T, M) = \poly(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n)
+    H(T, M) = 
+    \begin{cases}
+        \poly(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat 0^n) &
+        \text{if } n \text{ divides } \abs{M} \\
+        \poly(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n) &
+        \text{otherwise}
+    \end{cases}
 \end{displaymath}
 
 We then define our hash function \(H_h(T, M)\) as evaluation
@@ -116,7 +117,7 @@ we name this mode \emph{XCTR mode}, and define:
 \begin{displaymath}
     \XCTR_k(S) = E_k(S \xor \fromint(1)) \Concat E_k(S \xor \fromint(2)) \Concat E_k(S \xor \fromint(3)) \Concat \cdots
 \end{displaymath}
-thus generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls.
+Thus, generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls.
 
 \subsection{HCTR2 encryption}
 

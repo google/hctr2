@@ -12,7 +12,7 @@
 \begin{document}
 \section{Introduction}
 A symmetric encryption construction such as AES-GCM\cite{gcm}
-will produce a ciphertext which is several bytes larger than
+will produce a ciphertext which is larger than
 the plaintext, once the IV and MAC are included. However,
 there are several situations such as disk sector encryption
 where the ciphertext must be the exact same size as the
@@ -23,7 +23,7 @@ Where AES and multiplication in \(GF(2^n)\) are hardware-accelerated,
 the construction HCTR\cite{hctr} is among the most efficient for 
 tweakable length-preserving encryption, using
 a single block cipher invocation and two multiplies
-per block.
+per 16-byte block.
 
 In this paper, we present 
 a specification (\autoref{specification})
@@ -31,11 +31,12 @@ and security bound (\autoref{security})
 for a revised version, HCTR2, which 
 addresses the following issues, detailed in \autoref{hctrissues}:
 \begin{itemize}
-    \item \cite{kumarhctr} observes that the HCTR polynomial hash function
-    is not \(\epsilon\)-almost-XOR-universal\cite{eadu} as claimed.
+    \item \cite{kumarhctr} observes that HCTR's hash function
+    is not almost-XOR-universal\cite{eadu} as claimed.
     HCTR2's hash function fixes this property.
-    \item An error in the proof presented in \cite{hctrquad}
-    invalidates the claimed security bound; with our revised
+    \item Seperately,
+    an error in the proof presented in \cite{hctrquad}
+    invalidates the security bound claimed in that paper; with our revised
     mode we can claim a tighter bound.
     \item HCTR2 supports using tweaks of any length with a single key.
     \item HCTR's key is a block cipher key, plus an \(n\)-bit

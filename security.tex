@@ -12,17 +12,16 @@
 \begin{document}
 \section{Security of HCTR2}\label{security}
 \subsection{Definitions}
-We use \(x \sample S\) to mean ``\(x\) is sampled from \(S\) such that
-each element of \(S\) is equally likely'', and we write
+We use \(x \sample S\) to mean ``\(x\) is sampled from \(S\)
+uniformly at random'', and we write
 \(A^{\mathcal{O}, \mathcal{O}'}\Rightarrow 1\) to refer
-to the event ``algorithm \(A\),
+to the event ``adversary \(A\),
 given access to oracles \(\mathcal{O}, \mathcal{O}'\),
 returns 1''.
 
-The block cipher
-$E$
-must be a super-pseudorandom permutation~\cite{concrete}
-and we define the adversary's distinguishing advantage as:
+The block cipher \(E\)
+must be a super-pseudorandom permutation~\cite{concrete}.
+We define the adversary's distinguishing advantage for \(E\) as:
 %
 \begin{align*}
     \advantage{\pm \mathrm{prp}}{E}[(A)] \defeq
@@ -71,12 +70,12 @@ where \(\mathcal{A}(q, \sigma, t)\)
 is the set of all adversaries 
 making at most \(q\) queries
 and taking at most \(t\) time,
-such that the total of all blocks sent in queries is
+such that the total number of blocks sent in all queries is
 at most \(\sigma\) ie
 \begin{displaymath}
     \sum_s \ceil{|T^s|/n} + \ceil{|M^s|/n} \leq \sigma
 \end{displaymath}
-and \(T^s, M^s\) are the tweak and message
+where \(T^s, M^s\) are the tweak and message
 (plaintext or ciphertext)
 presented in query \(s\).
 

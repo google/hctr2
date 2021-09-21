@@ -19,11 +19,12 @@ HCTR uses a hash function based on the polynomial
 \end{displaymath}
 Because it assumes a fixed-length tweak it simply sets \(X = M \Concat T\).
 However, HCTR requires that the resulting polynomial be nonzero
-even when \(X = \lambda\), so as a special case they define
-\(H(\lambda) = h\).
+even when \(X = \lambda\), so as a special case \(H(\lambda) = h\).
 
 Unfortunately, as \cite{kumarhctr} observes this is no longer
 an injective map from \(X\)---we also have \(H(0) = h\). This
+breaks the almost-XOR-universal property relied on
+in the security bound and
 straightforwardly leads to an attack in which two encryption queries
 are presented, one of a block width, and the second extending
 the first with a single zero (and assuming a zero length tweak).
@@ -42,7 +43,7 @@ the proof of~\cite{hctrquad} is very similar
 to that of this paper: in the game RAND2, all queries get random
 responses, the block cipher inputs are inferred, and a collision
 in either the inferred plaintext or inferred ciphertext of the block cipher
-sets the ``bad'' flag. Where that paper refers to 
+sets the ``bad'' flag. What that paper refers to as
 \(C, \mathit{CC}, D\)
 we refer to as \(U, \UU, V\). Where HCTR2 has
 \(S = \MM \xor \UU \xor L\), HCTR simply has
