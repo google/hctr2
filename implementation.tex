@@ -11,4 +11,109 @@
 \documentclass[hctr.tex]{subfiles}
 \begin{document}
 \section{Implementation}\label{implementation}
+We provide generic implementations of HCTR2 in Python and C, as well as hardware accelerated implementations for x86-64 and ARM64. The implementation is available at {\color{red} FIX ME}. The rest of this section describes the optimizations used to efficiently implement HCTR2, as well as speed comparisons with other algorithms. This section is intended to document all of the design decisions made when implementing HCTR2 in assembly.
+
+\subsection{XCTR mode}
+Since the only difference between traditional CTR mode and XCTR is the counter, a slight modification to an accelerated CTR implementation yields an accelerated XCTR implementation. Our hardware accelerated XCTR implementation was adapted from the Linux kernel's implementation of CTR mode. The implementation retains all of its parallelism after modification. 
+
+\subsection{Polynomial hash function}
+The polynomial hash function is where the bulk of optimizations must be done. A naive partially-optimized implementation of $H$ is slower than XCTR mode. We use several optimization techniques to increase the efficiency of $H$. We show several methods to increase the parallelism of $H$ and to reduce the number of slow instructions required to compute it. With these optimizations in place, the polynomial hash function becomes significantly faster than XCTR mode.
+
+\subsubsection{Precomputed powers}
+Since $h$ is constant during hashing, powers of $h$ can be precomputed to avoid excess multiplications. We define a new function $\overline{poly}$ as follows
+\begin{align*}
+       \overline{poly}(M) = h^{k-1}M_0 \oplus \cdots \oplus hM_{k-2} \oplus M_{k-1}
+\end{align*}
+The function $\overline{poly}$ allows $k$ blocks to be efficiently hashed at once. By adapting Horner's method, we can use $\overline{poly}$ as a subroutine to efficiently compute $poly(M)$.
+
+First we break $M$ into $k$-block chunks $M = Q_0 \Concat \cdots \Concat Q_{s-1} \Concat M'$. Let $M'$ be $m$ blocks long for some $0 < m \le k$. We then apply $\overline{poly}$ to each chunk and combine the outputs to compute $poly$. 
+\begin{gather*}
+       poly(M) = poly(M') \oplus h^m(\overline{poly}(Q_{s-1}) \oplus h^k(\overline{poly}(Q_{s-2}) \oplus h^k(\cdots)))
+\end{gather*}
+Notice that each invocation of $\overline{poly}$ requires $k-1$ multiplications and the invocation of $poly(M')$ requires $m-1$ multiplications. So an invocation of $poly(M)$ requires $sk + (m-1)$ multiplications. Since $sk + (m-1)$ is constant for any choice of $k$, we can use any choice of $k$ and retain the same number of multiplications required to compute $poly(M)$. Furthermore, $\overline{poly}$ is parallelizable, so larger values of $k$ are preferred. Our implementation uses $k = 4$ for both x86-64 and ARM64.
+
+\subsubsection{Hardware accelerated multiplication}
+Finite field multiplication for HCTR2 consists of two subroutines, polynomial multiplication and polynomial reduction. We use a well-known variant of Karatsuba multiplication for polynomial multiplication and a well-known variant of Barrett reduction for polynomial reduction \cite{CLMUL}. We describe these algorithms for completeness.
+
+Let the input operands to polynomial multiplication be 128-bit polynomials $A, B$. We split $A, B$ into two 64-bit parts, $A = [A_1 : A_0]$, $B = [B_1 : B_0]$. Note that these values are assumed to be in registers, so the little-endian specification no longer applies. In other words, the lowest bit of $A_0$ is the constant term of $A$ and the highest bit of $A_1$ is the $x^{127}$ term. Let $clmul(X, Y)$ be the 128-bit carry-less product of two 64-bit operands. To perform Karatsuba multiplication, we define three 128-bit polynomials.
+\begin{gather*}
+       C = [C_1 : C_0] = clmul(A_1, B_1)\\
+       D = [D_1 : D_0] = clmul(A_0, B_0)\\
+       E = [E_1 : E_0] = clmul(A_0 \oplus B_0, A_1 \oplus B_1)
+\end{gather*}
+By combining these three values, we produce the 256-bit product $A * B$.
+\begin{align*}
+       A * B = [C_1 : C_0 \oplus C_1 \oplus D_1 \oplus E_1 : D_1 \oplus C_0 \oplus D_0 \oplus E_0 : D_0]
+\end{align*}
+We now describe the polynomial reduction algorithm. This is the slight modification of the process described in \cite{CLMUL}. This modification allows us to use carry-less multiplication instructions instead of bitshifts. Let $p(x) = [X_3 : X_2 : X_1 : X_0]$ be the $256$-bit operand. To compute the 128-bit reduction, we only need to reduce the upper 128-bit polynomial then XOR the reduction with the lower 128-bits. Let $c(x) = [X_3 : X_2]$ be the polynomial representing the upper 128-bits of the operand. Let $g(x)$ be the modulus and $g^*(x)$ be the lower 128-bits of the modulus. Since we assume the modulus to be $x^{128} + x^7 + x^2 + x + 1$, we have $g^*(x) = [\text{0x0} : \text{0x87}]$. Finally, let $q^+(x)$ be $x^{256}/g(x)$, in this case $q^+(x) = g(x)$. First we compute the 256-bit product of $q^+$ and $c(x)$ then discard the lower 128 bits. Let the operator $p(x) \div x^{n}$ represent polynomial long division without remainder by $x^n$ or equivalently, bitshifting right by $n$.
+\begin{gather*}
+       y(x) = q^+(x)c(x) = [Y_3 : Y_2 : Y_1 : Y_0]\\
+       y^*(x) = y(x) \div x^{128} \bmod x^{128} = [Y_3 : Y_2]
+\end{gather*}
+However, notice in this case that
+\begin{gather*}
+       y^*(x) = c(x)(x^{128} + g^*(x)) \div x^{128} \mod x^{128}\\
+       = [c(x)x^{128} + c(x)g^*(x)] \div x^{128} \mod x^{128}\\
+       = c(x) + (g^*(x)c(x) \div x^{128}) \mod x^{128}
+\end{gather*}
+Since $deg(g^*(x)) < 64$ we have $deg(g^(x)c(x)) < 192$. Furthermore, since we wish to compute $g^*(x)c(x) \div x^{128}$, we only need to compute the polynomial terms $a_{191}x^{192} + \cdots + a_{127}x^{128}$. Therefore we have
+\begin{align*}
+       (c(x) \div x^{64})g^*(x) \div x^{64} = g^*(x)c(x) \div x^{128}
+\end{align*}
+Substituting this into our original equation gives:
+\begin{gather*}
+       y^*(x) = c(x) + ((c(x) \div x^{64})g^*(x)) \div x^{64} \mod x^{128}\\
+       = (c(x) \div x^{64})(x^{64}) + (c(x) \bmod x^{64}) + ((c(x) \div x^{64})g^*(x)) \div x^{64} \mod x^{128}
+\end{gather*}
+Let $t(x) = c(x) \div x^{64}g^*(x)$. This gives
+\begin{align*}
+       y^*(x) = (c(x) \div x^{64})x^{64} + (c(x) \text{ mod } x^{64}) + t(x) \div x^{64} \mod x^{128}
+\end{align*}
+Furthermore, $t(x)$ is efficiently computable using carry-less multiplication.
+\begin{align*}
+       t(x) = (c(x) \div x^{64})g^*(x) = [T_1 : T_0] = clmul(X_3, \text{0x87})
+\end{align*}
+To compute the final reduction of $c(x)$, we then multiply $y^*(x)$ by $g^*(x)$ and return the lowest 128 bits of the product.
+\begin{align*}
+       r(x) = g^*(x)y^*(x) = t(x)x^{64} + g^*(x)\left[(c(x) \text{ mod } x^{64}) + (t(x) \div x^{64})\right]
+\end{align*}
+For simplicity let $z(x) = g^*(x)\left[(c(x) \text{ mod } x^{64}) + (t(x) \div x^{64})\right]$. Notice that this is also efficiently computable with carry-less multiplication.
+\begin{align*}
+       z(x) = [Z_1 : Z_0] = clmul(X_2 \oplus T_1,\text{0x87})
+\end{align*}
+So our final computation of $r(x)$ is
+\begin{align*}
+       r(x) = [T_0 \oplus Z_1 : Z_0] \oplus [X_1 : X_0]
+\end{align*}
+This approach greatly increases the speed of $H$, but it still has several problems. A single finite field multiplication requires 5 carry-less multiplications when implemented in this way, so an invocation to $\overline{poly}$ requires 5(k-1) carry-less multiplications. Furthermore, polynomial reduction requires an abundance of registers to implement. This makes a naive implementation of $\overline{poly}$ slow and difficult to parallelize on architectures where vectorized registers are scarce, such as x86-64. We fix this problem in the next subsection.
+
+\subsubsection{Amortized reductions and parallelism}
+The observation that $\overline{poly}$ is done only with pre-computed 128-bit polynomials leads to a large speedup in the implementation of $H$. The basic idea is to only perform a single polynomial reduction per invocation of $\overline{poly}$. Instead of performing polynomial multiplication in $GF_{128}$, we will simply perform multiplication in $GF_{2}[x]$. Since all multiplicands are pre-computed 128-bit polynomials, the output will always be a 256-bit polynomial. If we XOR all 256-bit polynomials together, we can then perform a single polynomial reduction at the end to compute the final output in $GF_{128}$.
+
+In practice, we change this idea slightly. Instead of producing a 256-bit polynomial by completing the full Karatsuba multiplication, we instead only perform the first step of Karatsuba multiplication by computing $C_i$, $D_i$, and $E_i$. We then compute the following
+\begin{gather*}
+       C = C_0 \oplus \cdots \oplus C_{k-1}\\
+       D = D_0 \oplus \cdots \oplus D_{k-1}\\
+       E = E_0 \oplus \cdots \oplus E_{k-1}
+\end{gather*}
+We then apply the final step of Karatsuba multiplication to $C$, $D$ and $E$ and compute the polynomial reduction. This allows the complex parts of polynomial multiplication to only be computed once per invocation of $\overline{poly}$.
+
+This implementation only requires $3(k-1) + 2$ carry-less multiplications per invocation of $\overline{poly}$. Furthermore, it allows for greater parallelism since the first step of Karatsuba multiplication can be done using only 4 registers on x86-64.
+
+\subsection{Further parallelism}
+A minor problem with the implementation of $\overline{poly}$ is that when computing $poly(M)$ the outer multiplications by $h^{k}$ cannot be parallelized. This can be fixed by precomputing the first $ck$ powers of $h$ for some integer $c$. This allows for a variant on the definition of $\overline{poly}$ which we will call $\overline{poly_i}$. We define this as
+\begin{align*}
+       \overline{poly_i} = h^{ki}M_0 + h^{ki-1}M_1 + \cdots + h^{ki - k + 1}M_{k-1}
+\end{align*}
+Using this idea, we can remove the non-parallelism of $h^k$ and further amortize polynomial reductions by computing
+\begin{align*}
+	\overline{poly_0}(Q_0) \oplus \overline{poly_1}(Q_1) \oplus \cdots \oplus \overline{poly_{k-1}}(Q_{k-1})
+\end{align*}
+If we leave this polynomial in terms of $C$, $D$ and $E$, only one reduction call is required for $k$ invocations of $\overline{poly_i}$
+
+\subsection{Speed comparisons}
+{\color{red} Tables, grahps, etc}
+
+
+\printbibliography[heading=bibintoc]
 \end{document}
