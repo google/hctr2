@@ -45,7 +45,7 @@ void hctr_setkey(struct hctr_ctx *ctx, const u8 *key)
  * Assume that nbytes is a multiple of BLOCKCIPHER_BLOCK_SIZE
  */
 void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
-		       size_t nbytes, const u8 *tweak, size_t tweak_len, bool encrypt)
+		       size_t nbytes, const u8 *tweak, size_t tweak_len, bool encrypt, bool simd)
 {
     struct polyhash_state polystate;
     u8 digest[POLYHASH_DIGEST_SIZE];
@@ -69,9 +69,9 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     D = dst + BLOCKCIPHER_BLOCK_SIZE;
 
     polyhash_init(&polystate);
-    polyhash_update_simd(&ctx->polyhash_key, &polystate, N, N_bytes);
-    polyhash_update_simd(&ctx->polyhash_key, &polystate, tweak, tweak_len/8);
-    polyhash_emit_simd(&ctx->polyhash_key, &polystate, (u8 *)&digest);
+    polyhash_update(&ctx->polyhash_key, &polystate, N, N_bytes, simd);
+    polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len/8, simd);
+    polyhash_emit(&ctx->polyhash_key, &polystate, (u8 *)&digest, simd);
 
     xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
     
@@ -94,36 +94,35 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     
     xor(&S, &MM, &CC, BLOCKCIPHER_BLOCK_SIZE);
 
-    hctr_ctr_crypt(&ctx->aes_ctx, D, N, N_bytes, &S);
+    hctr_ctr_crypt(&ctx->aes_ctx, D, N, N_bytes, &S, simd);
 
     polyhash_init(&polystate);
-    polyhash_update_simd(&ctx->polyhash_key, &polystate, D, N_bytes);
-    polyhash_update_simd(&ctx->polyhash_key, &polystate, tweak, tweak_len/8);
-    polyhash_emit_simd(&ctx->polyhash_key, &polystate, (u8 *)&digest);
+    polyhash_update(&ctx->polyhash_key, &polystate, D, N_bytes, simd);
+    polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len/8, simd);
+    polyhash_emit(&ctx->polyhash_key, &polystate, (u8 *)&digest, simd);
 
     xor(C, &CC, digest, BLOCKCIPHER_BLOCK_SIZE);
 }
 
-void _hctr_encrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
-        size_t nbytes, const u8 *tweak, size_t tweak_len) {
-    hctr_crypt(ctx, dst, src, nbytes, tweak, tweak_len, true);
-}
-
-void _hctr_decrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
-        size_t nbytes, const u8 *tweak, size_t tweak_len) {
-    hctr_crypt(ctx, dst, src, nbytes, tweak, tweak_len, false);
-}
-
-void hctr_encrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
+void hctr_encrypt_generic(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
         size_t nbytes, const u8 *tweak) {
-    _hctr_encrypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len);
+    hctr_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, true, false);
 }
 
-void hctr_decrypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
+void hctr_decrypt_generic(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
         size_t nbytes, const u8 *tweak) {
-    _hctr_decrypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len);
+    hctr_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, false, false);
 }
 
+void hctr_encrypt_simd(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
+        size_t nbytes, const u8 *tweak) {
+    hctr_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, true, true);
+}
+
+void hctr_decrypt_simd(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
+        size_t nbytes, const u8 *tweak) {
+    hctr_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, false, true);
+}
 
 
 void test_hctr(void)
@@ -133,7 +132,10 @@ void test_hctr(void)
 #define IV_BYTES	HCTR_DEFAULT_TWEAK_LEN
 #define KEY		struct hctr_ctx
 #define SETKEY		hctr_setkey
-#define ENCRYPT		hctr_encrypt
-#define DECRYPT		hctr_decrypt
+#define ENCRYPT		hctr_encrypt_generic
+#define DECRYPT		hctr_decrypt_generic
+#define ENCRYPT_SIMD		hctr_encrypt_simd
+#define DECRYPT_SIMD		hctr_decrypt_simd
+#define SIMD_IMPL_NAME "simd"
 #include "cipher_benchmark_template.h"
 }

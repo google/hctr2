@@ -8,11 +8,13 @@
  * https://opensource.org/licenses/MIT.
  */
 
+#include "aes.h"
+#include "aes_linux.h"
 #include "hctr-ctr.h"
 
 void hctr_ctr_setkey(struct aes_ctx *ctx, const u8 *key)
 {
-    aesti_expand_key(ctx, key, 256);
+    aes256_setkey(ctx, key);
 }
 
 
@@ -25,8 +27,18 @@ asmlinkage void ce_aes_hctr_ctr_encrypt(u8 out[], u8 const in[], u8 const rk[], 
                 int bytes, u8 ctr[], u8 finalbuf[]);
 #endif
 
-// Assume nbytes is a multiple of BLOCK_SIZE
 void hctr_ctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
+        size_t nbytes, const u8 *iv, bool simd) {
+    if(simd) {
+        hctr_ctr_crypt_simd(ctx, dst, src, nbytes, iv);
+    }
+    else {
+        hctr_ctr_crypt_generic(ctx, dst, src, nbytes, iv);
+    }
+}
+
+// Assume nbytes is a multiple of BLOCK_SIZE
+void hctr_ctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		       size_t nbytes, const u8 *iv)
 {
 #ifdef __x86_64__
@@ -38,6 +50,26 @@ void hctr_ctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 #endif
 }
 
+void hctr_ctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
+		       size_t nbytes, const u8 *iv)
+{
+    int i;
+    int nblocks;
+    ble128 ctr;
+    ctr.lo = 0;
+    ctr.hi = 0;
+
+    nblocks = nbytes / CTR_BLOCK_SIZE;
+    for(i = 0; i < nblocks; i++) {
+        ctr.lo = i+1;
+        ctr.hi = 0;
+        ble128_xor(&ctr,(ble128*)iv);
+        aes_encrypt(ctx, &dst[i * CTR_BLOCK_SIZE], (u8*)&ctr);
+        //aesni_ecb_enc(&ctx->aes_ctx, &dst[i * CTR_BLOCK_SIZE], &ctr, CTR_BLOCK_SIZE);
+        ble128_xor((ble128*)&dst[i * CTR_BLOCK_SIZE], (ble128*)&src[i * CTR_BLOCK_SIZE]);
+    }
+}
+
 void test_hctr_ctr(void)
 {
 #define ALGNAME		"HCTR-CTR"
@@ -45,7 +77,10 @@ void test_hctr_ctr(void)
 #define IV_BYTES	CTR_IV_SIZE
 #define KEY		struct aes_ctx
 #define SETKEY		hctr_ctr_setkey
-#define ENCRYPT		hctr_ctr_crypt
-#define DECRYPT		hctr_ctr_crypt
+#define ENCRYPT		hctr_ctr_crypt_generic
+#define DECRYPT		hctr_ctr_crypt_generic
+#define SIMD_IMPL_NAME "simd"
+#define ENCRYPT_SIMD	hctr_ctr_crypt_simd
+#define DECRYPT_SIMD	hctr_ctr_crypt_simd
 #include "cipher_benchmark_template.h"
 }

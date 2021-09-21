@@ -41,6 +41,13 @@ static inline void polyhash_init(struct polyhash_state *state)
     state->partial_block_length = 0;
 }
 
+void polyhash_update(const struct polyhash_key *key,
+        		struct polyhash_state *state, const u8 *data,
+        		size_t nbytes, bool simd);
+
+void polyhash_emit(const struct polyhash_key *key,
+				struct polyhash_state * state, u8 *out, bool simd);
+
 void polyhash_update_simd(const struct polyhash_key *key,
         		struct polyhash_state *state, const u8 *data,
         		size_t nbytes);

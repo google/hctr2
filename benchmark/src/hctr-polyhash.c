@@ -72,6 +72,28 @@ inline const ble128 * get_key_power(const struct polyhash_key *key, const int ex
     return &(key->powers[NUM_PRECOMPUTE_KEYS - 1 - (exponent - 2)]);
 }
 
+void polyhash_update(const struct polyhash_key *key,
+        		struct polyhash_state *state, const u8 *data,
+                size_t nbytes, bool simd) {
+    if(simd) {
+        polyhash_update_simd(key, state, data, nbytes);
+    }
+    else {
+        polyhash_update_generic(key, state, data, nbytes);
+    }
+}
+
+void polyhash_emit(const struct polyhash_key *key,
+        struct polyhash_state * state, u8 *out, bool simd) {
+    if(simd) {
+        polyhash_emit_simd(key, state, out);
+    }
+    else {
+        polyhash_emit_generic(key, state, out);
+    }
+}
+
+
 /*
  * This function may only be called by polyhash_update_clmulni, otherwise
  * out of bounds accesses may occur.
