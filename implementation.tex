@@ -11,7 +11,7 @@
 \documentclass[hctr.tex]{subfiles}
 \begin{document}
 \section{Implementation}\label{implementation}
-We provide generic implementations of HCTR2 in Python and C, as well as hardware accelerated implementations for x86-64 and ARM64. The implementation is available at {\color{red} FIX ME}. The rest of this section describes the optimizations used to efficiently implement HCTR2, as well as speed comparisons with other algorithms. This section is intended to document all of the design decisions made when implementing HCTR2 in assembly.
+We provide generic implementations of HCTR2 in Python and C, as well as hardware accelerated implementations for x86-64 and ARM64. The implementation is available at {\color{red} FIXME}. The rest of this section describes the optimizations used to efficiently implement HCTR2, as well as speed comparisons with other algorithms. This section is intended to document all of the design decisions made when implementing HCTR2 in assembly.
 
 \subsection{XCTR mode}
 Since the only difference between traditional CTR mode and XCTR is the counter, a slight modification to an accelerated CTR implementation yields an accelerated XCTR implementation. Our hardware accelerated XCTR implementation was adapted from the Linux kernel's implementation of CTR mode. The implementation retains all of its parallelism after modification. 
@@ -112,8 +112,7 @@ Using this idea, we can remove the non-parallelism of $h^k$ and further amortize
 If we leave this polynomial in terms of $C$, $D$ and $E$, only one reduction call is required for $k$ invocations of $\overline{poly_i}$
 
 \subsection{Speed comparisons}
-{\color{red} Tables, grahps, etc}
-
+{\color{red} FIXME Tables, grahps, etc}
 
 \printbibliography[heading=bibintoc]
 \end{document}
