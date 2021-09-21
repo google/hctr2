@@ -88,11 +88,6 @@ ie \(\HCTR[E_k]\) for \(k \sample \mathcal{K}\), while
 for \(\pi \sample \Perm(n)\).
 
 \subsection{Hash function}\label{hproperties}
-For any nonzero polynomial \(p(h)\)
-in \(GF(2^n)\) 
-of degree \(d\), there are at most \(d\) values \(h\)
-such that \(p(h) = 0\), and therefore
-\(\probsub{h\sample{\bin^n}}{p(h) = 0} \leq d/2^n\).
 We depend on the following properties of the map from 
 \(H(T, M)\) to polynomials:
 \begin{itemize}
@@ -101,16 +96,29 @@ We depend on the following properties of the map from
     \item The polynomial is never \(p(h) = 0\) or \(p(h) = h\)
     \item The polynomial is of degree at most
     \begin{displaymath}
-        d(T, M) = 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
+        d(T, M) \defeq 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
     \end{displaymath}
-    % FIXME nhuck@ comments that this is potentially confusing
 \end{itemize}
 Note that these are all considerations about the polynomial,
 not about the value \(H_h(T, M)\);
 for example we may have \(H_h(T, M) = h\) for some values of \(h\).
-% FIXME prove that the map is injective
 
-From this we infer three properties of \(H_h(T, M)\):
+To see that the map is injective,
+consider that the length block is never zero,
+and so the highest nonzero term of the polynomial
+is always the length block. This gives us
+\(\abs{T}\), \(\ceil{\abs{T}/n} + \ceil{\abs{M}/n}\),
+and whether a 1 has been appended to \(M\).
+From this we can infer which blocks contain \(M\)
+and whether to delete the last 1 and following zeroes,
+recovering both \(T\) and \(M\).
+
+For any nonzero polynomial \(p(h)\)
+in \(GF(2^n)\), there are at most \(\deg(p)\) values \(h\)
+such that \(p(h) = 0\), and therefore
+\(\probsub{h\sample{\bin^n}}{p(h) = 0} \leq \deg(p)/2^n\).
+From this and the above properties,
+we infer three properties of \(H_h(T, M)\):
 \begin{description}
     \item[Property 1]
     For any \(T, M\) and any \(g \in \bin^n\),
