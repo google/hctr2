@@ -163,8 +163,8 @@ Our use of the symbol \(\mathcal{T}\) and the term
 
 We wish to bound the adversary's ability to distinguish between
 two ``worlds'', world X (the ``real world'') and world Y (the ``ideal world'').
-Each world is a probability distribution over oracles the adversary
-interacts with.
+Each world is a probability distribution over
+deterministic oracles the adversary interacts with.
 
 We consider only deterministic adversaries.
 A randomized adversary can be considered as a random draw
@@ -205,14 +205,25 @@ We further assume that \(A(\tau)\) is optimal:
 \(A(\tau) = 1\)
 when \(\prob{Y = \tau} > \prob{X = \tau}\) and 0 otherwise.
 
-In \autoref{mainlemma}, we partition \(\Tc\) into \(\Tg\) and \(\Tb\). 
-We prove that for all \(\tau \in \Tg\)
-\(\prob{Y = \tau} \leq \prob{X = \tau}\),
-and that \(\prob{Y \in \Tb} \leq \epsilon\).
+In \autoref{mainlemma}, we partition \(\Tc\) into \(\Tg\) and \(\Tb\),
+and prove that:
+\begin{itemize}
+    \item \(\prob{Y = \tau} \leq \prob{X = \tau}\) for all \(\tau \in \Tg\)
+    \item \(\prob{Y \in \Tb} \leq \epsilon\)
+\end{itemize}
 It follows that \(A(\tau) = 0\) for all \(\tau \in \Tg\),
 and therefore that \(\prob{A(Y) = 1} \leq \epsilon\),
 from which we bound the distinguishing advantage:
 \(\prob{A(Y) = 1} - \prob{A(X) = 1} \leq \epsilon\).
+
+With this technique, only the first proof
+need consider the probability
+distribution of world X at all,
+and this proof need only consider good transcripts.
+The bulk of the work, proving
+\(\prob{Y \in \Tb} \leq \epsilon\),
+involves only world Y, which is far simpler
+to reason about.
 
 \subsection{Main lemma}\label{mainlemma}
 In what follows, we take world X (the ``real world'') 
@@ -329,6 +340,7 @@ in world Y we still have that \(h\), \(L\), and the
 query response are uniformly random and independent,
 and so we can consider them in any order.
 
+\subfile{casetable.tex}
 In most cases, the probability of a collision
 between two specific blocks is bounded by \(1/2^n\).
 
@@ -433,10 +445,8 @@ all values of \(U^s\) are equally likely
 and a single value causes the equation to hold,
 for a probability of \(1/2^n\).
 
-\subfile{casetable.tex}
-
 \autoref{domaincollision} illustrates the various cases
-we consider for domain collisions.
+we consider for inferred block cipher plaintext collisions.
 Columns represent the terms
 on the left hand side of the collision, while
 rows represent the terms on the right; 
@@ -458,6 +468,7 @@ and green if the probability may be
 greater than \(1/2^n\) and depends
 on the number of solutions to a
 particular polynomial;
+\(d^s\) when there are \(d^s\) solutions,
 \(\max\) where there are
 \(\max(d^r, d^s)\) solutions.
 Even where a square is green,
@@ -468,7 +479,7 @@ Where a rectangle covers
 multiple squares, a single argument
 covering all those cases is presented.
 \autoref{rangecollision} covers
-range collisions; in this case,
+block cipher ciphertext collisions; in this case,
 it is only decryption queries where
 probabilities may be above \(1/2^n\).
 
@@ -589,7 +600,7 @@ Since \(q \leq \sigma\), Halevi and Rogaway's PRP-RND lemma
     \leq \left.\binom{q}{2}\middle/2^n\right.
     \leq q^2/2^{n+1}
 \end{displaymath}
-Putting these together with our main lemma, we have that
+Putting these together with our main lemma, we have shown
 \begin{align*}
     &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
     \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')] \\

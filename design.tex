@@ -12,7 +12,7 @@
 \begin{document}
 \section{Design of HCTR2}\label{design}
 HCTR2 is intended as a successor to HCTR and retains several of the
-crucial features that make it an attractive design:
+features that make it an attractive design:
 \begin{itemize}
     \item An unbalanced Feistel-like network based on universal
     hashing, with a single block encryption on the narrow side.
@@ -85,7 +85,7 @@ for the properties we require of the hash function.
 To fix the \cite{kumarhctr} flaw, we eliminate the zero-length special case
 by adding one to the length before encoding it.
 
-We swap the tweak and the message, so that implementations need only
+We process the tweak before the message, so that implementations need only
 process the tweak once for each encryption/decryption, instead of twice.
 
 With the introduction of the constant \(L\)
@@ -111,7 +111,7 @@ is a block-multiple in length,
 we don't want an extra multiply
 for an extra block containing only the appended 1 bit.
 Borrowing from~\cite{xcbc},
-we append no 1 bit to such messages.
+we don't append a 1 bit to such messages.
 Instead, we indicate whether the message is block-multiple in length
 in the least significant bit of the length block.
 If all tweaks are of length \(t\), implementations can store
