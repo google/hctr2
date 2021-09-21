@@ -16,7 +16,7 @@ We use \(x \sample S\) to mean ``\(x\) is sampled from \(S\)
 uniformly at random'', and we write
 \(A^{\mathcal{O}, \mathcal{O}'}\Rightarrow 1\) to refer
 to the event ``adversary \(A\),
-given access to oracles \(\mathcal{O}, \mathcal{O}'\),
+given access to oracles \(\mathcal{O}\) and \(\mathcal{O}'\),
 returns 1''.
 
 Let $\Perm(n)$ denote the set of all permutations on \(\bin^n\).
@@ -66,8 +66,8 @@ the distinguishing advantage of an adversary $A$ is:
 \end{align*}
 where \(\mathcal{A}(q, \sigma, t)\)
 is the set of all adversaries 
-making at most \(q\) queries
-and taking at most \(t\) time,
+that make at most \(q\) queries
+and take at most \(t\) time,
 such that the total number of blocks sent in all queries is
 at most \(\sigma\) ie
 \begin{displaymath}
@@ -558,9 +558,8 @@ all queries gives us a total correction of
     &\sum_{r < s} \max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\\
     \leq & \sum_{r < s} d^r + d^s -1 + (m^r -1 )(d^s -1)\\
     = & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (m^r -1 )(d^s -1) \\
-    \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} d^rd^s \\
-    % FIXME last step seems a bit loose
-    \leq & (q-1)\sigma - \binom{q}{2} + \binom{\sigma}{2} \\
+    \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (d^r -1)(d^s -1) \\
+    \leq & (q-1)\sigma - \binom{q}{2} + \binom{\sigma - q}{2} \\
    \leq & (q-1)\sigma + \binom{\sigma}{2} \\
 \end{align*}
 
