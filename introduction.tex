@@ -13,16 +13,16 @@
 \section{Introduction}
 A symmetric encryption construction such as AES-GCM\cite{gcm}
 will produce a ciphertext which is larger than
-the plaintext, once the IV and MAC are included. However,
-there are several situations such as disk sector encryption
-where the ciphertext must be the exact same size as the
+the plaintext, once the nonce and authentication tag are included. However,
+there are situations such as disk sector encryption
+where the ciphertext must be the same size as the
 plaintext, and what is required is a tweakable
 super-pseudorandom permutation\cite{cmc}. 
 \cite{adiantum} includes a detailed history of length-preserving encryption.
 Where AES and multiplication in \(GF(2^n)\) are hardware-accelerated,
 the construction HCTR\cite{hctr} is among the most efficient for 
 tweakable length-preserving encryption, using
-a single block cipher invocation and two multiplies
+a single block cipher invocation and two \(GF(2^n)\) multiplications
 per 16-byte block.
 
 In this paper, we present 
@@ -34,7 +34,7 @@ addresses the following issues, detailed in \autoref{hctrissues}:
     \item \cite{kumarhctr} observes that HCTR's hash function
     is not almost-XOR-universal\cite{eadu} as claimed.
     HCTR2's hash function fixes this property.
-    \item Seperately,
+    \item Separately,
     an error in the proof presented in \cite{hctrquad}
     invalidates the security bound claimed in that paper; with our revised
     mode we can claim a tighter bound.

@@ -72,7 +72,8 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     where $v$ is the least integer $\geq 0$ such that $n$ divides $\abs{X} + v$
     \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
     \(n\)-bit block cipher with keyspace \(\mathcal{K}\);
-    our concrete proposal uses AES, so \(n=128\) and \(\mathcal{K}\) is
+    our concrete proposal uses AES\cite{aes},
+    so \(n=128\) and \(\mathcal{K}\) is
     \(\bin^{128}\), \(\bin^{192}\), or \(\bin^{256}\)
     \item \(\mathcal{T}\): the set of permissible tweaks
     \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^{n-1}-2\}}\bin^i\)
@@ -84,7 +85,7 @@ We map bytes to bitstrings with \(\fromint_8\).
 \subsection{Polynomial hash function}
 We interpret \(n\)-bit blocks as little-endian field elements of \(\GF(2^n)\),
 so \(001 \Concat 0^{n-3}\) is interpreted as the element \(x^2\).
-Where \(n=128\) we reduce by
+In our concrete proposal, \(n=128\) and we reduce by
 \(1 + x + x^2 + x^7 + x^{128}\). Then let
 \begin{displaymath}
     \poly(M_0 \Concat M_1 \Concat \cdots \Concat M_{l-2} \Concat M_{l-1})
@@ -111,13 +112,15 @@ of the polynomial \(H(T, M)\) at \(h\) for key \(h \in \bin^n\).
 \subsection{XCTR mode}
 
 HCTR and HCTR2 use an unusual mode of stream encryption.
-\cite{hctr,hctrquad} note the differences between this mode and CTR mode,
+\cite{hctr,hctrquad} note the differences between this mode and 
+CTR mode\cite{ctr},
 but use the same name to refer to it; for the avoidance of ambiguity
 we name this mode \emph{XCTR mode}, and define:
 \begin{displaymath}
     \XCTR_k(S) = E_k(S \xor \fromint(1)) \Concat E_k(S \xor \fromint(2)) \Concat E_k(S \xor \fromint(3)) \Concat \cdots
 \end{displaymath}
-Thus, generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls.
+Thus, generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls. Note also that XCTR is defined to be little endian,
+in contrast to CTR which is defined to be big endian.
 
 \subsection{HCTR2 encryption}
 

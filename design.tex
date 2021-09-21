@@ -61,7 +61,8 @@ HCTR2 differs from HCTR in the following ways:
     \autoref{hashdesign}.
     \item We present a new proof, based on the H-coefficient technique,
     with a tighter bound.
-    \item We specify endianness and the like so that implementations can be interoperable.
+    \item We specify endianness and the like so that implementations can be interoperable. We use little-endian representation everywhere,
+    since this is faster on nearly all modern platforms.
     \item We rename some variables in our exposition and proof to allow some more standard usage.
     \item We provide a sample implementation and test vectors.
 \end{itemize}
@@ -76,7 +77,7 @@ that used in HCTR. Our design goals are:
     \item allow a variable-length tweak
     \item guarantee \(H(T, M) \neq h\), required
     because \(h \gets E_k(\fromint(0))\)
-    \item allow implementations to precalculate as much as possible, to reduce \(GF(2^n)\) multiplies
+    \item allow implementations to precalculate as much as possible, to reduce \(GF(2^n)\) multiplications
 \end{itemize}
 
 See \autoref{hproperties}

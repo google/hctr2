@@ -19,9 +19,10 @@ to the event ``adversary \(A\),
 given access to oracles \(\mathcal{O}, \mathcal{O}'\),
 returns 1''.
 
-The block cipher \(E\)
-must be a super-pseudorandom permutation~\cite{concrete}.
-We define the adversary's distinguishing advantage for \(E\) as:
+Let $\Perm(n)$ denote the set of all permutations on \(\bin^n\).
+Per \cite{concrete}, for a block cipher 
+\(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\)
+the distinguishing advantage of an adversary \(A\) is:
 %
 \begin{align*}
     \advantage{\pm \mathrm{prp}}{E}[(A)] \defeq
@@ -29,14 +30,11 @@ We define the adversary's distinguishing advantage for \(E\) as:
     \\
     {}&\left. - \probsub{\pi \sample \Perm(n)}{A^{\pi,\pi^{-1}}\Rightarrow 1}\right\rvert
     \\
+    \intertext{We then define}
     \advantage{\pm \mathrm{prp}}{E}[(q, t)] \defeq
     {}&\max_{A \in \mathcal{A}(q, t)} \advantage{\pm \mathrm{prp}}{E}[(A)]
 \end{align*}
-%
-where $A$ is an adversary,
-$\Perm(n)$ denotes the set of all permutations on \(\bin^n\),
-and
-$\mathcal{A}(q, t)$
+where $\mathcal{A}(q, t)$
 is the set of all adversaries that make at most $q$ queries and take at most $t$ time.
 
 Let $\Perm^\mathcal{T}(\mathcal{M})$
@@ -553,7 +551,7 @@ all queries gives us a total correction of
     \leq & \sum_{r < s} d^r + d^s -1 + (m^r -1 )(d^s -1)\\
     = & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (m^r -1 )(d^s -1) \\
     \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} d^rd^s \\
-    % fixme last step seems a bit loose
+    % FIXME last step seems a bit loose
     \leq & (q-1)\sigma - \binom{q}{2} + \binom{\sigma}{2} \\
    \leq & (q-1)\sigma + \binom{\sigma}{2} \\
 \end{align*}
