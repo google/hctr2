@@ -78,36 +78,32 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
     \item \(\mathcal{T}\): the set of permissible tweaks
     \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^{n-1}-2\}}\bin^i\)
     \item \(\mathcal{M}\): the set of permissible messages
-    \(\mathcal{M} = \bigcup_{i \in \{n\ldots2^{n-1}-2\}}\bin^i\)
+    \(\mathcal{M} = \bigcup_{i \in \{n\ldots n + 2^{n-1}-2\}}\bin^i\)
 \end{itemize}
 We map bytes to bitstrings with \(\fromint_8\).
 
-\subsection{Polynomial hash function}
+\subsection{Polynomial hash function}\label{hashspec}
 We interpret \(n\)-bit blocks as little-endian field elements of \(\GF(2^n)\),
 so \(001 \Concat 0^{n-3}\) is interpreted as the element \(x^2\).
 In our concrete proposal, \(n=128\) and we reduce by
-\(1 + x + x^2 + x^7 + x^{128}\). Then let
-\begin{displaymath}
-    \poly(M_0 \Concat M_1 \Concat \cdots \Concat M_{l-2} \Concat M_{l-1})
-\end{displaymath}
-refer to the polynomial
-\begin{displaymath}
-    p(h) = M_0h^{l-1} \xor M_1h^{l-2} \xor \cdots \xor M_{l-2}h \xor M_{l-1}
-\end{displaymath}
+\(1 + x + x^2 + x^7 + x^{128}\).
+Define
+\begin{align*}
+    & \poly_h(M_0 \Concat M_1 \Concat \cdots \Concat M_{l-2} \Concat M_{l-1}) \\
+    \defeq & M_0h^{l-1} \xor M_1h^{l-2} \xor \cdots \xor M_{l-2}h \xor M_{l-1}
+\end{align*}
 
-We define a polynomial for tweak \(T\) and message \(M\):
-\begin{displaymath}
-    H(T, M) = 
+Then for tweak \(T\) and message \(M\), we define \(H: \bin^n \times \mathcal{T} \times \mathcal{T}\):
+\begin{align*}
+    & H_h(T, M) \\
+    \defeq & 
     \begin{cases}
-        \poly(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat 0^n) &
+        \poly_h(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat 0^n) &
         \text{if } n \text{ divides } \abs{M} \\
-        \poly(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n) &
+        \poly_h(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n) &
         \text{otherwise}
     \end{cases}
-\end{displaymath}
-
-We then define our hash function \(H_h(T, M)\) as evaluation
-of the polynomial \(H(T, M)\) at \(h\) for key \(h \in \bin^n\).
+\end{align*}
 
 \subsection{XCTR mode}
 

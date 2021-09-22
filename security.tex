@@ -88,20 +88,39 @@ ie \(\HCTR[E_k]\) for \(k \sample \mathcal{K}\), while
 for \(\pi \sample \Perm(n)\).
 
 \subsection{Hash function}\label{hproperties}
+In \autoref{hashspec} we defined \(\poly_h(M)\) as polynomial evaluation.
+We now define \(\poly(M)\) to refer to the formal polynomial
+that this implies: \(\poly(M_0 \Concat \cdots \Concat M_{l-1})
+\defeq  M_0h^{l-1} \xor \cdots \xor M_{l-1}\).
+While \(h + 2\) and \(2h + 1\) can be equal
+in value if \(h = 1\), two formal polynomials are only equal
+if every coefficient is equal; thus \(\poly(M) = \poly(M')\)
+only if \(M = 0^{ln} \Concat M'\) for some \(l\) or vice versa.
+We then define \(H(T, M)\) as the formal polynomial in \(h\) given
+by that tweak and message,
+so \(H_h(T, M)\) is then evaluation of this polynomial at \(h\).
+\begin{align*}
+    & H(T, M) \\
+    \defeq &
+    \begin{cases}
+        \poly(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat 0^n) &
+        \text{if } n \text{ divides } \abs{M} \\
+        \poly(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n) &
+        \text{otherwise}
+    \end{cases}    \\
+\end{align*}
+
 We depend on the following properties of the map from 
 \(H(T, M)\) to polynomials:
 \begin{itemize}
     \item The map is injective
     \item The constant term is always zero
-    \item The polynomial is never \(p(h) = 0\) or \(p(h) = h\)
+    \item The polynomial is never \(0\) or \(h\)
     \item The polynomial is of degree at most
     \begin{displaymath}
         d(T, M) \defeq 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
     \end{displaymath}
 \end{itemize}
-Note that these are all considerations about the polynomial,
-not about the value \(H_h(T, M)\);
-for example we may have \(H_h(T, M) = h\) for some values of \(h\).
 
 To see that the map is injective,
 consider that the length block is never zero,
@@ -150,7 +169,7 @@ we infer three properties of \(H_h(T, M)\):
         \probsub{h\sample{\bin^n}}{H_h(T, M) \xor h = g} \leq d(T, M)/2^n
     \end{displaymath}
     Proof: \(H(T, M)\) has a zero constant term and
-    cannot be equal to the polynomial \(p(h) = h\),
+    cannot be equal to the polynomial \(h\),
     so \(H(T, M) \xor g \xor h\) cannot be the zero polynomial, and
     therefore can have at most \(d(T, M)\) zeroes.
 \end{description}
