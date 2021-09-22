@@ -10,9 +10,9 @@
 
 \documentclass[hctr.tex]{subfiles}
 \begin{document}
-\section{HCTR issues}\label{hctrissues}
+\section{HCTR issues}
 Two errors in previous work on HCTR are addressed in HCTR2.
-\subsection{Hash function}
+\subsection{Hash function}\label{badhash}
 HCTR uses a hash function based on the polynomial
 \begin{displaymath}
     H(X) = \poly(\pad(X) \Concat \fromint(\abs{X}) \Concat 0^n)
@@ -29,7 +29,7 @@ straightforwardly leads to an attack in which two encryption queries
 are presented, one of a block width, and the second extending
 the first with a single zero (and assuming a zero length tweak).
 
-\subsection{Security bound}
+\subsection{Security bound}\label{badproof}
 \cite{hctr} was initially presented with a security bound cubic
 in the total size of all queries combined.  This is a little low
 for comfort; if a 128-bit block cipher is used, it suggests a

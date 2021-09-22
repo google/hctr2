@@ -29,14 +29,14 @@ In this paper, we present
 a specification (\autoref{specification})
 and security bound (\autoref{security})
 for a revised version, HCTR2, which 
-addresses the following issues, detailed in \autoref{hctrissues}:
+addresses the following issues:
 \begin{itemize}
     \item \cite{kumarhctr} observes that HCTR's hash function
-    is not almost-XOR-universal\cite{eadu} as claimed.
+    is not almost-XOR-universal\cite{eadu} as claimed (\autoref{badhash}).
     HCTR2's hash function fixes this property.
     \item Separately,
     an error in the proof presented in \cite{hctrquad}
-    invalidates the security bound claimed in that paper; with our revised
+    invalidates the security bound claimed in that paper (\autoref{badproof}); with our revised
     mode we can claim a tighter bound.
     \item HCTR2 supports using tweaks of any length with a single key.
     \item HCTR's key is a block cipher key, plus an \(n\)-bit
@@ -47,7 +47,7 @@ addresses the following issues, detailed in \autoref{hctrissues}:
     \item We specify endianness and the like for interoperability.
     \item We provide a sample implementation and test vectors.
 \end{itemize}
-We also discuss our design decisions (\autoref{design})
+We discuss our design decisions (\autoref{design})
 and report on its implementation on x86-64 and ARM64 (\autoref{implementation}).
 We know of no patents affecting use of HCTR2.
 \end{document}
