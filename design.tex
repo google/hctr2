@@ -63,6 +63,8 @@ HCTR2 differs from HCTR in the following ways:
     with a tighter bound.
     \item We specify endianness and the like so that implementations can be interoperable. We use little-endian representation everywhere,
     since this is faster on nearly all modern platforms.
+    This is another difference between XCTR and CTR, since
+    CTR is defined to be big-endian.
     \item We rename some variables in our exposition and proof to allow some more standard usage.
     \item We provide a sample implementation and test vectors.
 \end{itemize}

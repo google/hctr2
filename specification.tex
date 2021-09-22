@@ -119,8 +119,7 @@ we name this mode \emph{XCTR mode}, and define:
 \begin{displaymath}
     \XCTR_k(S) = E_k(S \xor \fromint(1)) \Concat E_k(S \xor \fromint(2)) \Concat E_k(S \xor \fromint(3)) \Concat \cdots
 \end{displaymath}
-Thus, generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls. Note also that XCTR is defined to be little endian,
-in contrast to CTR which is defined to be big endian.
+Thus, generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls. 
 
 \subsection{HCTR2 encryption}
 
