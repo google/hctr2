@@ -30,7 +30,7 @@ are presented, one of a block width, and the second extending
 the first with a single zero (and assuming a zero length tweak).
 
 \subsection{Security bound}\label{badproof}
-\cite{hctr} was initially presented with a security bound cubic
+HCTR was initially presented in \cite{hctr} with a security bound cubic
 in the total size of all queries combined.  This is a little low
 for comfort; if a 128-bit block cipher is used, it suggests a
 distinguisher can be effective given tens of terabytes of queries,
@@ -60,7 +60,7 @@ at most that many solutions. From this the paper infers
 a quadratic bound on the probability of any such collision
 given \(\sigma\) input blocks.
 
-In equation 22, the paper considers collisions of the form 
+In equation 21, the paper considers collisions of the form 
 \(S_i^r \qeq \MM^s\) and asserts that they are
 quadratically bounded for the same reason. However this equation
 is crucially different: unlike with \(Y_i^r\), the value we

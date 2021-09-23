@@ -86,7 +86,7 @@ We map bytes to bitstrings with \(\fromint_8\).
 We interpret \(n\)-bit blocks as little-endian field elements of \(\GF(2^n)\),
 so \(001 \Concat 0^{n-3}\) is interpreted as the element \(x^2\).
 In our concrete proposal, \(n=128\) and we reduce by
-\(1 + x + x^2 + x^7 + x^{128}\).
+\(x^{128} + x^7 + x^2 + x + 1\).
 Define
 \begin{align*}
     & \poly_h(M_0 \Concat M_1 \Concat \cdots \Concat M_{l-2} \Concat M_{l-1}) \\
