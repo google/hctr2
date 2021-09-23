@@ -273,7 +273,7 @@ be the number of blocks in the query.
 Note that \(d^s\) is the degree of the hash
 function polynomial used in query \(s\)
 (since all but one block of the message is hashed),
-and that \(\sigma = \sum_s d^s\).
+and that \(\sum_s d^s \leq \sigma\).
 We give the adversary some extra information
 which is included in the transcript.
 In world X, this information is:
@@ -545,7 +545,7 @@ Across all queries, the total
 correction will be
 \begin{align*}
     &\sum_s 2(d^s - 1) \\
-    = & 2(\sigma - q)
+    \leq & 2(\sigma - q)
 \end{align*}
 
 For a collision of two blocks within query \(s\)
@@ -569,7 +569,7 @@ all queries gives us a total correction of
 \begin{align*}
     &\sum_{r < s} \max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\\
     \leq & \sum_{r < s} d^r + d^s -1 + (m^r -1 )(d^s -1)\\
-    = & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (m^r -1 )(d^s -1) \\
+    \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (m^r -1 )(d^s -1) \\
     \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (d^r -1)(d^s -1) \\
     \leq & (q-1)\sigma - \binom{q}{2} + \binom{\sigma - q}{2} \\
    \leq & (q-1)\sigma + \binom{\sigma}{2} \\
@@ -609,7 +609,7 @@ By a standard substitution argument~\cite{cbcsec,concrete} we have that
 where \(t'\) is a small constant
 representing the per-block cost of simulating HCTR2, and
 \(\sigma + 2\) bounds the number of block cipher calls made by the simulator.
-Since \(q \leq \sigma\), Halevi and Rogaway's PRP-RND lemma
+Halevi and Rogaway's PRP-RND lemma
 (\cite{cmc}, Appendix C, Lemma 6) tells us that
 \begin{displaymath}
     \advantage{\pm \widetilde{\mathrm{prp}}}{\pm\widetilde{\mathrm{rnd}}}[(q, \sigma, t)] 
