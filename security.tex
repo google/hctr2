@@ -113,7 +113,7 @@ so \(H_h(T, M)\) is then evaluation of this polynomial at \(h\).
 We depend on the following properties of the map from 
 \(H(T, M)\) to polynomials:
 \begin{itemize}
-    \item The map is injective
+    \item The map is injective (see \autoref{injective})
     \item The constant term is always zero
     \item The polynomial is never \(0\) or \(h\)
     \item The polynomial is of degree at most
@@ -121,16 +121,6 @@ We depend on the following properties of the map from
         d(T, M) \defeq 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
     \end{displaymath}
 \end{itemize}
-
-To see that the map is injective,
-consider that the length block is never zero,
-and so the highest nonzero term of the polynomial
-is always the length block. This gives us
-\(\abs{T}\), \(\ceil{\abs{T}/n} + \ceil{\abs{M}/n}\),
-and whether a 1 has been appended to \(M\).
-From this we can infer which blocks contain \(M\)
-and whether to delete the last 1 and following zeroes,
-recovering both \(T\) and \(M\).
 
 For any nonzero polynomial \(p(h)\)
 in \(GF(2^n)\), there are at most \(\deg(p)\) values \(h\)
