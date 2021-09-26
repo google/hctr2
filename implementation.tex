@@ -174,8 +174,8 @@ In practice, we change this idea slightly. Instead of producing a 256-bit polyno
 		\State \textbf{return} $C, D, E$
 	\EndProcedure
 	\State
-	\Procedure{GF128Parallel}{\{A_0, \cdots, A_{k-1}\}, \{B_0, \cdots, B_{k-1}\}$}
-		\State $C, D, E \gets \Call{KaratsubaStep1Parallel}{$\{A_0, \cdots, A_{k-1}\}, \{B_0, \cdots, B_{k-1}\}$}
+	\Procedure{GF128Parallel}{$\{A_0, \cdots, A_{k-1}\}, \{B_0, \cdots, B_{k-1}\}$}
+		\State $C, D, E \gets \Call{KaratsubaStep1Parallel}{\{A_0, \cdots, A_{k-1}\}, \{B_0, \cdots, B_{k-1}\}$}
 		\State $P \gets \Call{KaratsubaStep2}{C, D, E}$
 		\State $R \gets \Call{Barrett}{P}$
 		\State \textbf{return} $R$
@@ -206,7 +206,7 @@ Using this idea, we can remove the non-parallelism of $h^k$ and further amortize
 			\State $e \gets nblocks - 1 - ci$
 			\State $Alist \gets \{Q[nci + 0 : n], \cdots, Q[nci + n(k - 1) : n]\}$
 			\State $Blist \gets \{h^{e}, \cdots, h^{e - k + 1}\}$
-			\State $C', D', E' \gets \Call{KaratsubaStep1Parallel}{Alist, Blist}$}
+			\State $C', D', E' \gets \Call{KaratsubaStep1Parallel}{Alist, Blist}$
 			\State $C \gets C \oplus C'$
 			\State $D \gets D \oplus D'$
 			\State $E \gets E \oplus E'$
