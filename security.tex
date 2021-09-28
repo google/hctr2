@@ -304,7 +304,7 @@ and so can infer
     \UU &= U \xor H_h(T, V)\\
     \UU &= \pi(\MM)\\
     S &= \MM \xor \UU \xor L\\ 
-    S_i &= S \xor \fromint(i)\\
+    S_j &= S \xor \fromint(j)\\
     Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor V) \Concat D \\
     Y_j &= \pi(S_j) \\
 \end{align*}
@@ -446,12 +446,12 @@ query \(s\) is a decryption query:
     This holds if \(U^r \xor H_h(T^r, V^r) = U^s \xor H_h(T^s, V^s)\);
     by hash function property 2, this holds with probability at most
     \(\max(d^r, d^s)/2^n\).
-    \item \(Y_j^r \qeq \UU^s\):
-    This holds if \(Y_j^r = U^s \xor H_h(T^s, C^s)\);
+    \item \(Y_i^r \qeq \UU^s\):
+    This holds if \(Y_i^r = U^s \xor H_h(T^s, V^s)\);
     by hash function property 1, this holds with probability at most
     \(d^s/2^n\).
     \item \(h \qeq \UU^s\):
-    This holds if \(h = U^s \xor H_h(T^s, C^s)\);
+    This holds if \(h = U^s \xor H_h(T^s, V^s)\);
     by hash function property 3, this holds with probability at most
     \(d^s/2^n\).
 \end{itemize}
@@ -465,9 +465,9 @@ for a probability of \(1/2^n\).
 
 \autoref{domaincollision} illustrates the various cases
 we consider for inferred block cipher plaintext collisions.
-Columns represent the terms
+Rows represent the terms
 on the left hand side of the collision, while
-rows represent the terms on the right; 
+columns represent the terms on the right; 
 for example, the top left box represents
 \(0 \qeq 1\). Where a square is left blank
 it is either because it represents
@@ -563,7 +563,7 @@ may collide with query \(r\), the correction is
 \(\max(d^r, d^s) -1\)
 (because of \(\MM^r \qeq \MM^s\)), whereas for a decryption query
 it is \(\max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\)
-(because of \(\UU^r \qeq \UU^s\) and \(Y_j^r \qeq \UU^s\)).
+(because of \(\UU^r \qeq \UU^s\) and \(Y_i^r \qeq \UU^s\)).
 
 Taking the max of these formulas and summing across
 all queries gives us a total correction of
