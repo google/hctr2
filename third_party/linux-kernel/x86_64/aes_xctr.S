@@ -62,7 +62,7 @@
  *
  */
 
-#include "../asm_common.h"
+#include "asm_common.h"
 
 #define VMOVDQ		vmovdqu
 

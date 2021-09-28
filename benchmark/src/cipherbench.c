@@ -19,24 +19,9 @@ static const struct cipher {
 	const char *name;
 	void (*test_func)(void);
 } ciphers[] = {
-	{ "Adiantum",		test_adiantum },
-	{ "AES",		test_aes },
-	{ "ChaCha",		test_chacha },
-	{ "ChaCha-MEM",		test_chacha_mem },
-	{ "CHAM",		test_cham },
-	{ "Chaskey-LTS",	test_chaskey_lts },
 	{ "HCTR",		test_hctr },
 	{ "HCTR-CTR",		test_hctr_ctr },
 	{ "HCTR-Polyhash",		test_hctr_polyhash },
-	{ "HPolyC",		test_hpolyc },
-	{ "LEA",		test_lea },
-	{ "NH",			test_nh },
-	{ "NOEKEON",		test_noekeon },
-	{ "Poly1305",		test_poly1305 },
-	{ "RC5",		test_rc5 },
-	{ "RC6",		test_rc6 },
-	{ "Speck",		test_speck },
-	{ "XTEA",		test_xtea },
 };
 
 static const struct cipher *find_cipher(const char *name)
@@ -208,7 +193,7 @@ __noreturn void assertion_failed(const char *expr, const char *file, int line)
 }
 
 struct cipherbench_params g_params = {
-	.bufsize = 4096,
+	.bufsize = 16,
 	.ntries = 5,
 };
 

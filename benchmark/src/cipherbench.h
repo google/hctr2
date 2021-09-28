@@ -7,21 +7,6 @@
  */
 #pragma once
 
-void test_adiantum(void);
-void test_aes(void);
-void test_chacha(void);
-void test_chacha_mem(void);
-void test_cham(void);
-void test_chaskey_lts(void);
-void test_hpolyc(void);
-void test_lea(void);
-void test_nh(void);
-void test_noekeon(void);
-void test_poly1305(void);
-void test_rc5(void);
-void test_rc6(void);
-void test_speck(void);
-void test_xtea(void);
 void test_hctr_polyhash(void);
 void test_hctr_ctr(void);
 void test_hctr(void);

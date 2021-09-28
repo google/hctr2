@@ -6,7 +6,7 @@
  * Copyright (C) 2013 - 2017 Linaro Ltd <ard.biesheuvel@linaro.org>
  */
 
-#include "../asm_common.h"
+#include "asm_common.h"
 
 #define AES_FUNC_START(func)		ENTRY(ce_ ## func)
 #define AES_FUNC_END(func)		ENDPROC(ce_ ## func)
