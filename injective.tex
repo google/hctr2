@@ -13,54 +13,33 @@
 \section{Injectivity of H onto polynomials}\label{injective}
 To demonstrate injectivity, 
 the following algorithm recovers \(T\) and \(M\) given
-the polynomial \(H(T, M)\).
-Assume \(\coeff(p, i)\) returns the binary form of the \(i\)'th
-coefficient of \(p\), and \(\lambda\) represents the empty string:
+a binary string \(X\) of length \(\abs{X} = n (1 + \deg(H(T, M)))\)
+representing the coefficients of 
+the polynomial \(H(T, M)\) in binary form,
+starting with the greatest nonzero power; thus
+\(13h^3\) would encode as \(1011 \Concat 0^{4n -4}\).
 \begin{algorithmic}[0]
-    \Procedure{GetTM}{$p$}
-    \State \(d \gets \deg(p)\)
-    \State \textbf{assert} \(d \geq 1\)
-    \State \textbf{assert} \(\coeff(p, 0) = 0^n\)
-    \State \(X \gets \coeff(p, d)\)
-    \State \(m \gets X[0; 1]\)
+    \Procedure{GetTM}{$X$}
+    \State \textbf{assert} \(\abs{X} \geq 2n\)
+    \State \textbf{assert} \(X[\abs{X} - n; n] = 0^n\)
+    \State \(d \gets \abs{X}/n -1\)\Comment{\(n\) divides \(X\) always}
     \State \(t \gets \fromint^{-1}_{n-1}(X[1;n-1])\)
     \State \textbf{assert} \(t > 0\)
     \State \(t \gets t-1\)
-    \State \(T \gets \lambda\)
-    \While{\(t \geq n\)}
-        \State \textbf{assert} \(d > 1\)
-        \State \(d \gets d-1\)
-        \State \(T \gets T \Concat \coeff(p, d)\)
-        \State \(t \gets t - n\)
-    \EndWhile
-    \If{\(t > 0\)}
-        \State \textbf{assert} \(d > 1\)
-        \State \(d \gets d-1\)
-        \State \(T \gets T \Concat \coeff(p, d)[0;t]\)
-    \EndIf
-    \State \(M \gets \lambda\)
-    \If{\(m = 0\)}
-        \While{\(d > 1\)}
-            \State \(d \gets d-1\)
-            \State \(M \gets M \Concat \coeff(p, d)\)
-        \EndWhile
+    \State \(w \gets n(1 + \ceil{t/n})\)
+    \If{\(X[0; 1] = 0\)}
+        \State \textbf{assert} \(w + n \leq \abs{X}\)
+        \State \(M \gets X[w;\abs{X}-w-n]\)
     \Else
-        \State \textbf{assert} \(d > 1\)
-        \While{\(d > 2\)}
-            \State \(d \gets d-1\)
-            \State \(M \gets M \Concat \coeff(p, d)\)
+        \State \textbf{assert} \(w + 2n \leq \abs{X}\)
+        \State \textbf{assert} \(X[\abs{X}-2n+1; n-1] \neq 0^{n-1}\)
+        \State \(i \gets \abs{X} - n - 1\)
+        \While{\(X[i; 1] = 0\)}
+            \State \(i \gets i - 1\)
         \EndWhile
-        \State \(d \gets d-1\)
-        \State \(X \gets \coeff(p, d)\)
-        \State \textbf{assert} \(X \neq 0^n\)
-        \For{\(i \gets (n-1, n-2, \ldots, 1, 0)\)}
-            \If{\(X[i;1] = 1\)}
-                \State \textbf{break}
-            \EndIf
-        \EndFor
-        \State \textbf{assert} \(i > 0\)
-        \State \(M \gets M \Concat X[0;i]\)
+        \State \(M \gets X[w;i - w]\)
     \EndIf
+    \State \(T \gets X[n;t]\)
     \State \textbf{return} \(T, M\)
     \EndProcedure
 \end{algorithmic}
