@@ -138,28 +138,26 @@ multiplications where $l$ is the number of blocks.
 We considered several alternatives:
 
 \emph{BRW polynomials}: BRW polynomials\cite{pema}\cite{heh2} are theoretically
-attractive since they only need $\lfloor l/2 \rfloor$ multiplications
-(and even fewer reductions) to
-evaluate. However, they pose a number of difficulties. \cite{brweval} gives a
+attractive since they only need \(\floor{l/2}\) multiplications
+to evaluate. However, they pose a number of difficulties. \cite{brweval} gives a
 nonrecursive algorithm that handles variable-length messages, but it is complex,
 uses temporary space that grows with the message length, and does not handle
-incremental computation well. Performance depends on much more than just the
-number of multiplications; the code size, amount of instruction-level
-parallelism, and number of reductions and other computations are also important.
-Standard polynomials compare favorably to BRW polynomials in these areas as well
-as in the ease of writing fast and correct implementations.
+incremental computation well. Standard polynomials avoid these issues;
+fast and correct implementations are easier to write,
+and implementers have much more control over
+code size, precomputation, instruction-level
+parallelism, number of reductions, and so forth.
 Finally, preserving our guarantees of injectivity on variable-length
 tweaks and messages, and the other hash function properties we need
 to guarantee, proved challenging.
-Thus, we do not switch to using BRW polynomials.
 
 \emph{Polynomials over non-binary fields}: When CPU instructions for carryless
 multiplication are unavailable, hashes using non-binary fields such as
 Poly1305\cite{poly1305} tend to be faster than hashes using binary fields.
-However, when carryless multiplication instructions \emph{are} available, hashes
-using binary fields tend to be faster and simpler. HCTR2 primarily targets
-processors that support carryless multiplication, so we do not switch to a
-non-binary field.
+However, HCTR2 primarily targets
+processors that support carryless multiplication, 
+and on such processors hashes
+using binary fields tend to be faster and simpler.
 
 \emph{Multivariate hashes}: Adiantum\cite{adiantum} builds an
 almost-$\Delta$-universal hash function using the multivariate hash
