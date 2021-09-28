@@ -1,8 +1,10 @@
-# Copyright 2021 Google LLC
+# Copyright (C) 2021 Google LLC <nhuck@google.com>
 #
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
+#
+# Author: Nathan Huckleberry <nhuck@google.com>
 
 import Crypto.Cipher.AES
 

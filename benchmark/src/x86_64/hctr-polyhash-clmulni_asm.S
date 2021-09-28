@@ -1,16 +1,12 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
-/*
- * This implementation of GF multiplication is an adaptation
- * of the aarch64 implementation of HCTR.
- *
- * Accelerated polyhash implementation with Intel PCLMULQDQ-NI
- * instructions. This file contains accelerated part of polyhash
- * implementation. More information about PCLMULQDQ can be found at:
- *
- * http://software.intel.com/en-us/articles/carry-less-multiplication-and-its-usage-for-computing-the-gcm-mode/
+ /*
+ * Accelerated polyhash
  *
  * Copyright (C) 2021 Google LLC. <nhuck@google.com>
- *	 Author: Nathan Huckleberry <nhuck@google.com>
+ * Use of this source code is governed by an MIT-style
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
+ *
+ * Author: Nathan Huckleberry <nhuck@google.com>
  */
 
 #include "../asm_common.h"

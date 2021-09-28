@@ -1,13 +1,12 @@
 /*
- * Poly1305 ε-almost-∆-universal hash function
+ * HCTR polyhash
  *
- * Note: this isn't the full Poly1305 MAC, i.e. it skips the final addition!
- *
- * Copyright (C) 2018 Google LLC
- *
+ * Copyright (C) 2021 Google LLC. <nhuck@google.com>
  * Use of this source code is governed by an MIT-style
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
+ *	 
+ * Author: Nathan Huckleberry <nhuck@google.com>
  */
 
 #include "gf128.h"
