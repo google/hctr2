@@ -256,9 +256,9 @@ such that \((T^r, C^r) = (T^s, C^s)\) for some \(r < s\),
 whether query \(r\) was an encryption or decryption query.
 
 For each query \(s\), 
-let \(m^s = \ceil{\abs{P^s}/n} = \ceil{\abs{C^s}/n}\)
+let \(m^s \defeq \ceil{\abs{P^s}/n} = \ceil{\abs{C^s}/n}\)
 be the number of blocks in the response,
-and let \(d^s = m^s + \ceil{\abs{T^s}/n}\)
+and let \(d^s \defeq m^s + \ceil{\abs{T^s}/n}\)
 be the number of blocks in the query.
 Note that \(d^s\) is the degree of the hash
 function polynomial used in query \(s\)
@@ -280,7 +280,7 @@ In world X, this information is:
     \item the hash key \(h\), given after all queries are complete
     \item the mask \(L\), given after all queries are complete
 \end{itemize}
-In the ``ideal world'', random output of the expected
+In world Y, random output of the expected
 length is substituted. Since the adversary can always ignore
 this information, giving it to them cannot make their performance worse.
 
@@ -308,12 +308,12 @@ and so can infer
 This gives us multisets \(\mathcal{D}\) and \(\mathcal{R}\)
 of block cipher plaintexts and ciphertexts:
 \begin{align*}
-    \mathcal{D} = \{\fromint(0), \fromint(1)\} \uplus &
+    \mathcal{D} \defeq \{\fromint(0), \fromint(1)\} \uplus &
     \biguplus_s \{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\\
-    \mathcal{R} = \{h, L\} \uplus &
+    \mathcal{R} \defeq \{h, L\} \uplus &
     \biguplus_s \{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}
 \end{align*}
-We therefore infer \(\sigma_m = 2 + \sum_s m^s\) block cipher
+We therefore infer \(\sigma_m \defeq 2 + \sum_s m^s\) block cipher
 plaintexts/ciphertexts from \(\sigma_m n\) bits of query response.
 A transcript is ``bad'' (\(\tau \in \Tb\))
 iff any entry in \(\mathcal{D}\) or \(\mathcal{R}\)
@@ -473,13 +473,13 @@ Rows represent the terms
 on the left hand side of the collision, while
 columns represent the terms on the right; 
 for example, the top left box represents
-\(0 \qeq 1\). Where a square is left blank
+\(\fromint(0) \qeq \fromint(1)\). Where a square is left blank
 it is either because it represents
 comparing a term to itself (eg \(\MM^s \qeq \MM^s\))
 or because it represents something that
 is already handled elsewhere
-(eg considering \(1 \qeq \MM^s\)
-handles the \(\MM^r \qeq 1\) case).
+(eg considering \(\fromint(1) \qeq \MM^s\)
+handles the \(\MM^r \qeq \fromint(1)\) case).
 A square is colored red
 and marked \(0\) if the
 probability of a particular instance
@@ -504,7 +504,6 @@ covering all those cases is presented.
 block cipher ciphertext collisions; in this case,
 it is only decryption queries where
 probabilities may be above \(1/2^n\).
-
 
 \subsubsection{Summing collision bounds}
 Given that most pairs have a probability of
@@ -615,7 +614,7 @@ where \(t'\) is a small constant
 representing the per-block cost of simulating HCTR2, and
 \(\sigma + 2\) bounds the number of block cipher calls made by the simulator.
 Halevi and Rogaway's PRP-RND lemma
-(\cite{cmc}, Appendix C, Lemma 6) tells us that
+\cite[Appendix C, Lemma 6]{cmc} tells us that
 \begin{displaymath}
     \advantage{\pm \widetilde{\mathrm{prp}}}{\pm\widetilde{\mathrm{rnd}}}[(q, \sigma, t)] 
     \leq \left.\binom{q}{2}\middle/2^n\right.
