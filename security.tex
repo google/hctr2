@@ -359,7 +359,6 @@ between two specific blocks is bounded by \(1/2^n\).
     \(L \qeq Y_j^s\),
     \(\UU^r \qeq Y_j^s\),
     \(Y_i^r \qeq Y_j^s\),
-    \(\UU^s \qeq Y_j^s\),
     \(Y_i^s \qeq Y_j^s\): 
     If query \(s\) is an encryption query,
     then given \(h\), \(L\), query \(s\), 
@@ -368,6 +367,15 @@ between two specific blocks is bounded by \(1/2^n\).
     \(C^s[jn;n]\) that results in the equation holding.
     If \(s\) is a decryption query, the same reasoning holds
     with \(P^s\), \(C^s\) swapped.
+    \item 
+    \(\UU^s \qeq Y_j^s\):
+    If query \(s\) is a decryption query,
+    the exact argument above applies.
+    If it is an encryption query,
+    then given \(h\), \(L\), \(T^s\), \(P^s\),
+    and \(V^s\), there is exactly
+    one value of \(U^s\) that results
+    in the equation holding.
     \item 
     \(\fromint(0) \qeq S_j^s\),
     \(\fromint(1) \qeq S_j^s\),
