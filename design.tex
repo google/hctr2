@@ -72,6 +72,25 @@ HCTR2 differs from HCTR in the following ways:
 
 \subsection{Hash function design}\label{hashdesign}
 
+\subsubsection{POLYVAL}
+
+Unlike HCTR, HCTR2 specifies the bit and byte order of field elements.
+The most widely used form of polynomial evaluation
+in \(\GF(2^{128})\) is GCM's GHASH\cite{gcm}.
+However, GHASH is not consistent in its endianness conventions
+between bytes and words;
+this increases implementation complexity and reduces efficiency.
+
+As a result, we instead use the POLYVAL function
+defined in \cite{aes_gcm_siv}.
+This function is carefully designed to allow
+a highly efficient implementation
+on processors with carryless multiply instructions.
+POLYVAL incurs a small cost in specification and proof complexity
+because the polynomial is evaluated not at \(h\) but at \(x^{-n}h\) 
+this cost is worth paying to gain efficiency while
+allowing code to be shared with other modes.
+
 \subsubsection{Input formatting}
 
 The formatting of inputs to the polynomial hash in HCTR2 is significantly
@@ -110,7 +129,7 @@ we need only encode only the tweak length in the length block,
 and the message length can then be inferred.
 For users whose tweaks are always the same length
 this means the length block is always the same, 
-so the multiplication with \(h\) can be
+so the multiplication with \(\hmont\) can be
 precomputed.
 
 However, in the very common case where 
@@ -123,13 +142,9 @@ Instead, we indicate whether
 the message length is a multiple of the block size
 in the least significant bit of the length block.
 If all tweaks are of length \(t\), implementations can cache
-\(\fromint(2t + 2)h\), and use this or \(\fromint(2t + 2)h \xor h\)
-to start hashing, XORing this value directly with the
-first block of the tweak.
-
-This encoding also guarantees that the length block
-cannot have the value \(\fromint(1)\), which achieves
-our guarantee that \(H(T, M) \neq h\).
+\(\fromint(2t + 2)\hmont\) and \(\fromint(2t + 3)\hmont\)
+and use one of these to start hashing as appropriate,
+XORing this value directly with the first block of the tweak.
 
 \subsubsection{Alternatives considered}
 
@@ -167,12 +182,5 @@ polynomial evaluation, this increases performance. However, this adds
 complexity, and NH requires a long key which needs to be derived and cached. 
 HCTR2 primarily targets processors where polynomial evaluation is fast, so
 we do not add an NH layer.
-
-\emph{Field convention}: Unlike HCTR, HCTR2 specifies the bit and byte order of
-field elements. Reusing the convention of GHASH from GCM\cite{gcm} is somewhat
-attractive, since it is widely deployed and code could be shared. However,
-GHASH's mapping between bits and polynomial coefficients is backwards from the
-natural order, which increases implementation complexity and reduces efficiency.
-Due to this issue, we instead use the natural order.
 
 \end{document}

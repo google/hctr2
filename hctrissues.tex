@@ -38,8 +38,7 @@ HCTR uses a hash function based on the polynomial
 \end{displaymath}
 Because it assumes a fixed-length tweak it simply sets \(X = M \Concat T\).
 However, HCTR requires that the resulting polynomial be nonzero
-even when \(X = \lambda\)
-(where \(\lambda\) represents the empty string \(\abs{\lambda} = 0\)),
+even when \(X = \lambda\),
 so as a special case \(H(\lambda) = h\).
 
 Unfortunately, as \cite{kumarhctr} observes this is no longer

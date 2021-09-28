@@ -14,9 +14,10 @@
 \subsection{Notation}
 \begin{itemize}
     \item $\abs{X}$: length of $X \in \bin^{*}$ in bits
+    \item $\lambda$: the empty string $\abs{\lambda} = 0$
+    \item $X[a;l]$: the substring of $X$ of length $l$ starting at the 0-based index $a$
     \item $\Concat$: bitstring concatenation
     \item \(\xor\): bitwise XOR
-    \item $X[a;l]$: the substring of $X$ of length $l$ starting at the 0-based index $a$
     \item \(n\): block size in bits
     \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
     little-endian conversion of integers to binary; 
@@ -40,22 +41,26 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
 \subsection{Polynomial hash function}\label{hashspec}
 We interpret \(n\)-bit blocks as little-endian field elements of \(\GF(2^n)\),
 so \(001 \Concat 0^{n-3}\) is interpreted as the element \(x^2\).
-In our concrete proposal, \(n=128\) and we reduce by
-\(x^{128} + x^7 + x^2 + x + 1\).
-Define
+Per \cite{aes_gcm_siv} we define
 \begin{align*}
-    & \poly_h(M_0 \Concat M_1 \Concat \cdots \Concat M_{l-2} \Concat M_{l-1}) \\
-    \defeq & M_0h^{l-1} \xor M_1h^{l-2} \xor \cdots \xor M_{l-2}h \xor M_{l-1}
+    \POLYVAL(h, \lambda) & = 0^n\\
+    \POLYVAL(h, A \Concat B) & = (\POLYVAL(h, A) \xor B) \otimes h \otimes x^{-n}
 \end{align*}
-where \(\abs{M_i} = n\).
+where \(\abs{B} = n\) and
+\(\otimes\) is multiplication in the finite field.
+In our concrete proposal, \(n=128\), we reduce by
+\(x^{128} + x^{127} + x^{126} + x^{121} + 1\),
+and the value of the field element \(x^{-n}\)
+is equal to \(x^{127} + x^{124} + x^{121} + x^{114} + 1\).
+
 For hash key \(h \in \bin^n\), tweak \(T\) and message \(M\), we define:
 \begin{align*}
     & H_h(T, M) \\
     \defeq & 
     \begin{cases}
-        \poly_h(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat 0^n) &
+        \POLYVAL(h, \fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M) &
         \text{if } n \text{ divides } \abs{M} \\
-        \poly_h(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n) &
+        \POLYVAL(h, \fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1)) &
         \text{otherwise}
     \end{cases}
 \end{align*}

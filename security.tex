@@ -89,17 +89,25 @@ ie \(\HCTR[E_k]\) for \(k \sample \mathcal{K}\), while
 for \(\pi \sample \Perm(n)\).
 
 \subsection{Hash function}\label{hproperties}
-In \autoref{hashspec} we defined \(\poly_h(M)\) as polynomial evaluation.
-We now define \(\poly(M)\) to refer to the formal polynomial
-that this implies: \(\poly(M_0 \Concat \cdots \Concat M_{l-1})
-\defeq  M_0h^{l-1} \xor \cdots \xor M_{l-1}\).
-While \(h + 2\) and \(2h + 1\) can be equal
-in value if \(h = 1\), two formal polynomials are only equal
+For efficiency reasons, POLYVAL does not
+evaluate a polynomial at the parameter \(h\),
+but at another point, \(\hmont = x^{-n}h\).
+Some care is therefore needed to relate
+properties of the hash function to
+possible zeroes of a polynomial.
+
+Define \(\poly(M)\) to refer to the formal polynomial
+\(\poly(M_0 \Concat \cdots \Concat M_{l-1})
+\defeq  M_0\hmont^{l-1} \xor \cdots \xor M_{l-1}\).
+While \(\hmont + 2\) and \(2\hmont + 1\) can be equal
+in value if \(\hmont = 1\), two formal polynomials are only equal
 if every coefficient is equal; thus \(\poly(M) = \poly(M')\)
 only if \(M = 0^{ln} \Concat M'\) for some \(l\) or vice versa.
-We then define \(H(T, M)\) as the formal polynomial in \(h\) given
-by that tweak and message,
-so \(H_h(T, M)\) is then evaluation of this polynomial at \(h\).
+
+We then define \(H(T, M)\) as the formal polynomial in \(\hmont\) given
+by that tweak and message.
+\(H_h(T, M)\) is then evaluation of this polynomial at
+\(\hmont = x^{-n}h\).
 \begin{align*}
     & H(T, M) \\
     \defeq &
@@ -114,19 +122,28 @@ so \(H_h(T, M)\) is then evaluation of this polynomial at \(h\).
 We depend on the following properties of this map 
 onto formal polynomials:
 \begin{itemize}
-    \item The map is injective (see \autoref{injective})
+    \item The map is injective
+    \item The polynomial is never \(0\) or \(x^n\hmont\)
     \item The constant term is always zero
-    \item The polynomial is never \(0\) or \(h\)
     \item The polynomial is of degree at most
     \begin{displaymath}
         d(T, M) \defeq 1 + \ceil{\abs{T}/n} + \ceil{\abs{M}/n}
     \end{displaymath}
 \end{itemize}
 
-For any nonzero polynomial \(p(h)\)
-in \(GF(2^n)\), there are at most \(\deg(p)\) values \(h\)
-such that \(p(h) = 0\), and therefore
-\(\probsub{h\sample{\bin^n}}{p(h) = 0} \leq \deg(p)/2^n\).
+For the first property, see \autoref{injective}.
+For the second, observe that \(H(T, M)\)
+can be of degree 1 only if \(\abs{T} = \abs{M} = 0\),
+in which case the polynomial is \(x\hmont\).
+Since \(x^{n-1} \neq 1\) we have that \(x^n \neq x\).
+
+For any nonzero polynomial \(p(\hmont)\)
+in \(GF(2^n)\), there are at most \(\deg(p)\) values \(\hmont\)
+such that \(p(\hmont) = 0\), and therefore
+\(\probsub{\hmont\sample{\bin^n}}{p(\hmont) = 0} \leq \deg(p)/2^n\).
+Since multiplication by a nonzero field element
+is a bijection of the field onto itself, it follows that
+\(\probsub{h\sample{\bin^n}}{p(x^{-n}h) = 0} \leq \deg(p)/2^n\).
 From this and the above properties,
 we infer three properties of \(H_h(T, M)\):
 \begin{description}
@@ -160,8 +177,10 @@ we infer three properties of \(H_h(T, M)\):
         \probsub{h\sample{\bin^n}}{H_h(T, M) \xor h = g} \leq d(T, M)/2^n
     \end{displaymath}
     Proof: \(H(T, M)\) has a zero constant term and
-    cannot be equal to the polynomial \(h\),
-    so \(H(T, M) \xor g \xor h\) cannot be the zero polynomial, and
+    cannot be equal to the polynomial \(x^n\hmont\).
+    Substituting \(h = x^n\hmont\),
+    \(H(T, M) \xor g \xor h = H(T, M) \xor g \xor x^n\hmont\)
+    cannot be the zero polynomial, and
     therefore can have at most \(d(T, M)\) zeroes.
 \end{description}
 
