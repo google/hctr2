@@ -79,7 +79,7 @@ that used in HCTR. Our design goals are:
     \item allow a variable-length tweak
     \item guarantee \(H(T, M) \neq h\), required
     because \(h \gets E_k(\fromint(0))\)
-    \item allow implementations to precalculate as much as possible, to reduce \(GF(2^n)\) multiplications
+    \item allow implementations to precompute as much as possible, to reduce \(GF(2^n)\) multiplications
 \end{itemize}
 
 See \autoref{hproperties}
@@ -110,13 +110,14 @@ this means the length block is always the same,
 so the multiplication with \(h\) can be
 precalculated.
 
-However, in the very common case where the message
-is a block-multiple in length,
-we don't want an extra multiply
+However, in the very common case where 
+the message length is a multiple of the block size,
+we don't want an extra multiplication
 for an extra block containing only the appended 1 bit.
 Borrowing from~\cite{xcbc},
 we don't append a 1 bit to such messages.
-Instead, we indicate whether the message is block-multiple in length
+Instead, we indicate whether
+the message length is a multiple of the block size
 in the least significant bit of the length block.
 If all tweaks are of length \(t\), implementations can store
 \(\fromint(2t + 2)h\), and use this or \(\fromint(2t + 2)h \xor h\)
