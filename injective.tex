@@ -18,11 +18,11 @@ representing the coefficients of
 the polynomial \(H(T, M)\) in binary form,
 starting with the greatest nonzero power; thus
 \(13h^3\) would encode as \(1011 \Concat 0^{4n -4}\).
-\begin{algorithmic}[0]
+\begin{algorithmic}[1]
     \Procedure{GetTM}{$X$}
+    \State \textbf{assert} \(\abs{X} \bmod n = 0\)
     \State \textbf{assert} \(\abs{X} \geq 2n\)
     \State \textbf{assert} \(X[\abs{X} - n; n] = 0^n\)
-    \State \(d \gets \abs{X}/n -1\)\Comment{\(n\) divides \(X\) always}
     \State \(t \gets \fromint^{-1}_{n-1}(X[1;n-1])\)
     \State \textbf{assert} \(t > 0\)
     \State \(t \gets t-1\)
