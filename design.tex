@@ -57,7 +57,7 @@ HCTR2 differs from HCTR in the following ways:
     \item We derive \(h \gets E_k(\fromint(0))\)
     and \(L \gets E_k(\fromint(1))\) from the block cipher key;
     this makes HCTR2 more convenient to use.
-    \item We completely redesign the polynomial hash used, as described in
+    \item We redesign the polynomial hash used, as described in
     \autoref{hashdesign}.
     \item We present a new proof, based on the H-coefficient technique,
     with a tighter bound.
@@ -71,8 +71,10 @@ HCTR2 differs from HCTR in the following ways:
 
 \subsection{Hash function design}\label{hashdesign}
 
-The polynomial hash used in HCTR2 is significantly different from
-that used in HCTR. Our design goals are:
+\subsubsection{Input formatting}
+
+The formatting of inputs to the polynomial hash in HCTR2 is significantly
+different from that in HCTR. Our design goals are:
 
 \begin{itemize}
     \item fix the flaw described in \cite{kumarhctr}
@@ -128,5 +130,46 @@ This encoding also guarantees that the length block
 cannot have the value \(\fromint(1)\), which achieves
 our guarantee that \(H(T, M) \neq h\).
 
-% mention BRW?
+\subsubsection{Alternatives considered}
+
+Like HCTR, HCTR2's almost-XOR-universal hash function uses a standard polynomial
+evaluation in $GF(2^n)$. This uses an $n$-bit key and requires $l$ field
+multiplications where $l$ is the number of blocks. Here we elaborate on
+alternatives we considered:
+
+\emph{BRW polynomials}: BRW polynomials\cite{pema}\cite{heh2} are theoretically
+attractive since they only need $\lfloor l/2 \rfloor$ multiplications to
+evaluate. However, they pose implementation difficulties. \cite{brweval} gives a
+nonrecursive algorithm that handles variable-length messages, but it is complex,
+uses temporary space that grows with the message length, and does not handle
+incremental computation well. Performance depends on much more than just the
+number of multiplications; the code size, amount of instruction-level
+parallelism, and number of reductions and other computations are also important.
+Standard polynomials compare favorably to BRW polynomials in these areas as well
+as in the ease of writing fast and correct implementations. Thus, we do not
+switch to using BRW polynomials.
+
+\emph{Polynomials over non-binary fields}: When CPU instructions for carryless
+multiplication are unavailable, hashes using non-binary fields such as
+Poly1305\cite{poly1305} tend to be faster than hashes using binary fields.
+However, when carryless multiplication instructions \emph{are} available, hashes
+using binary fields tend to be faster and simpler. This work primarily targets
+processors that support carryless multiplication, so we do not switch to a
+non-binary field.
+
+\emph{Multivariate hashes}: Adiantum\cite{adiantum} builds an
+almost-$\Delta$-universal hash function using the multivariate hash
+NH\cite{umac1} combined with polynomial evaluation. Where NH is faster than
+polynomial evaluation, this increases performance. However, this adds
+complexity, and NH requires a long key which needs to be derived and cached. For
+this work we primarily target processors where polynomial evaluation is fast, so
+we do not add an NH layer.
+
+\emph{Field convention}: Unlike HCTR, HCTR2 specifies the bit and byte order of
+field elements. Reusing the convention of GHASH from GCM\cite{gcm} is somewhat
+attractive, since it is widely deployed and code could be shared. However,
+GHASH's mapping between bits and polynomial coefficients is backwards from the
+natural order, which increases implementation complexity and reduces efficiency.
+Due to this issue, we instead use the natural order.
+
 \end{document}
