@@ -11,7 +11,25 @@
 \documentclass[hctr.tex]{subfiles}
 \begin{document}
 \section{HCTR issues}
+In two instances, our presentation of HCTR2 uses
+different names than the corresponding presentation of HCTR.
+
+\begin{itemize}
+    \item HCTR and HCTR2 use an unusual mode of stream encryption.
+    \cite{hctr,hctrquad} refer to this mode as ``CTR mode'',
+    but note the differences between this mode and 
+    standard CTR mode\cite{ctr}.
+    For the avoidance of ambiguity
+    we name this mode \emph{XCTR mode}.
+    \item What \cite{hctr,hctrquad} refer to as \(C, \mathit{CC}, D\)
+    we refer to as \(U, \UU, V\)
+    so that we can use \(P, C\) to refer to plaintext and ciphertext.
+\end{itemize}
+
+We will continue to use the HCTR2 names in
+what follows to stay connsistent with the rest of this paper.
 Two errors in previous work on HCTR are addressed in HCTR2.
+
 \subsection{Hash function}\label{badhash}
 HCTR uses a hash function based on the polynomial
 \begin{displaymath}
@@ -45,9 +63,7 @@ the proof of~\cite{hctrquad} is very similar
 to that of this paper: in the game RAND2, all queries get random
 responses, the block cipher inputs are inferred, and a collision
 in either the inferred plaintext or inferred ciphertext of the block cipher
-sets the ``bad'' flag. What that paper refers to as
-\(C, \mathit{CC}, D\)
-we refer to as \(U, \UU, V\). Where HCTR2 has
+sets the ``bad'' flag.  Where HCTR2 has
 \(S = \MM \xor \UU \xor L\), HCTR simply has
 \(S = \MM \xor \UU\). HCTR uses a fixed-length tweak
 of length \(t\); for simplicity we assume \(t = 0\)

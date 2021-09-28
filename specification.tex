@@ -60,11 +60,8 @@ For hash key \(h \in \bin^n\), tweak \(T\) and message \(M\), we define:
 \end{align*}
 
 \subsection{XCTR mode}
-HCTR and HCTR2 use an unusual mode of stream encryption.
-\cite{hctr,hctrquad} note the differences between this mode and 
-CTR mode\cite{ctr},
-but use the same name to refer to it; for the avoidance of ambiguity
-we name this mode \emph{XCTR mode}, and define:
+HCTR and HCTR2 use an unusual mode of stream encryption,
+which we here name \emph{XCTR mode}:
 \begin{displaymath}
     \XCTR_k(S) = E_k(S \xor \fromint(1)) \Concat E_k(S \xor \fromint(2)) \Concat E_k(S \xor \fromint(3)) \Concat \cdots
 \end{displaymath}
@@ -72,8 +69,5 @@ Thus, generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) 
 
 \subsection{HCTR2 encryption}
 From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
-Note that what \cite{hctr,hctrquad} refer to as \(C, \mathit{CC}, D\)
-we refer to as \(U, \UU, V\)
-so that we can use \(P, C\) to refer to plaintext and ciphertext.
 \subfile{algorithm.tex}
 \end{document}
