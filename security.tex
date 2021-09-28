@@ -284,17 +284,16 @@ In the ``ideal world'', random output of the expected
 length is substituted. Since the adversary can always ignore
 this information, giving it to them cannot make their performance worse.
 
+\subsubsection{Good and bad transcripts}
 For \(j \in \{1 \ldots m^s-1\}\) we define \(S_j^s = S^s \xor \fromint(j)\),
 the block cipher inputs used in XCTR, and \(Y_j^s\) the corresponding
 outputs, so that \(Y_j^s = \pi(S_j^s)\) and 
 \(Y_1^s \Concat \cdots \Concat Y_{m^s-1}^s = \XCTR_\pi(S^s)[0;n(m^s -1)] 
 = (N^s \xor V^s) \Concat D^s\).
 
-\subsubsection{Good and bad transcripts}
 Given the full transcript, including \(h\) and \(L\),
-we can infer all pairs of block cipher plaintexts and ciphertexts.
-First we infer that \(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\).
-Then for each query, we know \(T\), \(P\), \(C\) and \(D\)
+we can infer all block cipher plaintexts and ciphertexts.
+For each query, we know \(T\), \(P\), \(C\) and \(D\)
 and so can infer
 (omitting the query superscript \(s\) for readability):
 \begin{align*}
@@ -302,20 +301,25 @@ and so can infer
     U \Concat V &= C \\
     \MM &= M \xor H_h(T, N)\\
     \UU &= U \xor H_h(T, V)\\
-    \UU &= \pi(\MM)\\
     S &= \MM \xor \UU \xor L\\ 
     S_j &= S \xor \fromint(j)\\
     Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor V) \Concat D \\
-    Y_j &= \pi(S_j) \\
 \end{align*}
-We therefore infer \(\sigma_m = 2 + \sum_s m^s \) block cipher
-plaintext/ciphertext pairs from \(\sigma_m n\) bits of query response.
-
-A transcript is ``bad'' (\(\tau \in \Tb\)) iff any pair of 
-inferred block cipher plaintexts are the same
-\((\MM^s, S_j^s, \fromint(0), \fromint(1))\)
-or any pair of inferred block cipher ciphertexts are the same
-\((\UU^s, Y_j^s, h, L)\).
+This gives us multisets \(\mathcal{D}\) and \(\mathcal{R}\)
+of block cipher plaintexts and ciphertexts:
+\begin{align*}
+    \mathcal{D} = \{\fromint(0), \fromint(1)\} \uplus &
+    \biguplus_s \{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\\
+    \mathcal{R} = \{h, L\} \uplus &
+    \biguplus_s \{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}
+\end{align*}
+We therefore infer \(\sigma_m = 2 + \sum_s m^s\) block cipher
+plaintexts/ciphertexts from \(\sigma_m n\) bits of query response.
+A transcript is ``bad'' (\(\tau \in \Tb\))
+iff any entry in \(\mathcal{D}\) or \(\mathcal{R}\)
+has multiplicity greater than one,
+ie if any pair of inferred plaintexts are the same, or
+if any pair of inferred ciphertexts are the same.
 
 Since responses in world Y are coin flips,
 the probability of a 
