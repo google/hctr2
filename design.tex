@@ -134,26 +134,30 @@ our guarantee that \(H(T, M) \neq h\).
 
 Like HCTR, HCTR2's almost-XOR-universal hash function uses a standard polynomial
 evaluation in $GF(2^n)$. This uses an $n$-bit key and requires $l$ field
-multiplications where $l$ is the number of blocks. Here we elaborate on
-alternatives we considered:
+multiplications where $l$ is the number of blocks.
+We considered several alternatives:
 
 \emph{BRW polynomials}: BRW polynomials\cite{pema}\cite{heh2} are theoretically
-attractive since they only need $\lfloor l/2 \rfloor$ multiplications to
-evaluate. However, they pose implementation difficulties. \cite{brweval} gives a
+attractive since they only need $\lfloor l/2 \rfloor$ multiplications
+(and even fewer reductions) to
+evaluate. However, they pose a number of difficulties. \cite{brweval} gives a
 nonrecursive algorithm that handles variable-length messages, but it is complex,
 uses temporary space that grows with the message length, and does not handle
 incremental computation well. Performance depends on much more than just the
 number of multiplications; the code size, amount of instruction-level
 parallelism, and number of reductions and other computations are also important.
 Standard polynomials compare favorably to BRW polynomials in these areas as well
-as in the ease of writing fast and correct implementations. Thus, we do not
-switch to using BRW polynomials.
+as in the ease of writing fast and correct implementations.
+Finally, preserving our guarantees of injectivity on variable-length
+tweaks and messages, and the other hash function properties we need
+to guarantee, proved challenging.
+Thus, we do not switch to using BRW polynomials.
 
 \emph{Polynomials over non-binary fields}: When CPU instructions for carryless
 multiplication are unavailable, hashes using non-binary fields such as
 Poly1305\cite{poly1305} tend to be faster than hashes using binary fields.
 However, when carryless multiplication instructions \emph{are} available, hashes
-using binary fields tend to be faster and simpler. This work primarily targets
+using binary fields tend to be faster and simpler. HCTR2 primarily targets
 processors that support carryless multiplication, so we do not switch to a
 non-binary field.
 
