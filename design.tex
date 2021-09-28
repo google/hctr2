@@ -110,7 +110,7 @@ and the message length can then be inferred.
 For users whose tweaks are always the same length
 this means the length block is always the same, 
 so the multiplication with \(h\) can be
-precalculated.
+precomputed.
 
 However, in the very common case where 
 the message length is a multiple of the block size,
@@ -161,8 +161,8 @@ non-binary field.
 almost-$\Delta$-universal hash function using the multivariate hash
 NH\cite{umac1} combined with polynomial evaluation. Where NH is faster than
 polynomial evaluation, this increases performance. However, this adds
-complexity, and NH requires a long key which needs to be derived and cached. For
-this work we primarily target processors where polynomial evaluation is fast, so
+complexity, and NH requires a long key which needs to be derived and cached. 
+HCTR2 primarily targets processors where polynomial evaluation is fast, so
 we do not add an NH layer.
 
 \emph{Field convention}: Unlike HCTR, HCTR2 specifies the bit and byte order of
