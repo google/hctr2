@@ -36,7 +36,7 @@ features that make it an attractive design:
     when a 128-bit nonce is used, CTR 
     must use a 128-bit counter, and is
     at risk of implementations
-    whose flaws are only manifest on the
+    whose flaws only manifest on the
     rare occasions that a counter overflows
     into the next word.
 \end{itemize}
@@ -85,7 +85,8 @@ that used in HCTR. Our design goals are:
 See \autoref{hproperties}
 for the properties we require of the hash function.
 
-To fix the \cite{kumarhctr} flaw, we eliminate the zero-length special case
+To fix the flaw described in \cite{kumarhctr},
+we eliminate the zero-length special case
 by adding one to the length before encoding it.
 
 We process the tweak before the message, so that implementations need only
