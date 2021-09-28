@@ -352,15 +352,16 @@ In most cases, the probability of a collision
 between two specific blocks is bounded by \(1/2^n\).
 
 \begin{itemize}
-    \item \(h \qeq L\): trivially has probability \(1/2^n\).
+    \item \(h \qeq L\):
+    Trivially has probability \(1/2^n\).
     \item
     \(h \qeq Y_j^s\),
     \(L \qeq Y_j^s\),
     \(\UU^r \qeq Y_j^s\),
     \(Y_i^r \qeq Y_j^s\),
-    \(\UU^s \qeq Y_j^s\), 
+    \(\UU^s \qeq Y_j^s\),
     \(Y_i^s \qeq Y_j^s\): 
-    if query \(s\) is an encryption query,
+    If query \(s\) is an encryption query,
     then given \(h\), \(L\), query \(s\), 
     all prior queries and responses, and
     \(C^s[0;jn]\), there is exactly one value of
@@ -372,7 +373,7 @@ between two specific blocks is bounded by \(1/2^n\).
     \(\fromint(1) \qeq S_j^s\),
     \(\MM^r \qeq S_j^s\),
     \(S_i^r \qeq S_j^s\):
-    if query \(s\) is an encryption query,
+    If query \(s\) is an encryption query,
     then given \(h\), \(L\), \(T^s\),
     \(P^s\), \(V^s\)
     and all prior queries and responses,
@@ -388,7 +389,7 @@ between two specific blocks is bounded by \(1/2^n\).
     \(\MM^s \qeq S_j^s\),
     \(S_i^r \qeq \MM^s\),
     \(L \qeq \UU^s\):
-    given \(h\) and all queries and responses,
+    Given \(h\) and all queries and responses,
     there is exactly one value of \(L\)
     which causes the equation to hold.
 \end{itemize}
@@ -396,10 +397,11 @@ between two specific blocks is bounded by \(1/2^n\).
 In two cases, a collision is impossible.
 
 \begin{itemize}
-    \item \(\fromint(0) \qeq \fromint(1)\): trivially impossible.
+    \item \(\fromint(0) \qeq \fromint(1)\): 
+    Trivially impossible.
     \item 
     \(S_i^s \qeq S_j^s\):
-    this is impossible, 
+    This is impossible, 
     \(S_i^s \xor S_j^s = \fromint(i) \xor \fromint(j)\).
 \end{itemize}
 
@@ -410,14 +412,15 @@ query \(s\) is an encryption query:
 
 \begin{itemize}
     \item \(\MM^r \qeq \MM^s\):
-    this holds if \(M^r \xor H_h(T^r, N^r) = M^s \xor H_h(T^s, N^s)\);
+    This holds if \(M^r \xor H_h(T^r, N^r) = M^s \xor H_h(T^s, N^s)\);
     by hash function property 2, this holds with probability at most
     \(\max(d^r, d^s)/2^n\).
     \item \(\fromint(0) \qeq \MM^s\):
-    this holds if \(\fromint(0) = M^s \xor H_h(T^s, N^s)\);
+    This holds if \(\fromint(0) = M^s \xor H_h(T^s, N^s)\);
     by hash function property 1, this holds with probability at most
     \(d^s/2^n\).
-    \item \(\fromint(1) \qeq \MM^s\): as above.
+    \item \(\fromint(1) \qeq \MM^s\):
+    As above.
 \end{itemize}
 
 In each case, if query \(s\) is a decryption query,
@@ -432,15 +435,15 @@ query \(s\) is a decryption query:
 
 \begin{itemize}
     \item \(\UU^r \qeq \UU^s\): 
-    this holds if \(U^r \xor H_h(T^r, V^r) = U^s \xor H_h(T^s, V^s)\);
+    This holds if \(U^r \xor H_h(T^r, V^r) = U^s \xor H_h(T^s, V^s)\);
     by hash function property 2, this holds with probability at most
     \(\max(d^r, d^s)/2^n\).
     \item \(Y_j^r \qeq \UU^s\):
-    this holds if \(Y_j^r = U^s \xor H_h(T^s, C^s)\);
+    This holds if \(Y_j^r = U^s \xor H_h(T^s, C^s)\);
     by hash function property 1, this holds with probability at most
     \(d^s/2^n\).
     \item \(h \qeq \UU^s\):
-    this holds if \(h = U^s \xor H_h(T^s, C^s)\);
+    This holds if \(h = U^s \xor H_h(T^s, C^s)\);
     by hash function property 3, this holds with probability at most
     \(d^s/2^n\).
 \end{itemize}
