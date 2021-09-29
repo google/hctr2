@@ -1,5 +1,10 @@
 /*
- *	Implement AES CTR mode by8 optimization with AVX instructions. (x86_64)
+ * AES XCTR mode. This code was slightly modified from the Linux kernel's AES
+ * CTR by8 implementation. 
+ *
+ * =====================================================================
+ *
+ * Implement AES CTR mode by8 optimization with AVX instructions. (x86_64)
  *
  * This is AES128/192/256 CTR mode optimization implementation. It requires
  * the support of Intel(R) AESNI and AVX instructions.
