@@ -365,7 +365,7 @@ between two specific blocks is bounded by \(1/2^n\).
     \(L \qeq Y_j^s\),
     \(\UU^r \qeq Y_j^s\),
     \(Y_i^r \qeq Y_j^s\),
-    \(Y_i^s \qeq Y_j^s\): 
+    \(Y_i^s \qeq Y_j^s\) where \(i < j\): 
     If query \(s\) is an encryption query,
     then given \(h\), \(L\), query \(s\), 
     all prior queries and responses, and
@@ -414,7 +414,7 @@ In two cases, a collision is impossible.
     \item \(\fromint(0) \qeq \fromint(1)\): 
     Trivially impossible.
     \item 
-    \(S_i^s \qeq S_j^s\):
+    \(S_i^s \qeq S_j^s\) where \(i < j\):
     This is impossible, 
     \(S_i^s \xor S_j^s = \fromint(i) \xor \fromint(j)\).
 \end{itemize}
