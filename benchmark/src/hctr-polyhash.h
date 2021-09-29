@@ -21,7 +21,7 @@ struct polyhash_key {
 	ble128 h;
 
 	/*
-	 * h^2 ... h^33
+	 * h^2 ... h^N
          * for efficient encryption of 512 byte plaintext
 	 */
 	ble128 powers[NUM_PRECOMPUTE_KEYS];

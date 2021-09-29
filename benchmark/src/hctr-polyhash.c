@@ -314,8 +314,6 @@ void polyhash_emit_simd(const struct polyhash_key *key,
     ble128_xor((ble128*)out, &state->state);
 }
 
-/* Poly1305 benchmarking */
-
 static void _polyhash(const struct polyhash_key *key, const void *src,
 		      unsigned int srclen, u8 *digest)
 {
@@ -324,10 +322,10 @@ static void _polyhash(const struct polyhash_key *key, const void *src,
     int i;
 
 	polyhash_init(&polystate);
-    for(i = 0; i + POLYHASH_BLOCK_SIZE*32 <= srclen; i += POLYHASH_BLOCK_SIZE*32) {
-        polyhash_update_generic(key, &polystate, src + i, POLYHASH_BLOCK_SIZE*32);
+    for(i = 0; i + POLYHASH_BLOCK_SIZE*NUM_PRECOMPUTE_KEYS <= srclen; i += POLYHASH_BLOCK_SIZE*NUM_PRECOMPUTE_KEYS) {
+        polyhash_update_generic(key, &polystate, src + i, POLYHASH_BLOCK_SIZE*NUM_PRECOMPUTE_KEYS);
     }
-    polyhash_update_generic(key, &polystate, src + i, srclen % (POLYHASH_BLOCK_SIZE*32));
+    polyhash_update_generic(key, &polystate, src + i, srclen % (POLYHASH_BLOCK_SIZE*NUM_PRECOMPUTE_KEYS));
 	polyhash_emit_generic(key, &polystate, &out);
 
 	memcpy(digest, &out, sizeof(out));
@@ -341,10 +339,10 @@ static void _polyhash_simd(const struct polyhash_key *key, const void *src,
     int i;
 
 	polyhash_init(&polystate);
-    for(i = 0; i + POLYHASH_BLOCK_SIZE*32 <= srclen; i += POLYHASH_BLOCK_SIZE*32) {
-        polyhash_update_simd(key, &polystate, src + i, POLYHASH_BLOCK_SIZE*32);
+    for(i = 0; i + POLYHASH_BLOCK_SIZE*NUM_PRECOMPUTE_KEYS <= srclen; i += POLYHASH_BLOCK_SIZE*NUM_PRECOMPUTE_KEYS) {
+        polyhash_update_simd(key, &polystate, src + i, POLYHASH_BLOCK_SIZE*NUM_PRECOMPUTE_KEYS);
     }
-    polyhash_update_simd(key, &polystate, src + i, srclen % (POLYHASH_BLOCK_SIZE*32));
+    polyhash_update_simd(key, &polystate, src + i, srclen % (POLYHASH_BLOCK_SIZE*NUM_PRECOMPUTE_KEYS));
 	polyhash_emit_simd(key, &polystate, &out);
 
 	memcpy(digest, &out, sizeof(out));

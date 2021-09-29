@@ -44,6 +44,8 @@ void hctr_setkey(struct hctr_ctx *ctx, const u8 *key)
 
 /*
  * Assume that nbytes is a multiple of BLOCKCIPHER_BLOCK_SIZE
+ *
+ * TODO: Modify XCTR code to allow for non-multiple plaintexts
  */
 void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
 		       size_t nbytes, const u8 *tweak, size_t tweak_len, bool encrypt, bool simd)

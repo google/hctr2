@@ -38,7 +38,8 @@ void hctr_ctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
     }
 }
 
-// Assume nbytes is a multiple of BLOCK_SIZE
+// Assumes nbytes is a multiple of BLOCK_SIZE
+// TODO: Fix BLOCKSIZE multiple issue
 void hctr_ctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		       size_t nbytes, const u8 *iv)
 {
@@ -51,6 +52,8 @@ void hctr_ctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 #endif
 }
 
+// Assumes nbytes is a multiple of BLOCK_SIZE
+// TODO: Fix BLOCKSIZE multiple issue
 void hctr_ctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		       size_t nbytes, const u8 *iv)
 {
@@ -66,7 +69,6 @@ void hctr_ctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
         ctr.hi = 0;
         ble128_xor(&ctr,(ble128*)iv);
         aes_encrypt(ctx, &dst[i * CTR_BLOCK_SIZE], (u8*)&ctr);
-        //aesni_ecb_enc(&ctx->aes_ctx, &dst[i * CTR_BLOCK_SIZE], &ctr, CTR_BLOCK_SIZE);
         ble128_xor((ble128*)&dst[i * CTR_BLOCK_SIZE], (ble128*)&src[i * CTR_BLOCK_SIZE]);
     }
 }
