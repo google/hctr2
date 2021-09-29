@@ -518,8 +518,8 @@ and then apply a correction for the ones that don't.
 
 For example,
 to bound the probability an encryption query \(s\)
-has some collision with the fixed values
-\(h = \pi(\fromint(0))\) and \(L = \pi(\fromint(1))\)
+has some collision with the fixed values 
+\(\fromint(0)\), \(\fromint(1)\), \(h\) and \(L\)
 we observe first that
 there are two blocks in the fixed values
 and \(m^s\) blocks in query \(s\), so there are
@@ -625,7 +625,7 @@ Halevi and Rogaway's PRP-RND lemma
 Putting these together with our main lemma, we have shown
 \begin{align*}
     &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
-    \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma, t + \sigma t')] \\
+    \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')] \\
     &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 10\sigma + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
 \end{document}
