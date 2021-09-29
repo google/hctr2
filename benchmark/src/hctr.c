@@ -71,7 +71,7 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
 
     polyhash_init(&polystate);
     polyhash_update(&ctx->polyhash_key, &polystate, N, N_bytes, simd);
-    polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len/8, simd);
+    polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len, simd);
     polyhash_emit(&ctx->polyhash_key, &polystate, (u8 *)&digest, simd);
 
     xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
@@ -99,7 +99,7 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
 
     polyhash_init(&polystate);
     polyhash_update(&ctx->polyhash_key, &polystate, D, N_bytes, simd);
-    polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len/8, simd);
+    polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len, simd);
     polyhash_emit(&ctx->polyhash_key, &polystate, (u8 *)&digest, simd);
 
     xor(C, &CC, digest, BLOCKCIPHER_BLOCK_SIZE);
