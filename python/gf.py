@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Google LLC <nhuck@google.com>
+# Copyright 2021 Google LLC
 #
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
