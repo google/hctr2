@@ -28,10 +28,11 @@ features that make it an attractive design:
     that an adversary's control over \(S\) is very limited for both
     encryption and decryption queries; this is important in the
     proof of security.
-    \item The CTR mode variant XCTR; HCTR2, unlike HCTR,
-    does not require this mode for its security proofs, 
-    but we prefer not to change it unnecessarily.
-    XCTR also never needs to maintain a counter larger
+    \item The CTR mode variant XCTR.
+    Because of the extra constant \(L\), it would be straightforward
+    to prove secure an HCTR2 variant that used CTR mode.
+    However, unlike CTR, XCTR
+    never needs to maintain a counter larger
     than needed for the message size;
     when a 128-bit nonce is used, CTR 
     must use a 128-bit counter, and is
@@ -121,7 +122,7 @@ we don't append a 1 bit to such messages.
 Instead, we indicate whether
 the message length is a multiple of the block size
 in the least significant bit of the length block.
-If all tweaks are of length \(t\), implementations can store
+If all tweaks are of length \(t\), implementations can cache
 \(\fromint(2t + 2)h\), and use this or \(\fromint(2t + 2)h \xor h\)
 to start hashing, XORing this value directly with the
 first block of the tweak.

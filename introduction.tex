@@ -19,10 +19,10 @@ where the ciphertext must be the same size as the
 plaintext, and what is required is a tweakable
 super-pseudorandom permutation\cite{cmc}. 
 \cite{adiantum} includes a detailed history of length-preserving encryption.
-Where AES and multiplication in \(GF(2^n)\) are hardware-accelerated,
+Where AES and multiplication in \(GF(2^{128})\) are hardware-accelerated,
 the construction HCTR\cite{hctr} is among the most efficient for 
 tweakable length-preserving encryption, using
-a single block cipher invocation and two \(GF(2^n)\) multiplications
+a single block cipher invocation and two \(GF(2^{128})\) multiplications
 per 16-byte block.
 
 In this paper, we present 
