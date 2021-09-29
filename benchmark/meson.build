@@ -26,7 +26,11 @@ src = [
     'src/cham.c',
     'src/chaskey-lts.c',
     'src/cipherbench.c',
+    'src/gf128.c',
     'src/hbsh.c',
+    'src/hctr.c',
+    'src/hctr-ctr.c',
+    'src/hctr-polyhash.c',
     'src/insn_timing.c',
     'src/lea.c',
     'src/nh.c',
@@ -61,6 +65,8 @@ endif
 if host_machine.cpu_family() == 'aarch64'
     src += [
         'src/aarch64/nh-neon-core.S',
+        'src/aarch64/aes-ce.S',
+        'src/aarch64/hctr-polyhash-pmull_asm.S',
         '../third_party/linux-kernel/aarch64/chacha-neon-core.S',
     ]
 endif
@@ -68,6 +74,9 @@ if host_machine.cpu_family() == 'x86_64'
     src += [
         'src/x86_64/nh-avx2-x86_64.S',
         'src/x86_64/nh-sse2-x86_64.S',
+        'src/x86_64/aes_ctrby8_avx-x86_64.S',
+        'src/x86_64/hctr-polyhash-clmulni_asm.S',
+        '../third_party/linux-kernel/x86_64/aesni-intel_asm.S',
         '../third_party/linux-kernel/x86_64/chacha-avx2-x86_64.S',
         '../third_party/linux-kernel/x86_64/chacha-avx512vl-x86_64.S',
         '../third_party/linux-kernel/x86_64/chacha-ssse3-x86_64.S',

@@ -28,7 +28,7 @@
 #if BLOCK_BYTES == 16
 #  define TWEAK_T	ble128
 #  define TWEAK_XOR	ble128_xor
-#  define TWEAK_MUL_X	gf128mul_x_ble
+#  define TWEAK_MUL_X	__gf128mul_x_ble
 #else
 #  define TWEAK_T	u64
 #  define TWEAK_XOR(dst, src)	*(dst) ^= *(src)
