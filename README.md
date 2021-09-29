@@ -2,9 +2,9 @@
 
 HCTR2 is an efficient wide-block encryption mode that supports hardware
 acceleration. It is intended for use on processors that support accelerated
-AES and carry-less multiplication (CLMUL/PMULL).
+AES instructions and carry-less multiplication instructions (CLMUL/PMULL).
 
-When encrypting filenames, IV reuse is common to allow efficient directory
+When encrypting filenames, IV reuse is required to allow efficient directory
 lookups. With traditional filename encryption algorithms like AES-CTS-CBC, two
 filenames that share a prefix of the algorithm's blocksize will have ciphertexts
 that also share a prefix.  This leaks more information to an attacker than
