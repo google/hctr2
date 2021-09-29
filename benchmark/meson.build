@@ -14,7 +14,6 @@ configure_file(output : 'cbconfig.h', configuration : conf_data)
 include_dirs = [
     include_directories('.'),
     include_directories('src'),
-    include_directories('testvectors'),
     include_directories('../third_party/linux-kernel')
 ]
 add_project_arguments('-O2', '-Wall', '-Wno-pointer-sign', '-fno-strict-aliasing', language : 'c')
