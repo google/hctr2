@@ -18,7 +18,6 @@ different ciphertext.
 
  * `benchmark/`: HCTR implementation in C and benchmarking code
  * `python/`: HCTR implementation in Python
- * `specification/`: LaTeX sources for HCTR documents
  * `third_party`: derived works covered by a different licesnse than our main MIT license
 
 ## Notices
