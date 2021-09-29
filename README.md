@@ -1,16 +1,11 @@
 # HCTR2
 
-HCTR2 is an efficient wide-block encryption mode that supports hardware
-acceleration. It is intended for use on processors that support accelerated
-AES instructions and carry-less multiplication instructions (CLMUL/PMULL).
+HCTR2 is a wide-block encryption mode that supports hardware acceleration. It is
+efficient on processors that support accelerated AES instructions and carry-less
+multiplication instructions (CLMUL/PMULL).
 
-When encrypting filenames, IV reuse is required to allow efficient directory
-lookups. With traditional filename encryption algorithms like AES-CTS-CBC, two
-filenames that share a prefix of the algorithm's blocksize will have ciphertexts
-that also share a prefix.  This leaks more information to an attacker than
-necessary. HCTR2 is an efficient construction that eliminated the shared prefix
-issue. HCTR2 is a super pseudorandom permuation, meaning it works on an
-arbitrary length block size, allowing the entire filename to be a single block.
+HCTR2 is a super pseudorandom permuation, meaning it works on an arbitrary
+length block size, allowing arbitrary length plaintexts to be a single block.
 This means that any change to the plaintext will produce an unrecognizably
 different ciphertext.
 
