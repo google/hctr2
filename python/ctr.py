@@ -25,7 +25,7 @@ class Counter(object):
   def reset(self):
     self.current = 1
 
-class CTR(cipher.Cipher):
+class XCTR(cipher.Cipher):
   def set_keylen(self, k):
     self.choose_variant(lambda v: v["lengths"]["key"] == k)
 
