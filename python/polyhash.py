@@ -49,18 +49,16 @@ class PolyHash(Hash):
         pad_len = ((l - (len(s) % l)) % l)
         return s + b'\x00'*pad_len
 
-    def dot(self, x, y):
-        return x * y * self.polyval_const
-
     def poly(self, m, key):
       assert len(m) % self.lengths()['blocksize'] == 0
       # Make h into a Galois field element
       h = self.gf(int.from_bytes(key, byteorder="little"))
+      hmont = h * self.polyval_const
       blocks = [m[i:i+self.lengths()['blocksize']] for i in range(0, len(m), self.lengths()['blocksize'])]
       hash_result = self.gf(0)
       for i in range(len(blocks)):
         exponent = (len(blocks) - 1) - i
-        hash_result += self.dot((h**exponent), self.gf(int.from_bytes(blocks[i], byteorder='little')))
+        hash_result += (hmont**exponent) * self.gf(int.from_bytes(blocks[i], byteorder='little'))
       return int(hash_result).to_bytes(self.lengths()['blocksize'], byteorder='little')
 
     def hash(self, key, message, tweak):
