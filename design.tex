@@ -74,22 +74,26 @@ HCTR2 differs from HCTR in the following ways:
 
 \subsubsection{POLYVAL}
 
-Unlike HCTR, HCTR2 specifies the bit and byte order of field elements.
-The most widely used form of polynomial evaluation
-in \(\GF(2^{128})\) is GCM's GHASH\cite{gcm}.
-However, GHASH is not consistent in its endianness conventions
-between bytes and words;
-this increases implementation complexity and reduces efficiency.
+We aim to specify HCTR2 in sufficient detail
+for implementations to be interoperable,
+so we must be precise about endianness and the like
+in \(\GF(2^{128})\) polynomial evaluation.
+The most widely used  convention is that of GCM's GHASH\cite{gcm}.
+However, GHASH is not consistent in its endianness conventions,
+which increases implementation complexity and reduces efficiency.
 
 As a result, we instead use the POLYVAL function
-defined in \cite{aes_gcm_siv}.
+defined in \cite{aes_gcm_siv,aes_gcm_siv_rfc}.
 This function is carefully designed to allow
 a highly efficient implementation
 on processors with carryless multiply instructions.
-POLYVAL incurs a small cost in specification and proof complexity
-because the polynomial is evaluated not at \(h\) but at \(x^{-n}h\) 
-this cost is worth paying to gain efficiency while
-allowing code to be shared with other modes.
+POLYVAL incurs a small cost in specification and proof complexity because 
+the polynomial is evaluated not at \(h\) but at \(x^{-n}h\)
+so that Montgomery mutiplication\cite{montmul} can be key-agile.
+However it is efficient
+(1.2x faster than GHASH according to \cite{aes_gcm_siv})
+while offering an efficient conversion between POLYVAL and GHASH hashing
+which allows code/hardware for one to be used for the other.
 
 \subsubsection{Input formatting}
 

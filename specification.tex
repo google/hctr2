@@ -41,7 +41,7 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
 \subsection{Polynomial hash function}\label{hashspec}
 We interpret \(n\)-bit blocks as little-endian field elements of \(\GF(2^n)\),
 so \(001 \Concat 0^{n-3}\) is interpreted as the element \(x^2\).
-Per \cite{aes_gcm_siv} we define
+Per \cite{aes_gcm_siv,aes_gcm_siv_rfc} we define
 \begin{align*}
     \POLYVAL(h, \lambda) & = 0^n\\
     \POLYVAL(h, A \Concat B) & = (\POLYVAL(h, A) \xor B) \otimes h \otimes x^{-n}
