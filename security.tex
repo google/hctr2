@@ -11,8 +11,8 @@
 \documentclass[hctr.tex]{subfiles}
 \begin{document}
 \section{Security of HCTR2}\label{security}
-We prove that, if the underlying block cipher is secure, then
-HCTR2 has good security properties.
+We prove that if the underlying block cipher is secure,
+then HCTR2 has good security properties.
 \subsection{Definitions}
 We use \(x \sample S\) to mean ``\(x\) is sampled from \(S\)
 uniformly at random'', and we write
@@ -81,10 +81,9 @@ presented in query \(s\).
 
 We use \(\HCTR[\pi]\) to refer to HCTR2 in which invocation
 of the block cipher is replaced with invocation of the
-permutation \(\pi \in \Perm(n)\); thus for key
-\(k \in \mathcal{K}\) regular HCTR2 is \(\HCTR[E_k]\).
+permutation \(\pi \in \Perm(n)\).
 \(\XCTR_\pi\) refers to a similar substitution.
-\(\HCTR[E]\) refers to regular HCTR2,
+\(\HCTR[E]\) refers to HCTR2 using the block cipher \(E\),
 ie \(\HCTR[E_k]\) for \(k \sample \mathcal{K}\), while
 \(\HCTR[\Perm(n)]\) refers to \(\HCTR[\pi]\)
 for \(\pi \sample \Perm(n)\).
@@ -209,7 +208,8 @@ represent the distribution of transcripts
 in world X and world Y respectively, so that
 each transcript \(\tau\) has a probability \(\prob{X = \tau}\)
 of arising in world X, and similarly \(\prob{Y = \tau}\) in world Y.
-WLOG we assume that \(\prob{A(Y) = 1} \geq \prob{A(X) = 1}\).
+Without loss of generality,
+we assume that \(\prob{A(Y) = 1} \geq \prob{A(X) = 1}\).
 We further assume that \(A(\tau)\) is optimal:
 \(A(\tau) = 1\)
 when \(\prob{Y = \tau} > \prob{X = \tau}\) and 0 otherwise.
@@ -289,9 +289,8 @@ this information, giving it to them cannot make their performance worse.
 \subsubsection{Good and bad transcripts}
 For \(j \in \{1 \ldots m^s-1\}\) we define \(S_j^s = S^s \xor \fromint(j)\),
 the block cipher inputs used in XCTR, and \(Y_j^s\) the corresponding
-outputs, so that \(Y_j^s = \pi(S_j^s)\) and 
-\(Y_1^s \Concat \cdots \Concat Y_{m^s-1}^s = \XCTR_\pi(S^s)[0;n(m^s -1)] 
-= (N^s \xor V^s) \Concat D^s\).
+outputs, so that in world X \(Y_j^s = \pi(S_j^s)\) and 
+\(Y_1^s \Concat \cdots \Concat Y_{m^s-1}^s = \XCTR_\pi(S^s)[0;n(m^s -1)]\).
 
 Given the full transcript, including \(h\) and \(L\),
 we can infer all block cipher plaintexts and ciphertexts.
@@ -338,18 +337,19 @@ Thus for all \(\tau \in \Tg\)
 
 \subsubsection{Case analysis of collisions}
 Next we bound \(\prob{Y \in \Tb}\).
-We consider a case by case analysis of
-each of the kinds of collisions that are
-possible, and bound the probability in each case.
+We consider a case by case analysis of possible collisions,
+in either inferred plaintexts (\(\mathcal{D}\))
+or inferred ciphertexts (\(\mathcal{R}\)),
+and bound the probability in world Y each case.
 
-In the ideal world responses to queries are random,
+Responses to queries are random in world Y,
 but some caution is required.
 If we know the adversary's query \(s\), then conditioning on that,
 we cannot treat the response to query \(r\) as uniformly random;
 if the choice of later query depends on the earlier response,
 knowing the later query is information about the earlier response.
 However, conditioning on a query and all prior queries and responses,
-in world Y we still have that \(h\), \(L\), and the
+we still have that \(h\), \(L\), and the
 query response are uniformly random and independent,
 and so we can consider them in any order.
 
@@ -360,6 +360,9 @@ between two specific blocks is bounded by \(1/2^n\).
 \begin{itemize}
     \item \(h \qeq L\):
     Trivially has probability \(1/2^n\).
+    In world X, this has probability 0,
+    but we don't need to consider probabilities in world X
+    in what follows.
     \item
     \(h \qeq Y_j^s\),
     \(L \qeq Y_j^s\),
@@ -415,7 +418,7 @@ In two cases, a collision is impossible.
     Trivially impossible.
     \item 
     \(S_i^s \qeq S_j^s\) where \(i < j\):
-    This is impossible, 
+    This is impossible; 
     \(S_i^s \xor S_j^s = \fromint(i) \xor \fromint(j)\).
 \end{itemize}
 
@@ -492,8 +495,8 @@ and green if the probability may be
 greater than \(1/2^n\) and depends
 on the number of solutions to a
 particular polynomial;
-\(d^s\) when there are \(d^s\) solutions,
-\(\max\) where there are
+\(d^s\) when there are at most \(d^s\) solutions,
+\(\max\) where there are at most
 \(\max(d^r, d^s)\) solutions.
 Even where a square is green,
 if query \(s\) is a decryption query,
@@ -545,7 +548,7 @@ is bounded above by
 \begin{displaymath}
     \frac{4m^s + d^s -1}{2^n}
 \end{displaymath}
-The largest of the two correction formulas is
+The larger of the two correction formulas is
 the first one, so we use that for our overall bound.
 Across all queries, the total
 correction will be
@@ -596,14 +599,14 @@ on the probability of a bad transcript of
     \leq & \left.\left(2\binom{\sigma + 2}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
     = & \left.\left(2\left(\binom{\sigma}{2} + 2\sigma + 1\right) + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
     = & \left.\left(3\sigma(\sigma - 1)/2 + q\sigma + 5\sigma - 2q + 1\right)\middle/2^n\right. \\
-    \leq & \left.\left(3\sigma^2 + 2q\sigma + 10\sigma + 2\right)\middle/2^{n+1}\right. \\
+    \leq & \left.\left(3\sigma^2 + 2q\sigma + 7\sigma + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
 
 Applying the H-coefficient technique, we therefore conclude that
 \begin{align*}
     & \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(q, \sigma, t)] \\
     \leq & \prob{Y \in \Tb} \\
-    \leq & \left.\left(3\sigma^2 + 2q\sigma + 10\sigma + 2\right)\middle/2^{n+1}\right.
+    \leq & \left.\left(3\sigma^2 + 2q\sigma + 7\sigma + 2\right)\middle/2^{n+1}\right.
 \end{align*}
 
 \subsection{Security bound}
@@ -626,6 +629,6 @@ Putting these together with our main lemma, we have shown
 \begin{align*}
     &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
     \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')] \\
-    &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 10\sigma + 2\right)\middle/2^{n+1}\right. \\
+    &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 7\sigma + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
 \end{document}
