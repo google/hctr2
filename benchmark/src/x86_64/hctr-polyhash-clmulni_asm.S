@@ -14,7 +14,7 @@
 .align 16
 
 Lgstar:
-	.quad 0x87, 0x87
+	.quad 0xc200000000000000, 0xc200000000000000
 
 /* generate a unique variable for xmm register */
 .macro club_internal name, n
@@ -35,7 +35,7 @@ Lgstar:
 
 .text
 
-.macro clmul_xor_mul_no_reduction b
+.macro karatsuba1 b
 	.set by, \b
 
 	.set i, 0
@@ -84,20 +84,9 @@ Lgstar:
 	.endr
 .endm
 
-#define GSTAR %xmm4
 #define PL %xmm5
 #define PH %xmm6
-#define T %xmm7
-
-/*
- * Reduces karatsuba parts into a polynomial mod X^128 + X^7 + X^2 + X + 1.
- * Leaves the reduced 128 bit polynomial in %xmm6
- * xmm1 = [C1 : C0]
- * xmm0 = [D1 : D0]
- * xmm2 = [E1 : E0]
- */
-.macro clmul_mul_reduction
-	vmovdqa Lgstar(%rip), GSTAR
+.macro karatsuba2
 	movdqa %xmm0, PL
 	pxor %xmm1, PL
 	pxor %xmm2, PL # [C1 ^ D1 ^ E1 : C0 ^ D0 ^ E0]
@@ -106,23 +95,28 @@ Lgstar:
 	psrldq $8, PH # [0 : C1 ^ D1 ^ E1]
 	pxor %xmm0, PL # [C0 ^ D0 ^ E0 ^ D1 : D0]
 	pxor %xmm1, PH # c(x) = [C1 : C1 ^ D1 ^ E1 ^ C0] = [c(x) / x^64 : c(x) mod x^64]
-	movdqa PH, T
-	// t(x) = g*(x) * (c(x)/x^64)
-	pclmulqdq $0x11, GSTAR, T # t(x) = [t(x) / x^64 : t(x) mod x^64]
-	pslldq $8, PH # [c(x) mod x^64 : 0]
-	pxor T, PH # [(c(x) mod x^64) + (t(x) / x^64) : JUNK]
-	pclmulqdq $0x11, GSTAR, PH # g*(x)(c(x) mod x^64 + t(x)/x^64)
-	pslldq $8, T # [t(x) * x^64 mod x^128]
-	pxor T, PH
-	pxor PL, PH
+.endm
 
+#define GSTAR %xmm4
+#define T %xmm7
+#define Z %xmm8
+.macro montgomery_reduction
+	vmovdqa Lgstar(%rip), GSTAR
+	movdqa PL, T
+	pclmulqdq $0x00, GSTAR, T # T = [X0 * g*(x)]
+	pshufd $0b01001110, T, Z # Z = [T0 : T1]
+	pxor Z, PL # PL = [X1 ^ T0 : X0 ^ T1]
+	pxor PL, PH # PH = [X1 ^ T0 ^ X3 : X0 ^ T1 ^ X2]
+	pclmulqdq $0x11, GSTAR, PL # PL = [X1 ^ T0 * g*(x)]
+	pxor PL, PH
 .endm
 
 /* void clmul_polyhash_mul(char *dst, const u128 *op2) */
 ENTRY(clmul_polyhash_mul)
 	FRAME_BEGIN
-	clmul_xor_mul_no_reduction 1
-	clmul_mul_reduction
+	karatsuba1 1
+	karatsuba2
+	montgomery_reduction
 	movups %xmm6, (%rdi)
 	FRAME_END
 	ret
@@ -131,7 +125,7 @@ ENDPROC(clmul_polyhash_mul)
 /* void clmul_polyhash_mul_xor(const u128 *op1, const u128 *op2, u128 * dst) */
 ENTRY(clmul_polyhash_mul_xor)
 	FRAME_BEGIN
-	clmul_xor_mul_no_reduction 1
+	karatsuba1 1
 	movups (0*16)(%rdx), %xmm3
 	movups (1*16)(%rdx), %xmm4
 	movups (2*16)(%rdx), %xmm5
@@ -148,7 +142,7 @@ ENDPROC(clmul_polyhash_mul_xor)
 /* void clmul_polyhash_mul_xor(const u128 *op1, const u128 *op2, u128 * dst) */
 ENTRY(clmul_polyhash_mul4_xor)
 	FRAME_BEGIN
-	clmul_xor_mul_no_reduction 4
+	karatsuba1 4
 	movups (0*16)(%rdx), %xmm3
 	movups (1*16)(%rdx), %xmm4
 	movups (2*16)(%rdx), %xmm5
@@ -168,7 +162,8 @@ ENTRY(clmul_polyhash_xor_reduction)
 	movups (0*16)(%rdi), %xmm0
 	movups (1*16)(%rdi), %xmm1
 	movups (2*16)(%rdi), %xmm2
-	clmul_mul_reduction
+	karatsuba2
+	montgomery_reduction
 	movups (%rsi), %xmm2
 	pxor %xmm2, %xmm6
 	movups %xmm6, (%rsi)
