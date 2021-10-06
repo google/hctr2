@@ -53,6 +53,7 @@
 	show_result(ALGNAME, "decryption", "generic", nbytes, best_time);
 
 #ifdef ENCRYPT_SIMD
+	SETKEY_SIMD(&ctx, key);
 	best_time = UINT64_MAX;
 	for (try = 0; try < ntries; try++) {
 		memcpy(iv, orig_iv, sizeof(iv));
@@ -90,6 +91,7 @@
 #undef IV_BYTES
 #undef KEY
 #undef SETKEY
+#undef SETKEY_SIMD
 #undef ENCRYPT
 #undef DECRYPT
 #undef ENCRYPT_SIMD

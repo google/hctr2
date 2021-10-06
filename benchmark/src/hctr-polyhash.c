@@ -35,28 +35,49 @@ asmlinkage void pmull_polyhash_xor_reduction(const le128 *in, le128 *out);
 #define STRIDE_SIZE 4
 #endif
 
-// Generate key powers in reverse order
-static void polyhash_key_powers(struct polyhash_key *key)
+void reverse(ble128* a){
+    swap(a->lo, a->hi);
+    a->lo = __builtin_bswap64(a->lo);
+    a->hi = __builtin_bswap64(a->hi);
+}
+
+void polyhash_setkey_generic(struct polyhash_key *key, const u8 *raw_key)
 {
+	memcpy(&key->h, raw_key, sizeof(ble128));
+
+    reverse(&key->h);
+    gf128mul_x_lle(&key->h, &key->h);
+
+	/* Precompute key powers */   
     int curr_index;
 	for(int i = 0; i < NUM_PRECOMPUTE_KEYS; i++) {
         curr_index = NUM_PRECOMPUTE_KEYS - 1 - i;
 		memcpy(&key->powers[curr_index], &key->h, sizeof(ble128));
 		if(i == 0) {
-			gf128mul_ble(&(key->powers[curr_index]), &(key->h));
+			gf128mul_lle(&(key->powers[curr_index]), &(key->h));
 		}
 		else {
-			gf128mul_ble(&(key->powers[curr_index]), &(key->powers[(curr_index + 1)]));
+			gf128mul_lle(&(key->powers[curr_index]), &(key->powers[(curr_index + 1)]));
 		}
 	}
 }
 
-void polyhash_setkey(struct polyhash_key *key, const u8 *raw_key)
+void polyhash_setkey_simd(struct polyhash_key *key, const u8 *raw_key)
 {
 	memcpy(&key->h, raw_key, sizeof(ble128));
 
 	/* Precompute key powers */
-	polyhash_key_powers(key);
+    int curr_index;
+	for(int i = 0; i < NUM_PRECOMPUTE_KEYS; i++) {
+        curr_index = NUM_PRECOMPUTE_KEYS - 1 - i;
+		memcpy(&key->powers[curr_index], &key->h, sizeof(ble128));
+		if(i == 0) {
+			CLMUL(&(key->powers[curr_index]), &(key->h));
+		}
+		else {
+			CLMUL(&(key->powers[curr_index]), &(key->powers[(curr_index + 1)]));
+		}
+	}
 }
 
 /*
@@ -119,10 +140,11 @@ void polyhash_update_internal_generic(const struct polyhash_key *key,
             memcpy((u8*)&(state->partial_block) + state->partial_block_length,
                     data, partial_append);
             memcpy(tmp, &key->h, POLYHASH_KEY_SIZE);
-            CLMUL(&state->state, tmp);
+            gf128mul_lle(&state->state, tmp);
             /* block * h^2 */
             memcpy(tmp, get_key_power(key, 2), POLYHASH_KEY_SIZE);
-            gf128mul_ble(tmp, &state->partial_block);
+            reverse(&state->partial_block);
+            gf128mul_lle(tmp, &state->partial_block);
             ble128_xor(&state->state, tmp);
             memset(&state->partial_block, 0, POLYHASH_BLOCK_SIZE);
             state->partial_block_length = 0;
@@ -143,13 +165,15 @@ void polyhash_update_internal_generic(const struct polyhash_key *key,
 
     // exponentiate all previously hashed blocks
     if(nblocks != 0) {
-        CLMUL(&state->state, get_key_power(key, nblocks));
+        gf128mul_lle(&state->state, get_key_power(key, nblocks));
     }
 
     for(int i = 0; i < nblocks; i++) {
         exponent = (nblocks+1) - i;
         memcpy(tmp, get_key_power(key, exponent), POLYHASH_KEY_SIZE);
-        gf128mul_ble(tmp, data + (i * POLYHASH_BLOCK_SIZE));
+        reverse(data + (i * POLYHASH_BLOCK_SIZE));
+        gf128mul_lle(tmp, data + (i * POLYHASH_BLOCK_SIZE));
+        reverse(data + (i * POLYHASH_BLOCK_SIZE));
         ble128_xor(&state->state, tmp);
     }
     if(nbytes % POLYHASH_BLOCK_SIZE) {
@@ -183,17 +207,20 @@ void polyhash_emit_generic(const struct polyhash_key *key,
     }
     if(state->partial_block_length) {
         memcpy(&tmp, &key->h, POLYHASH_KEY_SIZE);
-        CLMUL(&state->state, &tmp);
+        gf128mul_lle(&state->state, &tmp);
         /* block * h^2 */
         memcpy(&tmp, get_key_power(key, 2), POLYHASH_KEY_SIZE);
-        gf128mul_ble(&tmp, &state->partial_block);
+        reverse(&state->partial_block);
+        gf128mul_lle(&tmp, &state->partial_block);
         ble128_xor(&state->state, &tmp);
     }
     tmp.lo = le64_to_cpu(state->num_hashed_bytes*8);
     tmp.hi = 0;
+    reverse(&tmp);
     memcpy(out, &key->h, POLYHASH_KEY_SIZE);
-    gf128mul_ble((ble128*)out, &tmp);
+    gf128mul_lle((ble128*)out, &tmp);
     ble128_xor((ble128*)out, &state->state);
+    reverse(out);
 }
 
 /*
@@ -293,7 +320,7 @@ void polyhash_update_simd(const struct polyhash_key *key,
 void polyhash_emit_simd(const struct polyhash_key *key,
 				struct polyhash_state * state, u8 *out)
 {
-	ble128 tmp;
+    ble128 tmp;
     ble128 pow;
     if(state->num_hashed_bytes == 0) {
         memcpy(out, &key->h, POLYHASH_DIGEST_SIZE);
@@ -355,7 +382,8 @@ void test_hctr_polyhash(void)
 #define HASH_SIMD	_polyhash_simd
 #define SIMD_IMPL_NAME	"clmul"
 #define KEY		struct polyhash_key
-#define SETKEY		polyhash_setkey
+#define SETKEY		polyhash_setkey_generic
+#define SETKEY_SIMD		polyhash_setkey_simd
 #define KEY_BYTES	POLYHASH_KEY_SIZE
 #define DIGEST_SIZE	POLYHASH_DIGEST_SIZE
 #include "hash_benchmark_template.h"

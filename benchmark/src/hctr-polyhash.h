@@ -34,7 +34,8 @@ struct polyhash_state {
     size_t num_hashed_bytes;
 };
 
-void polyhash_setkey(struct polyhash_key *key, const u8 *raw_key);
+void polyhash_setkey_generic(struct polyhash_key *key, const u8 *raw_key);
+void polyhash_setkey_simd(struct polyhash_key *key, const u8 *raw_key);
 
 static inline void polyhash_init(struct polyhash_state *state)
 {

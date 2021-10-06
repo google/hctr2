@@ -80,6 +80,7 @@ void test_hctr_ctr(void)
 #define IV_BYTES	CTR_IV_SIZE
 #define KEY		struct aes_ctx
 #define SETKEY		hctr_ctr_setkey
+#define SETKEY_SIMD		hctr_ctr_setkey
 #define ENCRYPT		hctr_ctr_crypt_generic
 #define DECRYPT		hctr_ctr_crypt_generic
 #define SIMD_IMPL_NAME "simd"

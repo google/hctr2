@@ -40,7 +40,9 @@
 	show_result(ALGNAME, "hashing", "generic", nbytes, best_time);
 
 #ifdef HASH_SIMD
-	best_time = UINT64_MAX;
+	SETKEY_SIMD(&ctx, key);
+	
+    best_time = UINT64_MAX;
 	for (try = 0; try < ntries; try++) {
 		start = now();
 		for (i = 0; i < nbytes; i += bufsize)
@@ -61,3 +63,4 @@
 #undef SETKEY
 #undef HASH
 #undef HASH_SIMD
+#undef SETKEY_SIMD

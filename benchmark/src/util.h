@@ -229,7 +229,6 @@ static inline void __gf128mul_x_ble(ble128 *x)
        x->hi = (hi << 1) | (lo >> 63);
 }
 
-
 typedef union {
 	struct {
 		__le64 b;
@@ -238,10 +237,24 @@ typedef union {
 	__le32 w32[4];
 } le128;
 
+typedef union {
+	struct {
+		__le64 a;
+		__le64 b;
+	};
+	__le32 w32[4];
+} be128;
+
 static inline void le128_xor(le128 *r, const le128 *p, const le128 *q)
 {
     r->a = p->a ^ q->a;
     r->b = p->b ^ q->b;
+}
+
+static inline void be128_xor(be128 *r, const be128 *p, const be128 *q)
+{
+	r->a = p->a ^ q->a;
+	r->b = p->b ^ q->b;
 }
 
 /* Addition in Z/(2^{128}Z) */

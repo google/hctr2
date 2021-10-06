@@ -30,14 +30,16 @@ struct hctr_ctx {
     struct polyhash_key polyhash_key;
 };
 
-/*
- * Let K_H be the 128-bit hash key and K_E be the 256-bit AES key
- * Assume:
- *     K = K_H || K_E
- */
-void hctr_setkey(struct hctr_ctx *ctx, const u8 *key)
+void hctr_setkey_generic(struct hctr_ctx *ctx, const u8 *key)
 {
-    polyhash_setkey(&ctx->polyhash_key, key);
+    polyhash_setkey_generic(&ctx->polyhash_key, key);
+	aesti_expand_key(&ctx->aes_ctx, key + HCTR_HASH_KEY_SIZE, BLOCKCIPHER_KEY_SIZE);
+    ctx->default_tweak_len = HCTR_DEFAULT_TWEAK_LEN;
+}
+
+void hctr_setkey_simd(struct hctr_ctx *ctx, const u8 *key)
+{
+    polyhash_setkey_simd(&ctx->polyhash_key, key);
 	aesti_expand_key(&ctx->aes_ctx, key + HCTR_HASH_KEY_SIZE, BLOCKCIPHER_KEY_SIZE);
     ctx->default_tweak_len = HCTR_DEFAULT_TWEAK_LEN;
 }
@@ -134,7 +136,8 @@ void test_hctr(void)
 #define KEY_BYTES	HCTR_KEY_SIZE
 #define IV_BYTES	HCTR_DEFAULT_TWEAK_LEN
 #define KEY		struct hctr_ctx
-#define SETKEY		hctr_setkey
+#define SETKEY		hctr_setkey_generic
+#define SETKEY_SIMD		hctr_setkey_simd
 #define ENCRYPT		hctr_encrypt_generic
 #define DECRYPT		hctr_decrypt_generic
 #define ENCRYPT_SIMD		hctr_encrypt_simd
