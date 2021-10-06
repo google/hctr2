@@ -11,7 +11,7 @@
 \documentclass[hctr.tex]{subfiles}
 \begin{document}
 \section{HCTR issues}
-In two instances, our presentation of HCTR2 uses
+Our presentation of HCTR2 uses
 names that differ from those used to present HCTR.
 
 \begin{itemize}
@@ -24,10 +24,12 @@ names that differ from those used to present HCTR.
     \item What \cite{hctr,hctrquad} refer to as \(C, \mathit{CC}, D\)
     we refer to as \(U, \UU, V\)
     so that we can use \(P, C\) to refer to plaintext and ciphertext.
+    We will use our names in what follows.
+    \item Because of our use of POLYVAL, HCTR2 draws a distinction
+    between the raw hash key \(\hgen\)
+    and the value at which the polynomial is evaluated \(\hpoly\).
+    HCTR has no such distinction and we use \(h\) throughout.
 \end{itemize}
-
-We will continue to use the HCTR2 names in
-what follows to stay consistent with the rest of this paper.
 
 Two errors in previous work on HCTR are addressed in HCTR2.
 
@@ -39,10 +41,10 @@ HCTR uses a hash function based on the polynomial
 Because it assumes a fixed-length tweak it simply sets \(X = M \Concat T\).
 However, HCTR requires that the resulting polynomial be nonzero
 even when \(X = \lambda\),
-so as a special case \(H(\lambda) = \hgen\).
+so as a special case \(H(\lambda) = h\).
 
 Unfortunately, as \cite{kumarhctr} observes this is no longer
-an injective map from \(X\)---we also have \(H(0) = \hgen\). This
+an injective map from \(X\)---we also have \(H(0) = h\). This
 breaks the almost-XOR-universal property relied on
 in the security bound and
 straightforwardly leads to an attack in which two encryption queries
@@ -70,7 +72,7 @@ of length \(t\); for simplicity we assume \(t = 0\)
 in what follows.
 
 For equation 17, the paper observes that the collision
-\(Y_i^r \qeq \UU^s\) occurs iff \(\hgen\) is one of the zeroes
+\(Y_i^r \qeq \UU^s\) occurs iff \(h\) is one of the zeroes
 of the polynomial \(Y_i^r \xor U^s \xor H(T^s, V^s)\).
 This polynomial has degree at most
 \(m^s\), and so can have
@@ -82,7 +84,7 @@ In equation 21, the paper considers collisions of the form
 \(S_i^r \qeq \MM^s\) and asserts that they are
 quadratically bounded for the same reason. However this equation
 is crucially different: unlike with \(Y_i^r\), the value we
-infer for \(S_i^r\) depends on \(\hgen\). The values of \(\hgen\)
+infer for \(S_i^r\) depends on \(h\). The values of \(h\)
 for which this collision occurs are
 the zeroes of the polynomial
 \begin{displaymath}

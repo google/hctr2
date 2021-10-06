@@ -85,7 +85,8 @@ which increases implementation complexity and reduces efficiency.
 As a result, we instead use the POLYVAL function
 defined in \cite{aes_gcm_siv,aes_gcm_siv_rfc}.
 POLYVAL incurs a small cost in specification and proof complexity because 
-the polynomial is evaluated not at \(\hgen\) but at \(x^{-n}\hgen\)
+the polynomial is evaluated not at the parameter \(\hgen\)
+but at \(x^{-n}\hgen\)
 so that Montgomery mutiplication\cite{montmul} can be key-agile.
 However it is carefully designed, efficient
 on processors with carryless multiply instructions
