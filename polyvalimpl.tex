@@ -14,17 +14,17 @@
 The polynomial hash function is where the bulk of optimizations must be done. A naive partially-optimized implementation of $H$ is slower than XCTR mode. We use several optimization techniques to increase the efficiency of $H$. We show several methods to increase the parallelism of $H$ and to reduce the number of slow instructions required to compute it. With these optimizations in place, the polynomial hash function becomes significantly faster than XCTR mode.
 
 \subsection{Precomputed powers}
-Since $h$ is constant during hashing, powers of $h$ can be precomputed to avoid excess multiplications. 
+Since $\hgen$ is constant during hashing, powers of $\hgen$ can be precomputed to avoid excess multiplications. 
 \begin{algorithm}[H]
 \caption{Fixed width polynomial evaluation}\label{polykalg}
 \begin{algorithmic}[1]
 	\Require $M$ is exactly $k$ blocks long.
-	\Require $h^1$, $\cdots$, $h^{k-1}$ have been precomputed.
+	\Require $\hgen^1$, $\cdots$, $\hgen^{k-1}$ have been precomputed.
 	\Procedure{PolyK}{$M$}
 		\State $poly \gets 0^{128}$
 		\State $i \gets 0$
 		\For{$i \le k$}
-		\State $poly \gets poly \oplus h^{k-1-i}M[ni:n]$
+		\State $poly \gets poly \oplus \hgen^{k-1-i}M[ni:n]$
 		\EndFor
 		\State \textbf{return} $poly$
 	\EndProcedure
@@ -36,19 +36,19 @@ The subroutine \texttt{PolyK} allows $k$ blocks to be efficiently hashed at once
 \caption{Polynomial evaluation}\label{polyalg}
 \begin{algorithmic}[1]
 	\Require $|M|$ is a multiple of block size.
-	\Require $h^1$, $\cdots$, $h^{k}$ have been precomputed.
+	\Require $\hgen^1$, $\cdots$, $\hgen^{k}$ have been precomputed.
 	\Procedure{Poly}{$M$}
 		\State $poly \gets 0^{128}$
 		\State $i \gets 0$
 		\While{$|M| \ge kn(i+1)$}
-			\State $poly \gets poly*h^k \oplus \Call{PolyK}{M[ikn : kn]}$
+			\State $poly \gets poly*\hgen^k \oplus \Call{PolyK}{M[ikn : kn]}$
 			\State $i \gets i + 1$
 		\EndWhile
 		\State $m \gets |M| - kni$\Comment{$0 \le m < k$}
 		\State $j \gets 0$
-		\State $\poly \gets \poly*h^m$
+		\State $\poly \gets \poly*\hgen^m$
 		\While{$jn < m$}
-		\State $poly \gets h^{m-j-1}M[ikn + jn : n]$
+		\State $poly \gets \hgen^{m-j-1}M[ikn + jn : n]$
 		\EndWhile
 		\State \textbf{return} $poly$
 	\EndProcedure
@@ -181,14 +181,14 @@ Using this method as a subroutine to compute $\texttt{PolyK}$ allows the complex
 This implementation only requires $3k + 2$ carry-less multiplications per invocation of $\texttt{PolyK}$. Furthermore, it allows for greater parallelism since the first step of Karatsuba multiplication can be done using only 4 registers on x86-64.
 
 \subsection{Further parallelism}
-A minor problem with the implementation of $\texttt{PolyK}$ is that when computing $\texttt{Poly}(M)$ the outer multiplications by $h^{k}$ cannot be parallelized. This can be fixed by precomputing the first $ck$ powers of $h$ for some integer $c$. This allows for a variant on the definition of $\texttt{PolyK}$ which we will call $\texttt{PolyInternal}$.
+A minor problem with the implementation of $\texttt{PolyK}$ is that when computing $\texttt{Poly}(M)$ the outer multiplications by $\hgen^{k}$ cannot be parallelized. This can be fixed by precomputing the first $ck$ powers of $\hgen$ for some integer $c$. This allows for a variant on the definition of $\texttt{PolyK}$ which we will call $\texttt{PolyInternal}$.
 
-Using this idea, we can remove the non-parallelism of $h^k$ and further amortize polynomial reductions. The following pseudocode describes a fully parallelized implementation of $\texttt{Poly}$.
+Using this idea, we can remove the non-parallelism of $\hgen^k$ and further amortize polynomial reductions. The following pseudocode describes a fully parallelized implementation of $\texttt{Poly}$.
 \begin{algorithm}[H]
 \caption{Subroutine for parallelized polynomial evaluation}\label{polyalgsub}
 \begin{algorithmic}[1]
 	\Require $|Q| < nkc$
-	\Require $h^1$, $\cdots$, $h^{kc}$ have been precomputed.
+	\Require $\hgen^1$, $\cdots$, $\hgen^{kc}$ have been precomputed.
 	\Procedure{PolyInternal}{$Q$}
 		\State $poly \gets 0^{128}$
 		\State $nblocks \gets \lfloor |Q|/n \rfloor$
@@ -199,7 +199,7 @@ Using this idea, we can remove the non-parallelism of $h^k$ and further amortize
 		\For{$i = 0, i < nstrides$}
 			\State $e \gets nblocks - 1 - ci$
 			\State $Alist \gets \{Q[nci + 0 : n], \cdots, Q[nci + n(k - 1) : n]\}$
-			\State $Blist \gets \{h^{e}, \cdots, h^{e - k + 1}\}$
+			\State $Blist \gets \{\hgen^{e}, \cdots, \hgen^{e - k + 1}\}$
 			\State $C', D', E' \gets \Call{KaratsubaStep1Parallel}{Alist, Blist}$
 			\State $C \gets C \oplus C'$
 			\State $D \gets D \oplus D'$
@@ -207,7 +207,7 @@ Using this idea, we can remove the non-parallelism of $h^k$ and further amortize
 		\EndFor
 		\For{$i = 0, i < nblocks \bmod c$}
 			\State $e \gets nblocks - 1 - i$
-			\State $C', D', E' \gets \Call{KaratsubaStep1}{Q[nc*nstrides + ni : n], h^{e}}$
+			\State $C', D', E' \gets \Call{KaratsubaStep1}{Q[nc*nstrides + ni : n], \hgen^{e}}$
 			\State $C \gets C \oplus C'$
 			\State $D \gets D \oplus D'$
 			\State $E \gets E \oplus E'$
@@ -222,11 +222,11 @@ Using this idea, we can remove the non-parallelism of $h^k$ and further amortize
 \begin{algorithm}[H]
 \caption{Parallelized polynomial evaluation}\label{polyalg}
 \begin{algorithmic}[1]
-	\Require $h^1$, $\cdots$, $h^{kc}$ have been precomputed.
+	\Require $\hgen^1$, $\cdots$, $\hgen^{kc}$ have been precomputed.
 	\Procedure{Poly}{$M$}
 		\State $poly \gets 0^{128}$
 		\For{$i = 0, i < \lceil |M| / c \rceil$}
-			\State $poly \gets poly*h^{kc} \oplus \Call{PolyInternal}{M[icn : cn]}$
+			\State $poly \gets poly*\hgen^{kc} \oplus \Call{PolyInternal}{M[icn : cn]}$
 		\EndFor
 		\State \textbf{return} $poly$
 	\EndProcedure

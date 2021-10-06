@@ -90,24 +90,24 @@ for \(\pi \sample \Perm(n)\).
 
 \subsection{Hash function}\label{hproperties}
 For efficiency reasons, POLYVAL does not
-evaluate a polynomial at the parameter \(h\),
-but at another point, \(\hmont = x^{-n}h\).
+evaluate a polynomial at the parameter \(\hgen\),
+but at another point, \(\hpoly = x^{-n}\hgen\).
 Some care is therefore needed to relate
 properties of the hash function to
 possible zeroes of a polynomial.
 
 Define \(\poly(M)\) to refer to the formal polynomial
 \(\poly(M_0 \Concat \cdots \Concat M_{l-1})
-\defeq  M_0\hmont^{l-1} \xor \cdots \xor M_{l-1}\).
-While \(\hmont + 2\) and \(2\hmont + 1\) can be equal
-in value if \(\hmont = 1\), two formal polynomials are only equal
+\defeq  M_0\hpoly^{l-1} \xor \cdots \xor M_{l-1}\).
+While \(\hpoly + 2\) and \(2\hpoly + 1\) can be equal
+in value if \(\hpoly = 1\), two formal polynomials are only equal
 if every coefficient is equal; thus \(\poly(M) = \poly(M')\)
 only if \(M = 0^{ln} \Concat M'\) for some \(l\) or vice versa.
 
-We then define \(H(T, M)\) as the formal polynomial in \(\hmont\) given
+We then define \(H(T, M)\) as the formal polynomial in \(\hpoly\) given
 by that tweak and message.
-\(H_h(T, M)\) is then evaluation of this polynomial at
-\(\hmont = x^{-n}h\).
+\(H_{\hgen}(T, M)\) is then evaluation of this polynomial at
+\(\hpoly = x^{-n}\hgen\).
 \begin{align*}
     & H(T, M) \\
     \defeq &
@@ -123,7 +123,7 @@ We depend on the following properties of this map
 onto formal polynomials:
 \begin{itemize}
     \item The map is injective
-    \item The polynomial is never \(0\) or \(x^n\hmont\)
+    \item The polynomial is never \(0\) or \(x^n\hpoly\)
     \item The constant term is always zero
     \item The polynomial is of degree at most
     \begin{displaymath}
@@ -134,23 +134,23 @@ onto formal polynomials:
 For the first property, see \autoref{injective}.
 For the second, observe that \(H(T, M)\)
 can be of degree 1 only if \(\abs{T} = \abs{M} = 0\),
-in which case the polynomial is \(x\hmont\).
+in which case the polynomial is \(x\hpoly\).
 Since \(x^{n-1} \neq 1\) we have that \(x^n \neq x\).
 
-For any nonzero polynomial \(p(\hmont)\)
-in \(GF(2^n)\), there are at most \(\deg(p)\) values \(\hmont\)
-such that \(p(\hmont) = 0\), and therefore
-\(\probsub{\hmont\sample{\bin^n}}{p(\hmont) = 0} \leq \deg(p)/2^n\).
+For any nonzero polynomial \(p(\hpoly)\)
+in \(GF(2^n)\), there are at most \(\deg(p)\) values \(\hpoly\)
+such that \(p(\hpoly) = 0\), and therefore
+\(\probsub{\hpoly\sample{\bin^n}}{p(\hpoly) = 0} \leq \deg(p)/2^n\).
 Since multiplication by a nonzero field element
 is a bijection of the field onto itself, it follows that
-\(\probsub{h\sample{\bin^n}}{p(x^{-n}h) = 0} \leq \deg(p)/2^n\).
+\(\probsub{\hgen\sample{\bin^n}}{p(x^{-n}\hgen) = 0} \leq \deg(p)/2^n\).
 From this and the above properties,
-we infer three properties of \(H_h(T, M)\):
+we infer three properties of \(H_{\hgen}(T, M)\):
 \begin{description}
     \item[Property 1]
     For any \(T, M\) and any \(g \in \bin^n\),
     \begin{displaymath}
-        \probsub{h\sample{\bin^n}}{H_h(T, M) = g} \leq d(T, M)/2^n
+        \probsub{\hgen\sample{\bin^n}}{H_{\hgen}(T, M) = g} \leq d(T, M)/2^n
     \end{displaymath}
     Proof: since \(H(T, M)\) is nonzero and has
     a zero constant term,
@@ -161,7 +161,7 @@ we infer three properties of \(H_h(T, M)\):
     \item[Property 2] 
     For any \((T_1, M_1) \neq (T_2, M_2)\) and any \(g \in \bin^n\)
     \begin{align*}
-        & \probsub{h\sample{\bin^n}}{H_h(T_1, M_1) \xor H_h(T_2, M_2) = g} \\
+        & \probsub{\hgen\sample{\bin^n}}{H_{\hgen}(T_1, M_1) \xor H_{\hgen}(T_2, M_2) = g} \\
         \leq  & \max(d(T_1, M_1), d(T_2, M_2))/2^n
     \end{align*}
     Proof: \(H\) is injective onto polynomials
@@ -174,12 +174,12 @@ we infer three properties of \(H_h(T, M)\):
     \item[Property 3]
     For any \(T, M\) and any \(g \in \bin^n\)
     \begin{displaymath}
-        \probsub{h\sample{\bin^n}}{H_h(T, M) \xor h = g} \leq d(T, M)/2^n
+        \probsub{\hgen\sample{\bin^n}}{H_{\hgen}(T, M) \xor \hgen = g} \leq d(T, M)/2^n
     \end{displaymath}
     Proof: \(H(T, M)\) has a zero constant term and
-    cannot be equal to the polynomial \(x^n\hmont\).
-    Substituting \(h = x^n\hmont\),
-    \(H(T, M) \xor g \xor h = H(T, M) \xor g \xor x^n\hmont\)
+    cannot be equal to the polynomial \(x^n\hpoly\).
+    Substituting \(\hgen = x^n\hpoly\),
+    \(H(T, M) \xor g \xor \hgen = H(T, M) \xor g \xor x^n\hpoly\)
     cannot be the zero polynomial, and
     therefore can have at most \(d(T, M)\) zeroes.
 \end{description}
@@ -298,7 +298,7 @@ In world X, this information is:
     \begin{displaymath}
         D^s = \XCTR_\pi(S^s)[\abs{P^s} - n; nm^s-\abs{P^s}]
     \end{displaymath}
-    \item the hash key \(h\), given after all queries are complete
+    \item the hash key \(\hgen\), given after all queries are complete
     \item the mask \(L\), given after all queries are complete
 \end{itemize}
 In world Y, random output of the expected
@@ -311,7 +311,7 @@ the block cipher inputs used in XCTR, and \(Y_j^s\) the corresponding
 outputs, so that in world X \(Y_j^s = \pi(S_j^s)\) and 
 \(Y_1^s \Concat \cdots \Concat Y_{m^s-1}^s = \XCTR_\pi(S^s)[0;n(m^s -1)]\).
 
-Given the full transcript, including \(h\) and \(L\),
+Given the full transcript, including \(\hgen\) and \(L\),
 we can infer all block cipher plaintexts and ciphertexts.
 For each query, we know \(T\), \(P\), \(C\) and \(D\)
 and so can infer
@@ -319,8 +319,8 @@ and so can infer
 \begin{align*}
     M \Concat N &= P \\
     U \Concat V &= C \\
-    \MM &= M \xor H_h(T, N)\\
-    \UU &= U \xor H_h(T, V)\\
+    \MM &= M \xor H_{\hgen}(T, N)\\
+    \UU &= U \xor H_{\hgen}(T, V)\\
     S &= \MM \xor \UU \xor L\\ 
     S_j &= S \xor \fromint(j)\\
     Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor V) \Concat D \\
@@ -330,7 +330,7 @@ of block cipher plaintexts and ciphertexts:
 \begin{align*}
     \mathcal{D} \defeq \{\fromint(0), \fromint(1)\} \uplus &
     \biguplus_s \{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\\
-    \mathcal{R} \defeq \{h, L\} \uplus &
+    \mathcal{R} \defeq \{\hgen, L\} \uplus &
     \biguplus_s \{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}
 \end{align*}
 We therefore infer \(\sigma_m \defeq 2 + \sum_s m^s\) block cipher
@@ -368,7 +368,7 @@ we cannot treat the response to query \(r\) as uniformly random;
 if the choice of later query depends on the earlier response,
 knowing the later query is information about the earlier response.
 However, conditioning on a query and all prior queries and responses,
-we still have that \(h\), \(L\), and the
+we still have that \(\hgen\), \(L\), and the
 query response are uniformly random and independent,
 and so we can consider them in any order.
 
@@ -377,19 +377,19 @@ In most cases, the probability of a collision
 between two specific blocks is bounded by \(1/2^n\).
 
 \begin{itemize}
-    \item \(h \qeq L\):
+    \item \(\hgen \qeq L\):
     Trivially has probability \(1/2^n\).
     In world X, this has probability 0,
     but we don't need to consider probabilities in world X
     in what follows.
     \item
-    \(h \qeq Y_j^s\),
+    \(\hgen \qeq Y_j^s\),
     \(L \qeq Y_j^s\),
     \(\UU^r \qeq Y_j^s\),
     \(Y_i^r \qeq Y_j^s\),
     \(Y_i^s \qeq Y_j^s\) where \(i < j\): 
     If query \(s\) is an encryption query,
-    then given \(h\), \(L\), query \(s\), 
+    then given \(\hgen\), \(L\), query \(s\), 
     all prior queries and responses, and
     \(C^s[0;jn]\), there is exactly one value of
     \(C^s[jn;n]\) that results in the equation holding.
@@ -400,7 +400,7 @@ between two specific blocks is bounded by \(1/2^n\).
     If query \(s\) is a decryption query,
     the exact argument above applies.
     If it is an encryption query,
-    then given \(h\), \(L\), \(T^s\), \(P^s\),
+    then given \(\hgen\), \(L\), \(T^s\), \(P^s\),
     and \(V^s\), there is exactly
     one value of \(U^s\) that results
     in the equation holding.
@@ -410,13 +410,13 @@ between two specific blocks is bounded by \(1/2^n\).
     \(\MM^r \qeq S_j^s\),
     \(S_i^r \qeq S_j^s\):
     If query \(s\) is an encryption query,
-    then given \(h\), \(L\), \(T^s\),
+    then given \(\hgen\), \(L\), \(T^s\),
     \(P^s\), \(V^s\)
     and all prior queries and responses,
     there is exactly one response value \(U^s\)
     that results in the equation holding.
     For a decryption query, 
-    given \(h\), \(L\), \(T^s\),
+    given \(\hgen\), \(L\), \(T^s\),
     \(C^s\), \(N^s\)
     and all prior queries and responses,
     there is exactly one response value \(M^s\)
@@ -425,7 +425,7 @@ between two specific blocks is bounded by \(1/2^n\).
     \(\MM^s \qeq S_j^s\),
     \(S_i^r \qeq \MM^s\),
     \(L \qeq \UU^s\):
-    Given \(h\) and all queries and responses,
+    Given \(\hgen\) and all queries and responses,
     there is exactly one value of \(L\)
     which causes the equation to hold.
 \end{itemize}
@@ -448,11 +448,11 @@ query \(s\) is an encryption query:
 
 \begin{itemize}
     \item \(\MM^r \qeq \MM^s\):
-    This holds if \(M^r \xor H_h(T^r, N^r) = M^s \xor H_h(T^s, N^s)\);
+    This holds if \(M^r \xor H_{\hgen}(T^r, N^r) = M^s \xor H_{\hgen}(T^s, N^s)\);
     by hash function property 2, this holds with probability at most
     \(\max(d^r, d^s)/2^n\).
     \item \(\fromint(0) \qeq \MM^s\):
-    This holds if \(\fromint(0) = M^s \xor H_h(T^s, N^s)\);
+    This holds if \(\fromint(0) = M^s \xor H_{\hgen}(T^s, N^s)\);
     by hash function property 1, this holds with probability at most
     \(d^s/2^n\).
     \item \(\fromint(1) \qeq \MM^s\):
@@ -460,7 +460,7 @@ query \(s\) is an encryption query:
 \end{itemize}
 
 In each case, if query \(s\) is a decryption query,
-then given \(h\), \(T^s\), \(C^s\), \(N^s\),
+then given \(\hgen\), \(T^s\), \(C^s\), \(N^s\),
 and all prior queries and responses,
 all values of \(M^s\) are equally likely 
 and a single value causes the equation to hold,
@@ -471,21 +471,21 @@ query \(s\) is a decryption query:
 
 \begin{itemize}
     \item \(\UU^r \qeq \UU^s\): 
-    This holds if \(U^r \xor H_h(T^r, V^r) = U^s \xor H_h(T^s, V^s)\);
+    This holds if \(U^r \xor H_{\hgen}(T^r, V^r) = U^s \xor H_{\hgen}(T^s, V^s)\);
     by hash function property 2, this holds with probability at most
     \(\max(d^r, d^s)/2^n\).
     \item \(Y_i^r \qeq \UU^s\):
-    This holds if \(Y_i^r = U^s \xor H_h(T^s, V^s)\);
+    This holds if \(Y_i^r = U^s \xor H_{\hgen}(T^s, V^s)\);
     by hash function property 1, this holds with probability at most
     \(d^s/2^n\).
-    \item \(h \qeq \UU^s\):
-    This holds if \(h = U^s \xor H_h(T^s, V^s)\);
+    \item \(\hgen \qeq \UU^s\):
+    This holds if \(\hgen = U^s \xor H_{\hgen}(T^s, V^s)\);
     by hash function property 3, this holds with probability at most
     \(d^s/2^n\).
 \end{itemize}
 
 As above, if query \(s\) is an encryption query,
-then given \(h\), \(T^s\), \(P^s\), \(V^s\),
+then given \(\hgen\), \(T^s\), \(P^s\), \(V^s\),
 and all prior queries and responses,
 all values of \(U^s\) are equally likely
 and a single value causes the equation to hold,
@@ -541,7 +541,7 @@ and then apply a correction for the ones that don't.
 For example,
 to bound the probability an encryption query \(s\)
 has some collision with the fixed values 
-\(\fromint(0)\), \(\fromint(1)\), \(h\) and \(L\)
+\(\fromint(0)\), \(\fromint(1)\), \(\hgen\) and \(L\)
 we observe first that
 there are two blocks in the fixed values
 and \(m^s\) blocks in query \(s\), so there are

@@ -55,7 +55,7 @@ HCTR2 differs from HCTR in the following ways:
     HCTR2 precisely enough to be standardized, and permitting the tweak length
     to vary is preferable to either fixing the tweak length for all users,
     or specifying a family of HCTR2 variants parameterized by tweak length.
-    \item We derive \(h \gets E_k(\fromint(0))\)
+    \item We derive \(\hgen \gets E_k(\fromint(0))\)
     and \(L \gets E_k(\fromint(1))\) from the block cipher key;
     this makes HCTR2 more convenient to use.
     \item We redesign the polynomial hash used, as described in
@@ -85,7 +85,7 @@ which increases implementation complexity and reduces efficiency.
 As a result, we instead use the POLYVAL function
 defined in \cite{aes_gcm_siv,aes_gcm_siv_rfc}.
 POLYVAL incurs a small cost in specification and proof complexity because 
-the polynomial is evaluated not at \(h\) but at \(x^{-n}h\)
+the polynomial is evaluated not at \(\hgen\) but at \(x^{-n}\hgen\)
 so that Montgomery mutiplication\cite{montmul} can be key-agile.
 However it is carefully designed, efficient
 on processors with carryless multiply instructions
@@ -101,8 +101,8 @@ different from that in HCTR. Our design goals are:
 \begin{itemize}
     \item fix the flaw described in \cite{kumarhctr}
     \item allow a variable-length tweak
-    \item guarantee \(H(T, M) \neq h\), required
-    because \(h \gets E_k(\fromint(0))\)
+    \item guarantee \(H(T, M) \neq \hgen\), required
+    because \(\hgen \gets E_k(\fromint(0))\)
     \item allow implementations to precompute as much as possible, to reduce \(GF(2^n)\) multiplications
 \end{itemize}
 
@@ -131,7 +131,7 @@ we need only encode only the tweak length in the length block,
 and the message length can then be inferred.
 For users whose tweaks are always the same length
 this means the length block is always the same, 
-so the multiplication with \(\hmont\) can be
+so the multiplication with \(\hpoly\) can be
 precomputed.
 
 However, in the very common case where 
@@ -144,7 +144,7 @@ Instead, we indicate whether
 the message length is a multiple of the block size
 in the least significant bit of the length block.
 If all tweaks are of length \(t\), implementations can cache
-\(\fromint(2t + 2)\hmont\) and \(\fromint(2t + 3)\hmont\)
+\(\fromint(2t + 2)\hpoly\) and \(\fromint(2t + 3)\hpoly\)
 and use one of these to start hashing as appropriate,
 XORing this value directly with the first block of the tweak.
 
