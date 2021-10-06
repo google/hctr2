@@ -17,7 +17,7 @@ a binary string \(X\) of length \(\abs{X} = n (1 + \deg(H(T, M)))\)
 representing the coefficients of 
 the polynomial \(H(T, M)\) in binary form,
 starting with the greatest nonzero power; thus
-\(13h^3\) would encode as \(1011 \Concat 0^{4n -4}\).
+\(13\hpoly^3\) would encode as \(1011 \Concat 0^{4n -4}\).
 \begin{algorithmic}[1]
     \Procedure{GetTM}{$X$}
     \State \textbf{assert} \(\abs{X} \bmod n = 0\)

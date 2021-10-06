@@ -65,11 +65,11 @@ the proof of~\cite{hctrquad} is very similar
 to that of this paper: in the game RAND2, all queries get random
 responses, the block cipher inputs are inferred, and a collision
 in either the inferred plaintext or inferred ciphertext of the block cipher
-sets the ``bad'' flag.  Where HCTR2 has
-\(S = \MM \xor \UU \xor L\), HCTR simply has
-\(S = \MM \xor \UU\). HCTR uses a fixed-length tweak
-of length \(t\); for simplicity we assume \(t = 0\)
-in what follows.
+sets the ``bad'' flag.  
+Where HCTR2 has \(S = \MM \xor \UU \xor L\),
+HCTR simply has \(S = \MM \xor \UU\). 
+HCTR uses a fixed-length tweak;
+for simplicity we assume a zero-length tweak in what follows.
 
 For equation 17, the paper observes that the collision
 \(Y_i^r \qeq \UU^s\) occurs iff \(h\) is one of the zeroes

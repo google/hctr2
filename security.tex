@@ -178,7 +178,6 @@ we infer three properties of \(H_{\hgen}(T, M)\):
     \end{displaymath}
     Proof: \(H(T, M)\) has a zero constant term and
     cannot be equal to the polynomial \(x^n\hpoly\).
-    Substituting \(\hgen = x^n\hpoly\),
     \(H(T, M) \xor g \xor \hgen = H(T, M) \xor g \xor x^n\hpoly\)
     cannot be the zero polynomial, and
     therefore can have at most \(d(T, M)\) zeroes.
@@ -193,7 +192,7 @@ we here present a simpler exposition that
 does not cover the technique in its full
 generality but only our use of it.
 Our use of the symbol \(\mathcal{T}\) and the term
-``compatible'' differs slightly from~\cite{hco2}.
+``compatible'' differ from~\cite{hco2}.
 
 We wish to bound the adversary's ability to distinguish between
 two ``worlds'', world X (the ``real world'') and world Y (the ``ideal world'').
@@ -206,7 +205,7 @@ from a population of deterministic adversaries, so
 a bound on the advantage achievable by a deterministic
 adversary bounds the whole pool and therefore
 the advantage of the randomized adversary. In what follows
-we consider the adversary fixed; only the world, and the
+we consider the adversary \(A\) fixed; only the world, and the
 particular oracles drawn from that world, vary.
 
 When the adversary interacts with the oracle,
@@ -372,10 +371,10 @@ we still have that \(\hgen\), \(L\), and the
 query response are uniformly random and independent,
 and so we can consider them in any order.
 
-\subfile{casetable.tex}
 In most cases, the probability of a collision
 between two specific blocks is bounded by \(1/2^n\).
 
+\subfile{casetable.tex}
 \begin{itemize}
     \item \(\hgen \qeq L\):
     Trivially has probability \(1/2^n\).
@@ -561,7 +560,8 @@ of \(2(d^s - 1)\) to get a final probability bound of
     \frac{4m^s + 2(d^s - 1)}{2^n}
 \end{displaymath}
 
-Similarly, the correction for a decryption query is
+Similarly, considering the pair \(\hgen \qeq \UU^s\),
+the correction for a decryption query is
 \(d^s - 1\) and therefore  the probability 
 is bounded above by
 \begin{displaymath}
@@ -591,7 +591,6 @@ may collide with query \(r\), the correction is
 (because of \(\MM^r \qeq \MM^s\)), whereas for a decryption query
 it is \(\max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\)
 (because of \(\UU^r \qeq \UU^s\) and \(Y_i^r \qeq \UU^s\)).
-
 Taking the max of these formulas and summing across
 all queries gives us a total correction of
 \begin{align*}

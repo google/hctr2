@@ -46,7 +46,7 @@ Per \cite{aes_gcm_siv,aes_gcm_siv_rfc} we define
     \POLYVAL(\hgen, \lambda) & = 0^n\\
     \POLYVAL(\hgen, A \Concat B) & = (\POLYVAL(\hgen, A) \xor B) \otimes \hgen \otimes x^{-n}
 \end{align*}
-where \(\abs{B} = n\) and
+where \(\abs{\hgen} = \abs{B} = n\) and
 \(\otimes\) is multiplication in the finite field.
 In our concrete proposal, \(n=128\), we reduce by
 \(x^{128} + x^{127} + x^{126} + x^{121} + 1\),
@@ -74,6 +74,7 @@ which we here name \emph{XCTR mode}:
 Thus, generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls. 
 
 \subsection{HCTR2 encryption}
-From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
+From these definitions, HCTR2 is as defined in \autoref{pseudocode};
+\autoref{decryptionpseudocode} gives the decryption algorithm.
 \subfile{algorithm.tex}
 \end{document}
