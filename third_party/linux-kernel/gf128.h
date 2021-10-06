@@ -41,10 +41,11 @@
 #define _CRYPTO_GF128MUL_H
 
 #include "../../benchmark/src/util.h"
+
 /* Comment by Rik:
  *
- * For some background on GF(2^128) see for example: 
- * http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-revised-spec.pdf 
+ * For some background on GF(2^128) see for example:
+ * http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-revised-spec.pdf
  *
  * The elements of GF(2^128) := GF(2)[X]/(X^128-X^7-X^2-X^1-1) can
  * be mapped to computer memory in a variety of ways. Let's examine
@@ -122,19 +123,25 @@
     held in arrays of bytes in which field bits 8n..8n + 7 are held in
     byte[n], with lower indexed bits placed in the more numerically
     significant bit positions within bytes.
+
     On little endian machines the bit indexes translate into the bit
     positions within four 32-bit words in the following way
+
     MS            x[0]           LS  MS            x[1]		  LS
     ms   ls ms   ls ms   ls ms   ls  ms   ls ms   ls ms   ls ms   ls
     24...31 16...23 08...15 00...07  56...63 48...55 40...47 32...39
+
     MS            x[2]           LS  MS            x[3]		  LS
     ms   ls ms   ls ms   ls ms   ls  ms   ls ms   ls ms   ls ms   ls
     88...95 80...87 72...79 64...71  120.127 112.119 104.111 96..103
+
     On big endian machines the bit indexes translate into the bit
     positions within four 32-bit words in the following way
+
     MS            x[0]           LS  MS            x[1]		  LS
     ms   ls ms   ls ms   ls ms   ls  ms   ls ms   ls ms   ls ms   ls
     00...07 08...15 16...23 24...31  32...39 40...47 48...55 56...63
+
     MS            x[2]           LS  MS            x[3]		  LS
     ms   ls ms   ls ms   ls ms   ls  ms   ls ms   ls ms   ls ms   ls
     64...71 72...79 80...87 88...95  96..103 104.111 112.119 120.127
@@ -142,11 +149,9 @@
 
 /*	A slow generic version of gf_mul, implemented for lle and bbe
  * 	It multiplies a and b and puts the result in a */
-void gf128mul_lle(le128 *a, const le128 *b);
+void gf128mul_lle(be128 *a, const be128 *b);
 
-void gf128mul_bbe(le128 *a, const le128 *b);
-
-void gf128mul_ble(le128 *a, const le128 *b);
+void gf128mul_bbe(be128 *a, const be128 *b);
 
 /*
  * The following functions multiply a field element by x in
@@ -163,7 +168,7 @@ static inline u64 gf128mul_mask_from_bit(u64 x, int which)
 	return ((s64)(x << (63 - which)) >> 63);
 }
 
-static inline void gf128mul_x_lle(le128 *r, const le128 *x)
+static inline void gf128mul_x_lle(be128 *r, const be128 *x)
 {
 	u64 a = be64_to_cpu(x->a);
 	u64 b = be64_to_cpu(x->b);
@@ -176,7 +181,7 @@ static inline void gf128mul_x_lle(le128 *r, const le128 *x)
 	r->a = cpu_to_be64((a >> 1) ^ _tt);
 }
 
-static inline void gf128mul_x_bbe(le128 *r, const le128 *x)
+static inline void gf128mul_x_bbe(be128 *r, const be128 *x)
 {
 	u64 a = be64_to_cpu(x->a);
 	u64 b = be64_to_cpu(x->b);
@@ -200,4 +205,5 @@ static inline void gf128mul_x_ble(le128 *r, const le128 *x)
 	r->a = cpu_to_le64((a << 1) | (b >> 63));
 	r->b = cpu_to_le64((b << 1) ^ _tt);
 }
+
 #endif /* _CRYPTO_GF128MUL_H */

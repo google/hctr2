@@ -16,25 +16,34 @@
 /*
  ---------------------------------------------------------------------------
  Copyright (c) 2003, Dr Brian Gladman, Worcester, UK.   All rights reserved.
+
  LICENSE TERMS
+
  The free distribution and use of this software in both source and binary
  form is allowed (with or without changes) provided that:
+
    1. distributions of this source code include the above copyright
       notice, this list of conditions and the following disclaimer;
+
    2. distributions in binary form include the above copyright
       notice, this list of conditions and the following disclaimer
       in the documentation and/or other associated materials;
+
    3. the copyright holder's name is not used to endorse products
       built using this software without specific written permission.
+
  ALTERNATIVELY, provided that this notice is retained in full, this product
  may be distributed under the terms of the GNU General Public License (GPL),
  in which case the provisions of the GPL apply INSTEAD OF those given above.
+
  DISCLAIMER
+
  This software is provided 'as is' with no explicit or implied warranties
  in respect of its properties, including, but not limited to, correctness
  and/or fitness for purpose.
  ---------------------------------------------------------------------------
  Issue 31/01/2006
+
  This file provides fast multiplication in GF(2^128) as required by several
  cryptographic authentication modes
 */
@@ -115,8 +124,8 @@
 	(i & 0x02 ? 0x0384 : 0) ^ (i & 0x01 ? 0x01c2 : 0) \
 )
 
-static const uint16_t gf128mul_table_le[256] = gf128mul_dat(xda_le);
-static const uint16_t gf128mul_table_be[256] = gf128mul_dat(xda_be);
+static const u16 gf128mul_table_le[256] = gf128mul_dat(xda_le);
+static const u16 gf128mul_table_be[256] = gf128mul_dat(xda_be);
 
 /*
  * The following functions multiply a field element by x^8 in
@@ -125,7 +134,7 @@ static const uint16_t gf128mul_table_be[256] = gf128mul_dat(xda_be);
  * correctly on both styles of machine.
  */
 
-static void gf128mul_x8_lle(le128 *x)
+static void gf128mul_x8_lle(be128 *x)
 {
 	u64 a = be64_to_cpu(x->a);
 	u64 b = be64_to_cpu(x->b);
@@ -135,7 +144,7 @@ static void gf128mul_x8_lle(le128 *x)
 	x->a = cpu_to_be64((a >> 8) ^ (_tt << 48));
 }
 
-static void gf128mul_x8_bbe(le128 *x)
+static void gf128mul_x8_bbe(be128 *x)
 {
 	u64 a = be64_to_cpu(x->a);
 	u64 b = be64_to_cpu(x->b);
@@ -145,19 +154,19 @@ static void gf128mul_x8_bbe(le128 *x)
 	x->b = cpu_to_be64((b << 8) ^ _tt);
 }
 
-void gf128mul_x8_ble(le128 *x)
+void gf128mul_x8_ble(le128 *r, const le128 *x)
 {
 	u64 a = le64_to_cpu(x->a);
 	u64 b = le64_to_cpu(x->b);
 	u64 _tt = gf128mul_table_be[a >> 56];
 
-    x->a = cpu_to_le64((a << 8) | (b >> 56));
-	x->b = cpu_to_le64((b << 8) ^ _tt);
+	r->a = cpu_to_le64((a << 8) | (b >> 56));
+	r->b = cpu_to_le64((b << 8) ^ _tt);
 }
 
-void gf128mul_lle(le128 *r, const le128 *b)
+void gf128mul_lle(be128 *r, const be128 *b)
 {
-	le128 p[8];
+	be128 p[8];
 	int i;
 
 	p[0] = *r;
@@ -169,21 +178,21 @@ void gf128mul_lle(le128 *r, const le128 *b)
 		u8 ch = ((u8 *)b)[15 - i];
 
 		if (ch & 0x80)
-			le128_xor(r, r, &p[0]);
+			be128_xor(r, r, &p[0]);
 		if (ch & 0x40)
-			le128_xor(r, r, &p[1]);
+			be128_xor(r, r, &p[1]);
 		if (ch & 0x20)
-			le128_xor(r, r, &p[2]);
+			be128_xor(r, r, &p[2]);
 		if (ch & 0x10)
-			le128_xor(r, r, &p[3]);
+			be128_xor(r, r, &p[3]);
 		if (ch & 0x08)
-			le128_xor(r, r, &p[4]);
+			be128_xor(r, r, &p[4]);
 		if (ch & 0x04)
-			le128_xor(r, r, &p[5]);
+			be128_xor(r, r, &p[5]);
 		if (ch & 0x02)
-			le128_xor(r, r, &p[6]);
+			be128_xor(r, r, &p[6]);
 		if (ch & 0x01)
-			le128_xor(r, r, &p[7]);
+			be128_xor(r, r, &p[7]);
 
 		if (++i >= 16)
 			break;
@@ -192,9 +201,9 @@ void gf128mul_lle(le128 *r, const le128 *b)
 	}
 }
 
-void gf128mul_bbe(le128 *r, const le128 *b)
+void gf128mul_bbe(be128 *r, const be128 *b)
 {
-	le128 p[8];
+	be128 p[8];
 	int i;
 
 	p[0] = *r;
@@ -206,62 +215,25 @@ void gf128mul_bbe(le128 *r, const le128 *b)
 		u8 ch = ((u8 *)b)[i];
 
 		if (ch & 0x80)
-			le128_xor(r, r, &p[7]);
+			be128_xor(r, r, &p[7]);
 		if (ch & 0x40)
-			le128_xor(r, r, &p[6]);
+			be128_xor(r, r, &p[6]);
 		if (ch & 0x20)
-			le128_xor(r, r, &p[5]);
+			be128_xor(r, r, &p[5]);
 		if (ch & 0x10)
-			le128_xor(r, r, &p[4]);
+			be128_xor(r, r, &p[4]);
 		if (ch & 0x08)
-			le128_xor(r, r, &p[3]);
+			be128_xor(r, r, &p[3]);
 		if (ch & 0x04)
-			le128_xor(r, r, &p[2]);
+			be128_xor(r, r, &p[2]);
 		if (ch & 0x02)
-			le128_xor(r, r, &p[1]);
+			be128_xor(r, r, &p[1]);
 		if (ch & 0x01)
-			le128_xor(r, r, &p[0]);
+			be128_xor(r, r, &p[0]);
 
 		if (++i >= 16)
 			break;
 
 		gf128mul_x8_bbe(r);
-	}
-}
-
-void gf128mul_ble(le128 *r, const le128 *b)
-{
-	le128 p[8];
-	int i;
-
-	p[0] = *r;
-	for (i = 0; i < 7; ++i)
-		gf128mul_x_ble(&p[i + 1], &p[i]);
-
-	memset(r, 0, sizeof(*r));
-	for (i = 0;;) {
-		u8 ch = ((u8 *)b)[15 - i];
-
-		if (ch & 0x80)
-			le128_xor(r, r, &p[7]);
-		if (ch & 0x40)
-			le128_xor(r, r, &p[6]);
-		if (ch & 0x20)
-			le128_xor(r, r, &p[5]);
-		if (ch & 0x10)
-			le128_xor(r, r, &p[4]);
-		if (ch & 0x08)
-			le128_xor(r, r, &p[3]);
-		if (ch & 0x04)
-			le128_xor(r, r, &p[2]);
-		if (ch & 0x02)
-			le128_xor(r, r, &p[1]);
-		if (ch & 0x01)
-			le128_xor(r, r, &p[0]);
-
-		if (++i >= 16)
-			break;
-
-		gf128mul_x8_ble(r);
 	}
 }
