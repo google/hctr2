@@ -8,7 +8,7 @@
 %!TeX program = lualatex
 %!TeX spellcheck = en-US
 
-\documentclass[hctr.tex]{subfiles}
+\documentclass[hctr2.tex]{subfiles}
 \begin{document}
 \section{Optimization of POLYVAL}\label{polyvalimpl}
 The polynomial hash function is where the bulk of optimizations must be done. A naive partially-optimized implementation of $H$ is slower than XCTR mode. We use several optimization techniques to increase the efficiency of $H$. We show several methods to increase the parallelism of $H$ and to reduce the number of slow instructions required to compute it. With these optimizations in place, the polynomial hash function becomes significantly faster than XCTR mode.
