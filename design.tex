@@ -49,21 +49,25 @@ features that make it an attractive design:
 HCTR2 differs from HCTR in the following ways:
 
 \begin{itemize}
-    \item To achieve a quadratic security bound
-    on queries of unbounded size,
-    we introduce the extra
+    \item We introduce the extra
     key-dependent constant \(L\),
     so that where HCTR has \(S = \MM \xor \UU\)
-    we have \(S = \MM \xor \UU \xor L\).
-    \item We allow a variable-length tweak. It is our intention to specify
-    HCTR2 precisely enough to be standardized, and permitting the tweak length
-    to vary is preferable to either fixing the tweak length for all users,
-    or specifying a family of HCTR2 variants parameterized by tweak length.
+    we have \(S = \MM \xor \UU \xor L\),
+    fixing the issue described in \autoref{badproof}
+    and restoring the quadratic security bound.
+    \item We redesign the polynomial hash input format, as described in
+    \autoref{inputformatting}, fixing the issue described in \autoref{badhash}.
+    \item We accept a variable-length tweak.
+    This increases flexibility,
+    and eliminates the risk of attacks where
+    two users of the same key have different ideas
+    on what the tweak length is.
     \item We derive \(\hgen \gets E_k(\fromint(0))\)
     and \(L \gets E_k(\fromint(1))\) from the block cipher key;
     this makes HCTR2 more convenient to use.
-    \item We redesign the polynomial hash used, as described in
-    \autoref{hashdesign}.
+    \item We specify POLYVAL\cite{aes_gcm_siv,aes_gcm_siv_rfc}
+    as the polynomial evaluation function,
+    for reasons set out in \autoref{choosingpolyval}.
     \item We present a new proof, based on the H-coefficient technique,
     with a tighter bound.
     \item We specify endianness and the like so that implementations can be interoperable. We use little-endian representation everywhere,
@@ -76,7 +80,7 @@ HCTR2 differs from HCTR in the following ways:
 
 \subsection{Hash function design}\label{hashdesign}
 
-\subsubsection{POLYVAL}
+\subsubsection{POLYVAL}\label{choosingpolyval}
 
 We aim to specify HCTR2 in sufficient detail
 for implementations to be interoperable,
@@ -98,7 +102,7 @@ on processors with carryless multiply instructions
 and offers an efficient conversion between POLYVAL and GHASH hashing
 which allows code/hardware for one to be used for the other.
 
-\subsubsection{Input formatting}
+\subsubsection{Input formatting}\label{inputformatting}
 
 The formatting of inputs to the polynomial hash in HCTR2 is significantly
 different from that in HCTR. Our design goals are:

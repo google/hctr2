@@ -11,15 +11,15 @@
 \documentclass[hctr2.tex]{subfiles}
 \begin{document}
 \section{Implementation}\label{implementation}
-We provide generic implementations of HCTR2 in Python and C, as well as hardware accelerated implementations for x86-64 and ARM64. The implementation is available at {\color{red} FIXME}. The rest of this section describes the optimizations used to efficiently implement HCTR2, as well as speed comparisons with other algorithms. This section is intended to document all of the design decisions made when implementing HCTR2 in assembly.
+At \url{https://github.com/google/hctr2}
+we provide a (very slow) reference implementation of HCTR2 in Python,
+a portable C implementation, and assembly implementations for
+x86-64 and ARM64 making use of AES acceleration instructions.
+We adapted our assembly implementation of XCTR mode from
+the Linux kernel's CTR mode implementation, retaining all parallelism.
+Optimization of POLYVAL is a subject of independent interest,
+so we defer discussion to \autoref{polyvalimpl}.
 
-Optimization of POLYVAL is a subject of independent
-interest, which we defer to \autoref{polyvalimpl}.
-
-\subsection{XCTR mode}
-Since the only difference between traditional CTR mode and XCTR is the counter, a slight modification to an accelerated CTR implementation yields an accelerated XCTR implementation. Our hardware accelerated XCTR implementation was adapted from the Linux kernel's implementation of CTR mode. The implementation retains all of its parallelism after modification. 
-
-\subsection{Speed comparisons}
-{\color{red} FIXME Tables, grahps, etc}
+{\color{red} FIXME tables, graphs, etc}
 
 \end{document}
