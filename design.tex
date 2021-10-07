@@ -18,12 +18,7 @@ features that make it an attractive design:
     hashing, with a single block encryption on the narrow side.
     This gives us excellent performance and parallelizability,
     as well as very natural handling of messages that are not
-    a multiple of the block size. Contrast with eg HEH\cite{heh}:
-    while HCTR requires three passes, or two if passes are
-    run in parallel, HEH requires five, or three if run in parallel.
-    HEH also requires a ciphertext-stealing-like trick to
-    handle odd-sized messages, further increasing
-    latency especially for small messages.
+    a multiple of the block size. 
     \item Use of \(\MM \xor \UU\) in generating \(S\), which means
     that an adversary's control over \(S\) is very limited for both
     encryption and decryption queries; this is important in the
@@ -76,6 +71,39 @@ HCTR2 differs from HCTR in the following ways:
     CTR is defined to be big-endian.
     \item We rename some variables in our exposition and proof to allow some more standard usage.
     \item We provide a sample implementation and test vectors.
+\end{itemize}
+
+\subsection{Comparison of length-preserving modes}
+We considered a number of modes aiming to provide
+tweakable super-pseudorandom permutations
+as the basis for our design before settling on HCTR.
+\begin{itemize}
+    \item CMC\cite{cmc}, EME\cite{eme}, and EME*\cite{emestar}
+    require two block cipher calls per input block.
+    \item PEP\cite{pep}, TET\cite{tet}, and HEH\cite{heh} are 
+    complex, and are either
+    unable to handle messages that are not multiples of the
+    block size, or require extra ciphertext-stealing like tricks
+    to handle such messages.
+    In addition, they require five passes over the data,
+    or three if passes are combined.
+    Thanks to the simplicity of the unbalanced Feistel network,
+    HCTR and HCTR2 require three passes, or two if combined.
+    \item HCH\cite{hch} is similar to HCTR
+    but uses \(S = E_k(\MM \xor \UU)\).
+    With this change the authors were able to prove a
+    quadratic security bound. Our modification,
+    \(S = \MM \xor \UU \xor E_k(\fromint(1))\), saves
+    a block cipher call per invocation.
+    \item HSE\cite{hse} achieves similar performance to
+    this mode, but is significantly more complicated,
+    and accepts only an \(n\)-bit tweak.
+    \item HMC\cite{hmc} allows the encryption of the
+    first block to run in parallel with subsequent blocks,
+    but at a cost of significant complication of decryption,
+    which does not gain this advantage;
+    at key setup time, the multiplicative inverse of
+    the hash key must be calculated.
 \end{itemize}
 
 \subsection{Hash function design}\label{hashdesign}
