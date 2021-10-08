@@ -333,8 +333,10 @@ of block cipher plaintexts and ciphertexts:
     \mathcal{R} \defeq \{\hgen, L\} \uplus &
     \biguplus_s \{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}
 \end{align*}
-We therefore infer \(\sigma_m \defeq 2 + \sum_s m^s\) block cipher
-plaintexts/ciphertexts from \(\sigma_m n\) bits of query response.
+We therefore infer
+\(\abs{\mathcal{D}} = \abs{\mathcal{R}} = \sigma_m \defeq 2 + \sum_s m^s\)
+block cipher plaintexts/ciphertexts
+from \(\sigma_m n\) bits of query response.
 A transcript is ``bad'' (\(\tau \in \Tb\))
 iff any entry in \(\mathcal{D}\) or \(\mathcal{R}\)
 has multiplicity greater than one,
@@ -530,102 +532,103 @@ it is only decryption queries where
 probabilities may be above \(1/2^n\).
 
 \subsubsection{Summing collision bounds}
-Given that most pairs have a probability of
-colliding of \(1/2^n\), 
-to establish an upper bound that any pair
-will collide across all of these cases,
-we start with the bound that would result
-if all pairs had a bound of \(1/2^n\),
-and then apply a correction for the ones that don't.
+To establish an upper bound that any pair
+will collide, we find the sum of
+probability of collision for all pairs in 
+the multiset \(\mathcal{D}\)
+and all pairs in the multiset \(\mathcal{R}\). 
+Since most pairs have a probability of colliding of \(1/2^n\),
+we define a ``correction'' \(c\) such that 
+\begin{align*}
+    & \prob{Y \in \Tb} \\
+    = &\prob{\exists a, b \in \mathcal{D}: a = b \vee \exists a, b \in \mathcal{R} : a = b} \\
+    \leq &\sum_{\mathcal{M}\in{\mathcal{D}, \mathcal{R}}}
+        \sum_{a, b \in \mathcal{M}} \prob{a = b} \\
+    = &\left.\left(2\binom{\sigma_m}{2} + 
+    \sum_{\mathcal{M}\in{\mathcal{D}, \mathcal{R}}}
+    \sum_{a, b \in \mathcal{M}} 2^n\prob{a = b} -1
+    \right)\middle/2^n\right. \\
+    = &\left.\left(2\binom{\sigma_m}{2} + c
+    \right)\middle/2^n\right.
+\end{align*}
+We proceed by cases:
+\(c = c_f + c_w + c_a + c_b\) where
+\begin{itemize}
+    \item \(c_f\) considers collisions
+    for all \(s\)
+    from \(\{\fromint(0), \fromint(1)\}\) to \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
+    and from \(\{\hgen, L\}\) to \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
+    \item \(c_w\) considers collisions
+    for all \(s\)
+    within \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
+    and within \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
+    \item \(c_a\) considers collisions
+    for all \(r < s\)
+    from \(\{\MM^r, S_1^r, \ldots, S_{m^r-1}^r\}\) to \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
+    and from \(\{\UU^r, Y_1^r, \ldots, Y_{m^r-1}^r\}\) to \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
+    \item \(c_b\) considers collisions within 
+    \(\{\fromint(0), \fromint(1)\}\) and \(\{\hgen, L\}\)
+\end{itemize}
+With this formulation, the grey boxes in
+\autoref{domaincollision} and \autoref{rangecollision}
+require a correction of zero and so needn't be considered further;
+only the red and green boxes need to be considered.
 
-For example,
-to bound the probability an encryption query \(s\)
-has some collision with the fixed values 
-\(\fromint(0)\), \(\fromint(1)\), \(\hgen\) and \(L\)
-we observe first that
-there are two blocks in the fixed values
-and \(m^s\) blocks in query \(s\), so there are
-\(2m^s\) pairs of blocks across the two,
-and \(4m^s\) opportunities for a collision, 
-considering both plaintext and ciphertext.
-If all pairs had collision probability \(1/2^n\),
-then the overall collision probability bound
-would be \(4m^s/2^n\). However, there are
-two exceptions: the pairs
+For \(c_f\): if query \(s\) is an encryption query,
+the only nonzero contributions come from the pairs
 \(\fromint(0) \qeq \MM^s\) and
 \(\fromint(1) \qeq \MM^s\). In each of these
 cases the probability bound is not \(1/2^n\) but
-\(d^s/2^n\), We therefore apply a correction
-of \(2(d^s - 1)\) to get a final probability bound of
-\begin{displaymath}
-    \frac{4m^s + 2(d^s - 1)}{2^n}
-\end{displaymath}
-
-Similarly, considering the pair \(\hgen \qeq \UU^s\),
-the correction for a decryption query is
-\(d^s - 1\) and therefore  the probability 
-is bounded above by
-\begin{displaymath}
-    \frac{4m^s + d^s -1}{2^n}
-\end{displaymath}
-The larger of the two correction formulas is
-the first one, so we use that for our overall bound.
-Across all queries, the total
-correction will be
+\(d^s/2^n\), implying a correction of
+\(2(d^s - 1)\) for each encryption query.
+If query \(s\) is a decryption query,
+we need only consider the pair \(\hgen \qeq \UU^s\)
+for a correction of \(d^s - 1\). 
+Summing across all queries, we conclude that
 \begin{align*}
-    &\sum_s 2(d^s - 1) \\
-    \leq & 2(\sigma - q)
+    c_f \leq &\sum_s \max(2(d^s - 1), d^s - 1) \\
+        = &\sum_s 2(d^s - 1) \\
+        \leq & 2(\sigma - q)
 \end{align*}
 
-For a collision of two blocks within query \(s\)
-the correction formula is negative:
-\(S_i^s \qeq S_j^s\) is an impossible collision, 
-so we subtract the number of such blocks:
-\(-\binom{m^s -1}{2}\). However we have no good way
-to impose a useful upper bound on the negative sum
-\(\sum_s-\binom{m^s -1}{2}\) so we use the
-trivial upper bound of 0.
-
-Where an encryption query \(s\)
-may collide with query \(r\), the correction is 
-\(\max(d^r, d^s) -1\)
-(because of \(\MM^r \qeq \MM^s\)), whereas for a decryption query
-it is \(\max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\)
-(because of \(\UU^r \qeq \UU^s\) and \(Y_i^r \qeq \UU^s\)).
-Taking the max of these formulas and summing across
-all queries gives us a total correction of
+For \(c_w\): we need only consider \(S_i^s \qeq S_j^s\),
+which is impossible, therefore
 \begin{align*}
-    &\sum_{r < s} \max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\\
-    \leq & \sum_{r < s} d^r + d^s -1 + (m^r -1 )(d^s -1)\\
-    \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (m^r -1 )(d^s -1) \\
-    \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (d^r -1)(d^s -1) \\
-    \leq & (q-1)\sigma - \binom{q}{2} + \binom{\sigma - q}{2} \\
-   \leq & (q-1)\sigma + \binom{\sigma}{2} \\
+    c_w \leq &\sum_s -\binom{m^s -1}{2} \\
+        \leq &0
 \end{align*}
 
-The correction for collision between fixed values
-is \(-1\), reflecting the impossibility of the collision
-\(\fromint(0) \qeq \fromint(1)\).
-
-Thus our total correction is
-\(2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\)
-and the number of pairs of blocks is \(\binom{\sigma_m}{2}\), 
-giving an upper bound
-on the probability of a bad transcript of
-
+For \(c_a\): if query \(s\) is an encryption query,
+\(\MM^r \qeq \MM^s\) gives us a correction of
+\(\max(d^r, d^s) -1\);
+if it is a decryption query,
+\(\UU^r \qeq \UU^s\) and \(Y_i^r \qeq \UU^s\)
+give a correction of
+\(\max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\)
+Summing across queries, we find
 \begin{align*}
-    & \left.\left(2\binom{\sigma_m}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
-    \leq & \left.\left(2\binom{\sigma + 2}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
-    = & \left.\left(2\left(\binom{\sigma}{2} + 2\sigma + 1\right) + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
-    = & \left.\left(3\sigma(\sigma - 1)/2 + q\sigma + 5\sigma - 2q + 1\right)\middle/2^n\right. \\
-    \leq & \left.\left(3\sigma^2 + 2q\sigma + 7\sigma + 2\right)\middle/2^{n+1}\right. \\
+    c_a \leq &\sum_{r<s} \max(\max(d^r, d^s) -1, \max(d^r, d^s) -1 + (m^r -1 )(d^s -1)) \\
+           = &\sum_{r<s} \max(d^r, d^s) -1 + (m^r -1 )(d^s -1) \\
+        \leq & \sum_{r < s} d^r + d^s -1 + (m^r -1 )(d^s -1)\\
+        \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (m^r -1 )(d^s -1) \\
+        \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (d^r -1)(d^s -1) \\
+        \leq & (q-1)\sigma - \binom{q}{2} + \binom{\sigma - q}{2} \\
+        \leq & (q-1)\sigma + \binom{\sigma}{2} \\
 \end{align*}
+
+\(c_b = -1\), since 
+\(\fromint(0) \qeq \fromint(1)\) is impossible.
 
 Applying the H-coefficient technique, we therefore conclude that
 \begin{align*}
     & \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(q, \sigma, t)] \\
     \leq & \prob{Y \in \Tb} \\
-    \leq & \left.\left(3\sigma^2 + 2q\sigma + 7\sigma + 2\right)\middle/2^{n+1}\right.
+    \leq & \left.\left(2\binom{\sigma_m}{2} + c_f + c_w + c_a + c_b\right)\middle/2^n\right. \\
+    \leq & \left.\left(2\binom{\sigma_m}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
+    \leq & \left.\left(2\binom{\sigma + 2}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
+    = & \left.\left(2\left(\binom{\sigma}{2} + 2\sigma + 1\right) + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
+    = & \left.\left(3\sigma(\sigma - 1)/2 + q\sigma + 5\sigma - 2q + 1\right)\middle/2^n\right. \\
+    \leq & \left.\left(3\sigma^2 + 2q\sigma + 7\sigma + 2\right)\middle/2^{n+1}\right. \\
 \end{align*}
 
 \subsection{Security bound}
