@@ -13,6 +13,23 @@
 
 .align 16
 
+#define PL %xmm0
+#define PH %xmm1
+#define T %xmm2
+#define Z %xmm3
+#define GSTAR %xmm4
+#define C %xmm12
+#define D %xmm13
+#define E %xmm14
+#define SUM %xmm15
+
+#define OP1 %rdi
+#define OP2 %r10
+#define IDX %r11
+#define TMP %rax
+
+#define NUM_PRECOMPUTE_KEYS 14
+
 Lgstar:
 	.quad 0xc200000000000000, 0xc200000000000000
 
@@ -35,20 +52,28 @@ Lgstar:
 
 .text
 
+/*
+ * Accepts operand lists of length b in rdi and rsi. Computes the product of
+ * each rdi,rsi pair then XORs the products into C, D, E.
+ *
+ * XORs product into C, D, E
+ * Preserves SUM
+ * All other xmm registers clobbered
+ */
 .macro karatsuba1 b
 	.set by, \b
 
 	.set i, 0
 	.rept (by)
 		club i
-		movups (16*i)(%rdi), var_a1
+		movups (16*i)(OP1), var_a1
 		pshufd $0b01001110, var_a1, var_a3
 		.set i, (i +1)
 	.endr
 	.set i, 0
 	.rept (by)
 		club i
-		movups (16*i)(%rsi), var_a2
+		movups (16*i)(OP2), var_a2
 		pshufd $0b01001110, var_a2, var_a4
 		.set i, (i +1)
 	.endr
@@ -74,32 +99,61 @@ Lgstar:
 		.set i, (i +1)
 	.endr
 
-	.set i, 1
-	.rept (by - 1)
+	.set i, 0
+	.rept (by)
 		club i
-		pxor var_a1, %xmm0
-		pxor var_a2, %xmm1
-		pxor var_a3, %xmm2
+		pxor var_a1, D
+		pxor var_a2, C
+		pxor var_a3, E
 		.set i, (i +1)
 	.endr
 .endm
 
-#define PL %xmm5
-#define PH %xmm6
+/*
+ * Computes first karatsuba step of values loaded into xmm0 and xmm1. Used to
+ * multiply intermediate register values rather than memory stored values.
+ *
+ * XORs product into C, D, E
+ * Preserves SUM
+ * All other xmm registers clobbered
+ */
+.macro karatsuba1_noload
+	pshufd $0b01001110, %xmm0, %xmm2
+	pshufd $0b01001110, %xmm1, %xmm3
+	pxor %xmm0, %xmm2
+	pxor %xmm1, %xmm3
+	pclmulqdq $0x00, %xmm3, %xmm2
+	movdqa %xmm0, %xmm3
+	pclmulqdq $0x00, %xmm1, %xmm0
+	pclmulqdq $0x11, %xmm3, %xmm1
+	pxor %xmm0, D
+	pxor %xmm1, C
+	pxor %xmm2, E
+.endm
+
+/*
+ * Computes the 256-bit polynomial represented by C, D, E. Stores
+ * the result in PL, PH.
+ *
+ * All other xmm registers are preserved.
+ */
 .macro karatsuba2
-	movdqa %xmm0, PL
-	pxor %xmm1, PL
-	pxor %xmm2, PL # [C1 ^ D1 ^ E1 : C0 ^ D0 ^ E0]
+	movdqa C, PL
+	pxor D, PL
+	pxor E, PL # [C1 ^ D1 ^ E1 : C0 ^ D0 ^ E0]
 	movdqa PL, PH
 	pslldq $8, PL # [C0 ^ D0 ^ E0 : 0]
 	psrldq $8, PH # [0 : C1 ^ D1 ^ E1]
-	pxor %xmm0, PL # [C0 ^ D0 ^ E0 ^ D1 : D0]
-	pxor %xmm1, PH # c(x) = [C1 : C1 ^ D1 ^ E1 ^ C0] = [c(x) / x^64 : c(x) mod x^64]
+	pxor D, PL # [C0 ^ D0 ^ E0 ^ D1 : D0]
+	pxor C, PH # c(x) = [C1 : C1 ^ D1 ^ E1 ^ C0] = [c(x) / x^64 : c(x) mod x^64]
 .endm
 
-#define GSTAR %xmm4
-#define T %xmm7
-#define Z %xmm8
+/*
+ * Computes the 128-bit reduction of PL, PH. Stores the result in PH.
+ * 
+ * PL, PH, Z, T.
+ * All other xmm registers are preserved.
+ */
 .macro montgomery_reduction
 	vmovdqa Lgstar(%rip), GSTAR
 	movdqa PL, T
@@ -111,62 +165,162 @@ Lgstar:
 	pxor PL, PH
 .endm
 
-/* void clmul_polyhash_mul(char *dst, const u128 *op2) */
+/*
+ * Compute poly on window size of NUM_PRECOMPUTE_KEYS blocks
+ * Poly = M_0h^N + ... + M_{n-1}h^1 (no constant term)
+ */
+.macro full_stride
+	pxor C, C
+	pxor D, D
+	pxor E, E
+	mov %rsi, OP2
+	# Multiply sum by h^N
+	movups (%rsi), %xmm0
+	movdqa SUM, %xmm1
+	karatsuba1_noload
+	karatsuba2
+	montgomery_reduction
+	movdqa PH, SUM
+	pxor C, C
+	pxor D, D
+	pxor E, E
+	xor IDX, IDX
+.Loop:
+	cmpq $(NUM_PRECOMPUTE_KEYS), IDX
+	jae .LoopExit
+	
+	movq $(NUM_PRECOMPUTE_KEYS), TMP
+	subq IDX, TMP
+
+	cmp $3, TMP # TMP < 3 ?
+	jl .lt3
+	karatsuba1 3
+	addq $3, IDX
+	addq $(3*16), OP1
+	addq $(3*16), OP2
+	jmp .out
+.lt3:
+	cmp $2, TMP # TMP < 2 ?
+	jl .lt2
+	karatsuba1 2
+	addq $2, IDX
+	addq $(2*16), OP1
+	addq $(2*16), OP2
+	jmp .out
+.lt2:
+	karatsuba1 1 # TMP < 1 ?
+	addq $1, IDX
+	addq $(1*16), OP1
+	addq $(1*16), OP2
+.out:
+	jmp .Loop
+.LoopExit:
+	karatsuba2
+	montgomery_reduction
+	pxor PH, SUM
+.endm
+
+/*
+ * Compute poly on window size of %rdx blocks
+ * 0 < %rdx < NUM_PRECOMPUTE_KEYS
+ */
+.macro partial_stride
+	pxor C, C
+	pxor D, D
+	pxor E, E
+	mov %rdx, TMP
+	shlq $4, TMP
+	mov %rsi, OP2
+	addq $(16*NUM_PRECOMPUTE_KEYS), OP2
+	subq TMP, OP2
+	# Multiply sum by h^N
+	movups (OP2), %xmm0
+	movdqa SUM, %xmm1
+	karatsuba1_noload
+	karatsuba2
+	montgomery_reduction
+	movdqa PH, SUM
+	pxor C, C
+	pxor D, D
+	pxor E, E
+	xor IDX, IDX
+.LoopPartial:
+	cmpq %rdx, IDX # IDX < rdx
+	jae .LoopExitPartial
+	
+	movq %rdx, TMP
+	subq IDX, TMP # TMP = rdx - IDX
+
+	cmp $3, TMP # TMP < 3 ?
+	jl .lt3Partial
+	karatsuba1 3
+	addq $3, IDX
+	addq $(3*16), OP1
+	addq $(3*16), OP2
+	jmp .outPartial
+.lt3Partial:
+	cmp $2, TMP # TMP < 2 ?
+	jl .lt2Partial
+	karatsuba1 2
+	addq $2, IDX
+	addq $(2*16), OP1
+	addq $(2*16), OP2
+	jmp .outPartial
+.lt2Partial:
+	karatsuba1 1 # TMP < 1 ?
+	addq $1, IDX
+	addq $(1*16), OP1
+	addq $(1*16), OP2
+.outPartial:
+	jmp .LoopPartial
+.LoopExitPartial:
+	karatsuba2
+	montgomery_reduction
+	pxor PH, SUM
+.endm
+
 ENTRY(clmul_polyhash_mul)
 	FRAME_BEGIN
+	pxor C, C
+	pxor D, D
+	pxor E, E
+	mov %rsi, OP2
 	karatsuba1 1
 	karatsuba2
 	montgomery_reduction
-	movups %xmm6, (%rdi)
+	movups PH, (%rdi)
 	FRAME_END
 	ret
 ENDPROC(clmul_polyhash_mul)
 
-/* void clmul_polyhash_mul_xor(const u128 *op1, const u128 *op2, u128 * dst) */
-ENTRY(clmul_polyhash_mul_xor)
+/* 
+ * Perform polynomial evaluation as specified by HCTR2. XORs the evaluated
+ * polynomial with the data stored at output.
+ *
+ * Computes h^nM_0 + ... + h^1M_{n-1} (No constant term)
+ *
+ * rdi (OP1) - pointer to message blocks
+ * rsi - pointer to precomputed key struct
+ * rdx - number of blocks in rdi
+ * rcx - output location
+ * 
+ * void clmul_hctr2_poly(const u128 *in, const u128* keys, uint64_t nblocks, u128* out) 
+ */
+ENTRY(clmul_hctr2_poly)
 	FRAME_BEGIN
-	karatsuba1 1
-	movups (0*16)(%rdx), %xmm3
-	movups (1*16)(%rdx), %xmm4
-	movups (2*16)(%rdx), %xmm5
-    pxor %xmm3, %xmm0
-    pxor %xmm4, %xmm1
-	pxor %xmm5, %xmm2
-	movups %xmm0, (0*16)(%rdx)
-	movups %xmm1, (1*16)(%rdx)
-	movups %xmm2, (2*16)(%rdx)
+	pxor SUM, SUM
+.StrideLoop:
+	cmpq $NUM_PRECOMPUTE_KEYS, %rdx
+	jb .StrideLoopExit
+	full_stride
+	subq $NUM_PRECOMPUTE_KEYS, %rdx
+	jmp .StrideLoop
+.StrideLoopExit:
+	test %rdx, %rdx
+	je .SkipPartial
+	partial_stride
+.SkipPartial:
+	movups SUM, (%rcx)
 	FRAME_END
 	ret
-ENDPROC(clmul_polyhash_mul_xor)
-
-/* void clmul_polyhash_mul_xor(const u128 *op1, const u128 *op2, u128 * dst) */
-ENTRY(clmul_polyhash_mul4_xor)
-	FRAME_BEGIN
-	karatsuba1 4
-	movups (0*16)(%rdx), %xmm3
-	movups (1*16)(%rdx), %xmm4
-	movups (2*16)(%rdx), %xmm5
-    pxor %xmm3, %xmm0
-    pxor %xmm4, %xmm1
-	pxor %xmm5, %xmm2
-	movups %xmm0, (0*16)(%rdx)
-	movups %xmm1, (1*16)(%rdx)
-	movups %xmm2, (2*16)(%rdx)
-	FRAME_END
-	ret
-ENDPROC(clmul_polyhash_mul_xor)
-
-/* void clmul_polyhash_mul_xor(const u128 *in, u128 * out) */
-ENTRY(clmul_polyhash_xor_reduction)
-	FRAME_BEGIN
-	movups (0*16)(%rdi), %xmm0
-	movups (1*16)(%rdi), %xmm1
-	movups (2*16)(%rdi), %xmm2
-	karatsuba2
-	montgomery_reduction
-	movups (%rsi), %xmm2
-	pxor %xmm2, %xmm6
-	movups %xmm6, (%rsi)
-	FRAME_END
-	ret
-ENDPROC(clmul_polyhash_mul_xor)
+ENDPROC(clmul_hctr2_poly)
