@@ -17,11 +17,11 @@ the plaintext, once the nonce and authentication tag are included. However,
 there are situations such as disk sector encryption
 where the ciphertext must be the same size as the
 plaintext, and what is required is a tweakable
-super-pseudorandom permutation\cite{cmc}. 
+super-pseudorandom permutation\cite{cmc} (SPRP). 
 \cite{adiantum} includes a detailed history of length-preserving encryption.
 Where AES and multiplication in \(GF(2^{128})\) are hardware-accelerated,
-the construction HCTR\cite{hctr} is among the most efficient for 
-tweakable length-preserving encryption, using
+the HCTR\cite{hctr} is among the most efficient 
+SPRP construtions, using
 a single block cipher invocation and two \(GF(2^{128})\) multiplications
 per 16-byte block.
 
@@ -49,6 +49,6 @@ addresses the following issues:
 \end{itemize}
 We discuss our design decisions (\autoref{design})
 and report on its implementation on x86-64 and ARM64 (\autoref{implementation}).
-We know of no patents affecting use of HCTR2.
+We know of no patents affecting HCTR2.
 \subfile{hctr2fig.tex}
 \end{document}
