@@ -90,12 +90,6 @@ ie \(\HCTR[E_k]\) for \(k \sample \mathcal{K}\), while
 for \(\pi \sample \Perm(n)\).
 
 \subsection{Hash function}\label{hproperties}
-For efficiency reasons, POLYVAL does not
-evaluate a polynomial at the parameter \(\hgen\),
-but at another point, \(\hpoly = x^{-n}\hgen\).
-Some care is therefore needed to relate
-properties of the hash function to
-possible zeroes of a polynomial.
 
 Define \(\poly(M)\) to refer to the formal polynomial
 \(\poly(M_0 \Concat \cdots \Concat M_{l-1})
@@ -108,7 +102,8 @@ only if \(M = 0^{ln} \Concat M'\) for some \(l\) or vice versa.
 We then define \(H(T, M)\) as the formal polynomial in \(\hpoly\) given
 by that tweak and message.
 \(H_{\hgen}(T, M)\) is then evaluation of this polynomial at
-\(\hpoly = x^{-n}\hgen\).
+\(\hpoly = x^{-n}\hgen\); POLYVAL evaluates at this point for
+performance reasons.
 \begin{align*}
     & H(T, M) \\
     \defeq &
@@ -117,7 +112,7 @@ by that tweak and message.
         \text{if } n \text{ divides } \abs{M} \\
         \poly(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n) &
         \text{otherwise}
-    \end{cases}    \\
+    \end{cases}
 \end{align*}
 
 We depend on the following properties of this map 
@@ -323,7 +318,7 @@ and so can infer
     \UU &= U \xor H_{\hgen}(T, V)\\
     S &= \MM \xor \UU \xor L\\ 
     S_j &= S \xor \fromint(j)\\
-    Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor V) \Concat D \\
+    Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor V) \Concat D
 \end{align*}
 This gives us multisets \(\mathcal{D}\) and \(\mathcal{R}\)
 of block cipher plaintexts and ciphertexts:
@@ -538,22 +533,27 @@ probability of collision for all pairs in
 the multiset \(\mathcal{D}\)
 and all pairs in the multiset \(\mathcal{R}\). 
 Since most pairs have a probability of colliding of \(1/2^n\),
-we define a ``correction'' \(c\) such that 
+we define a ``correction'' \(c\):
 \begin{align*}
     & \prob{Y \in \Tb} \\
     = &\prob{\exists a, b \in \mathcal{D}: a = b \vee \exists a, b \in \mathcal{R} : a = b} \\
     \leq &\sum_{\mathcal{M}\in{\mathcal{D}, \mathcal{R}}}
         \sum_{a, b \in \mathcal{M}} \prob{a = b} \\
-    = &\left.\left(2\binom{\sigma_m}{2} + 
-    \sum_{\mathcal{M}\in{\mathcal{D}, \mathcal{R}}}
-    \sum_{a, b \in \mathcal{M}} 2^n\prob{a = b} -1
-    \right)\middle/2^n\right. \\
     = &\left.\left(2\binom{\sigma_m}{2} + c
-    \right)\middle/2^n\right.
+    \right)\middle/2^n\right. \\
+    \intertext{where}
+    c \defeq &\sum_{\mathcal{M}\in{\mathcal{D}, \mathcal{R}}}
+    \sum_{a, b \in \mathcal{M}} 2^n\prob{a = b} -1
 \end{align*}
+This way of counting has the advantage that
+the fourteen grey boxes in \autoref{domaincollision} and \autoref{rangecollision}
+require a correction of zero and so needn't be considered further;
+only the two red and six green boxes need to be considered.
 We proceed by cases:
-\(c = c_f + c_w + c_a + c_b\) where
+\(c = c_b + c_f + c_w + c_a\) where
 \begin{itemize}
+    \item \(c_b\) considers collisions within 
+    \(\{\fromint(0), \fromint(1)\}\) and \(\{\hgen, L\}\)
     \item \(c_f\) considers collisions
     for all \(s\)
     from \(\{\fromint(0), \fromint(1)\}\) to \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
@@ -566,13 +566,10 @@ We proceed by cases:
     for all \(r < s\)
     from \(\{\MM^r, S_1^r, \ldots, S_{m^r-1}^r\}\) to \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
     and from \(\{\UU^r, Y_1^r, \ldots, Y_{m^r-1}^r\}\) to \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
-    \item \(c_b\) considers collisions within 
-    \(\{\fromint(0), \fromint(1)\}\) and \(\{\hgen, L\}\)
 \end{itemize}
-With this formulation, the grey boxes in
-\autoref{domaincollision} and \autoref{rangecollision}
-require a correction of zero and so needn't be considered further;
-only the red and green boxes need to be considered.
+
+\(c_b = -1\), since 
+\(\fromint(0) \qeq \fromint(1)\) is impossible.
 
 For \(c_f\): if query \(s\) is an encryption query,
 the only nonzero contributions come from the pairs
@@ -592,9 +589,9 @@ Summing across all queries, we conclude that
 \end{align*}
 
 For \(c_w\): we need only consider \(S_i^s \qeq S_j^s\),
-which is impossible, therefore
+which is impossible:
 \begin{align*}
-    c_w \leq &\sum_s -\binom{m^s -1}{2} \\
+    c_w = &\sum_s -\binom{m^s -1}{2} \\
         \leq &0
 \end{align*}
 
@@ -613,22 +610,19 @@ Summing across queries, we find
         \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (m^r -1 )(d^s -1) \\
         \leq & (q-1)\sigma - \binom{q}{2} + \sum_{r < s} (d^r -1)(d^s -1) \\
         \leq & (q-1)\sigma - \binom{q}{2} + \binom{\sigma - q}{2} \\
-        \leq & (q-1)\sigma + \binom{\sigma}{2} \\
+        \leq & (q-1)\sigma + \binom{\sigma}{2}
 \end{align*}
-
-\(c_b = -1\), since 
-\(\fromint(0) \qeq \fromint(1)\) is impossible.
 
 Applying the H-coefficient technique, we therefore conclude that
 \begin{align*}
     & \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(q, \sigma, t)] \\
     \leq & \prob{Y \in \Tb} \\
-    \leq & \left.\left(2\binom{\sigma_m}{2} + c_f + c_w + c_a + c_b\right)\middle/2^n\right. \\
-    \leq & \left.\left(2\binom{\sigma_m}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
+    \leq & \left.\left(2\binom{\sigma_m}{2} + c_b + c_f + c_w + c_a\right)\middle/2^n\right. \\
+    \leq & \left.\left(2\binom{\sigma_m}{2} - 1 + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2}\right)\middle/2^n\right. \\
     \leq & \left.\left(2\binom{\sigma + 2}{2} + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
     = & \left.\left(2\left(\binom{\sigma}{2} + 2\sigma + 1\right) + 2(\sigma - q) + (q-1)\sigma + \binom{\sigma}{2} -1\right)\middle/2^n\right. \\
     = & \left.\left(3\sigma(\sigma - 1)/2 + q\sigma + 5\sigma - 2q + 1\right)\middle/2^n\right. \\
-    \leq & \left.\left(3\sigma^2 + 2q\sigma + 7\sigma + 2\right)\middle/2^{n+1}\right. \\
+    \leq & \left.\left(3\sigma^2 + 2q\sigma + 7\sigma + 2\right)\middle/2^{n+1}\right.
 \end{align*}
 
 \subsection{Security bound}
@@ -651,6 +645,6 @@ Putting these together with our main lemma, we have shown
 \begin{align*}
     &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
     \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')] \\
-    &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 7\sigma + 2\right)\middle/2^{n+1}\right. \\
+    &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 7\sigma + 2\right)\middle/2^{n+1}\right.
 \end{align*}
 \end{document}
