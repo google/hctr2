@@ -118,7 +118,7 @@ The most widely used  convention is that of GCM's GHASH\cite{gcm}.
 However, GHASH is not consistent in its endianness conventions,
 which increases implementation complexity and reduces efficiency.
 
-As a result, we instead use the POLYVAL function
+Instead, we use the POLYVAL function
 defined in \cite{aes_gcm_siv,aes_gcm_siv_rfc}.
 POLYVAL incurs a small cost in specification and proof complexity because 
 the polynomial is evaluated not at the parameter \(\hgen\)
@@ -140,7 +140,7 @@ different from that in HCTR. Our design goals are:
     \item allow a variable-length tweak
     \item guarantee \(H(T, M) \neq \hgen\), required
     because \(\hgen \gets E_k(\fromint(0))\)
-    \item allow implementations to precompute as much as possible, to reduce \(GF(2^n)\) multiplications
+    \item allow implementations to precompute as much as possible, to reduce \(\GF(2^n)\) multiplications
 \end{itemize}
 
 See \autoref{hproperties}
@@ -188,7 +188,7 @@ XORing this value directly with the first block of the tweak.
 \subsubsection{Alternatives considered}
 
 Like HCTR, HCTR2's almost-XOR-universal hash function uses a standard polynomial
-evaluation in $GF(2^n)$. This uses an $n$-bit key and requires $l$ field
+evaluation in $\GF(2^n)$. This uses an $n$-bit key and requires $l$ field
 multiplications where $l$ is the number of blocks.
 We considered several alternatives:
 

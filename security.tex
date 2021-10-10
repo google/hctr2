@@ -14,7 +14,8 @@
 Following the approach described in \cite{concrete},
 we prove that if the underlying block cipher is secure,
 then HCTR2 has good security properties.
-\subsection{Definitions}
+The security bound proven appears in \autoref{securitybound}.
+\subsection{Definitions}\label{definitions}
 We use \(x \sample S\) to mean ``\(x\) is sampled from \(S\)
 uniformly at random'', and we write
 \(A^{\mathcal{O}, \mathcal{O}'}\Rightarrow 1\) to refer
@@ -94,9 +95,11 @@ for \(\pi \sample \Perm(n)\).
 Define \(\poly(M)\) to refer to the formal polynomial
 \(\poly(M_0 \Concat \cdots \Concat M_{l-1})
 \defeq  M_0\hpoly^{l-1} \xor \cdots \xor M_{l-1}\).
-While \(\hpoly + 2\) and \(2\hpoly + 1\) can be equal
-in value if \(\hpoly = 1\), two formal polynomials are only equal
-if every coefficient is equal; thus \(\poly(M) = \poly(M')\)
+While for example \(\hpoly + 2\) and \(2\hpoly + 1\) can be equal
+in value if \(\hpoly = 1\),
+they are not equal as formal polynomials;
+two formal polynomials are only equal
+if every coefficient is equal. Thus \(\poly(M) = \poly(M')\)
 only if \(M = 0^{ln} \Concat M'\) for some \(l\) or vice versa.
 
 We then define \(H(T, M)\) as the formal polynomial in \(\hpoly\) given
@@ -134,7 +137,7 @@ in which case the polynomial is \(x\hpoly\).
 Since \(x^{n-1} \neq 1\) we have that \(x^n \neq x\).
 
 For any nonzero polynomial \(p(\hpoly)\)
-in \(GF(2^n)\), there are at most \(\deg(p)\) values \(\hpoly\)
+in \(\GF(2^n)\), there are at most \(\deg(p)\) values \(\hpoly\)
 such that \(p(\hpoly) = 0\), and therefore
 \(\probsub{\hpoly\sample{\bin^n}}{p(\hpoly) = 0} \leq \deg(p)/2^n\).
 Since multiplication by a nonzero field element
@@ -179,7 +182,7 @@ we infer three properties of \(H_{\hgen}(T, M)\):
     therefore can have at most \(d(T, M)\) zeroes.
 \end{description}
 
-\subsection{H-coefficient technique}
+\subsection{H-coefficient technique}\label{hco}
 The H-coefficient technique was introduced by Patarin in 1991~\cite{ppdes,hco}.
 We highly recommend the exposition
 of~\cite{hco2} Section 3,
@@ -199,7 +202,7 @@ We consider only deterministic adversaries.
 A randomized adversary can be considered as a random draw
 from a population of deterministic adversaries, so
 a bound on the advantage achievable by a deterministic
-adversary bounds the whole pool and therefore
+adversary bounds the whole population and therefore
 the advantage of the randomized adversary. In what follows
 we consider the adversary \(A\) fixed; only the world, and the
 particular oracles drawn from that world, vary.
@@ -222,6 +225,8 @@ represent the distribution of transcripts
 in world X and world Y respectively, so that
 each transcript \(\tau\) has a probability \(\prob{X = \tau}\)
 of arising in world X, and similarly \(\prob{Y = \tau}\) in world Y.
+The adversary's distinguishing advantage is then
+\(\left|\prob{A(Y) = 1} - \prob{A(X) = 1}\right|\).
 Without loss of generality,
 we assume that \(\prob{A(Y) = 1} \geq \prob{A(X) = 1}\).
 We further assume that \(A(\tau)\) is optimal:
@@ -257,7 +262,9 @@ and world Y (the ``ideal world'') to be \(\pm\widetilde{\mathrm{rnd}}\),
 which maps every query to a random response such that
 all responses of the appropriate length are equally likely;
 we then use the H-coefficient technique to bound
-the distinguishing advantage between them.
+the distinguishing advantage between them
+for a fixed adversary \(A \in \mathcal{A}(q, \sigma, t)\)
+as defined in \autoref{definitions}.
 
 We use superscripts to distinguish between queries;
 where we refer to \(r\), \(s\), we assume that \(r < s\).
@@ -321,7 +328,7 @@ and so can infer
     Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor V) \Concat D
 \end{align*}
 This gives us multisets \(\mathcal{D}\) and \(\mathcal{R}\)
-of block cipher plaintexts and ciphertexts:
+of inferred block cipher plaintexts and ciphertexts:
 \begin{align*}
     \mathcal{D} \defeq \{\fromint(0), \fromint(1)\} \uplus &
     \biguplus_s \{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\\
@@ -347,9 +354,9 @@ the probability in world X
 is the probability of all of those plaintext/ciphertext
 pairs being part of a given random permutation.
 This is 
-\(\prod_{i=0}^{\sigma_m -1}(1/(2^n - i))\).
-Thus for all \(\tau \in \Tg\)
-\(\prob{Y = \tau} \leq \prob{X = \tau}\). 
+\(\prod_{i=0}^{\sigma_m -1}1/(2^n - i)\).
+Thus \(\prob{Y = \tau} \leq \prob{X = \tau}\)
+for all \(\tau \in \Tg\) as required (\autoref{hco}).
 
 \subsubsection{Case analysis of collisions}
 Next we bound \(\prob{Y \in \Tb}\).
@@ -361,7 +368,7 @@ and bound the probability in world Y each case.
 Responses to queries are random in world Y,
 but some caution is required.
 If we know the adversary's query \(s\), then conditioning on that,
-we cannot treat the response to query \(r\) as uniformly random;
+we cannot treat the response to query \(r < s\) as uniformly random;
 if the choice of later query depends on the earlier response,
 knowing the later query is information about the earlier response.
 However, conditioning on a query and all prior queries and responses,
@@ -369,7 +376,7 @@ we still have that \(\hgen\), \(L\), and the
 query response are uniformly random and independent,
 and so we can consider them in any order.
 
-In most cases, the probability of a collision
+In fourteen cases, the probability of a collision
 between two specific blocks is bounded by \(1/2^n\).
 
 \subfile{casetable.tex}
@@ -433,12 +440,12 @@ In two cases, a collision is impossible.
     \item \(\fromint(0) \qeq \fromint(1)\): 
     Trivially impossible.
     \item 
-    \(S_i^s \qeq S_j^s\) where \(i < j\):
+    \(S_i^s \qeq S_j^s\):
     This is impossible; 
     \(S_i^s \xor S_j^s = \fromint(i) \xor \fromint(j)\).
 \end{itemize}
 
-There are a handful of cases where the probability may
+There are six cases where the probability may
 be greater than \(1/2^n\).
 Considering first collisions with \(\MM^s\) where
 query \(s\) is an encryption query:
@@ -537,13 +544,16 @@ we define a ``correction'' \(c\):
 \begin{align*}
     & \prob{Y \in \Tb} \\
     = &\prob{\exists a, b \in \mathcal{D}: a = b \vee \exists a, b \in \mathcal{R} : a = b} \\
-    \leq &\sum_{\mathcal{M}\in{\mathcal{D}, \mathcal{R}}}
-        \sum_{a, b \in \mathcal{M}} \prob{a = b} \\
+    \leq &
+        \Bigg(\sum_{a, b \in \mathcal{D}} \prob{a = b}\Bigg)
+      + \Bigg(\sum_{a, b \in \mathcal{R}} \prob{a = b}\Bigg)
+      \\
     = &\left.\left(2\binom{\sigma_m}{2} + c
     \right)\middle/2^n\right. \\
     \intertext{where}
-    c \defeq &\sum_{\mathcal{M}\in{\mathcal{D}, \mathcal{R}}}
-    \sum_{a, b \in \mathcal{M}} 2^n\prob{a = b} -1
+    c \defeq &
+    \Bigg(\sum_{a, b \in \mathcal{D}} 2^n\prob{a = b} -1\Bigg)
+    + \Bigg(\sum_{a, b \in \mathcal{R}} 2^n\prob{a = b} -1\Bigg)
 \end{align*}
 This way of counting has the advantage that
 the fourteen grey boxes in \autoref{domaincollision} and \autoref{rangecollision}
@@ -552,20 +562,20 @@ only the two red and six green boxes need to be considered.
 We proceed by cases:
 \(c = c_b + c_f + c_w + c_a\) where
 \begin{itemize}
-    \item \(c_b\) considers collisions within 
-    \(\{\fromint(0), \fromint(1)\}\) and \(\{\hgen, L\}\)
-    \item \(c_f\) considers collisions
+    \item \(c_b\) covers collisions within 
+    \(\{\fromint(0), \fromint(1)\}\) and within \(\{\hgen, L\}\)
+    \item \(c_f\) covers collisions
     for all \(s\)
-    from \(\{\fromint(0), \fromint(1)\}\) to \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
-    and from \(\{\hgen, L\}\) to \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
-    \item \(c_w\) considers collisions
+    between \(\{\fromint(0), \fromint(1)\}\) and \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
+    and between \(\{\hgen, L\}\) and \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
+    \item \(c_w\) covers collisions
     for all \(s\)
     within \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
     and within \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
-    \item \(c_a\) considers collisions
+    \item \(c_a\) covers collisions
     for all \(r < s\)
-    from \(\{\MM^r, S_1^r, \ldots, S_{m^r-1}^r\}\) to \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
-    and from \(\{\UU^r, Y_1^r, \ldots, Y_{m^r-1}^r\}\) to \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
+    between \(\{\MM^r, S_1^r, \ldots, S_{m^r-1}^r\}\) and \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
+    and between \(\{\UU^r, Y_1^r, \ldots, Y_{m^r-1}^r\}\) and \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
 \end{itemize}
 
 \(c_b = -1\), since 
@@ -624,7 +634,7 @@ Applying the H-coefficient technique, we therefore conclude that
     = & \left.\left(3\sigma^2 + 2q\sigma + 7\sigma + 2\right)\middle/2^{n+1}\right.
 \end{align*}
 
-\subsection{Security bound}
+\subsection{Security bound}\label{securitybound}
 By a standard substitution argument~\cite{cbcsec,concrete} we have that
 \begin{displaymath}
     \advantage{\HCTR[\Perm(n)]}{\HCTR[E]}[(q, \sigma, t)]

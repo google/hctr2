@@ -19,10 +19,10 @@ where the ciphertext must be the same size as the
 plaintext, and what is required is a tweakable
 super-pseudorandom permutation\cite{cmc} (SPRP). 
 \cite{adiantum} includes a detailed history of length-preserving encryption.
-Where AES and multiplication in \(GF(2^{128})\) are hardware-accelerated,
-the HCTR\cite{hctr} is among the most efficient 
+Where AES and multiplication in \(\GF(2^{128})\) are hardware-accelerated,
+HCTR\cite{hctr} is among the most efficient 
 SPRP construtions, using
-a single block cipher invocation and two \(GF(2^{128})\) multiplications
+a single block cipher invocation and two \(\GF(2^{128})\) multiplications
 per 16-byte block.
 
 In this paper, we present 
