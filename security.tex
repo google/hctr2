@@ -330,10 +330,10 @@ and so can infer
 This gives us multisets \(\mathcal{D}\) and \(\mathcal{R}\)
 of inferred block cipher plaintexts and ciphertexts:
 \begin{align*}
-    \mathcal{D} \defeq \{\fromint(0), \fromint(1)\} \uplus &
-    \biguplus_s \{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\\
-    \mathcal{R} \defeq \{\hgen, L\} \uplus &
-    \biguplus_s \{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}
+    \mathcal{D} \defeq [\fromint(0), \fromint(1)] \uplus &
+    \biguplus_s [\MM^s, S_1^s, \ldots, S_{m^s-1}^s]\\
+    \mathcal{R} \defeq [\hgen, L] \uplus &
+    \biguplus_s [\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s]
 \end{align*}
 We therefore infer
 \(\abs{\mathcal{D}} = \abs{\mathcal{R}} = \sigma_m \defeq 2 + \sum_s m^s\)
@@ -534,32 +534,32 @@ it is only decryption queries where
 probabilities may be above \(1/2^n\).
 
 \subsubsection{Summing collision bounds}
-To establish an upper bound that any pair
-will collide, we find the sum of
-probability of collision for all pairs in 
-the multiset \(\mathcal{D}\)
-and all pairs in the multiset \(\mathcal{R}\). 
-Since most pairs have a probability of colliding of \(1/2^n\),
-we define a ``correction'' \(c\):
+To establish an upper bound that any pair will collide,
+we sum collision probabilities
+for all pairs in the multiset \(\mathcal{D}\)
+and all pairs in the multiset \(\mathcal{R}\).
+To make summing easier, we define a ``correction'' \(c\):
 \begin{align*}
     & \prob{Y \in \Tb} \\
-    = &\prob{\exists a, b \in \mathcal{D}: a = b \vee \exists a, b \in \mathcal{R} : a = b} \\
+    = &\prob{\exists [a, b] \subseteq \mathcal{D}: a = b \vee \exists [a, b] \subseteq \mathcal{R} : a = b} \\
     \leq &
-        \Bigg(\sum_{a, b \in \mathcal{D}} \prob{a = b}\Bigg)
-      + \Bigg(\sum_{a, b \in \mathcal{R}} \prob{a = b}\Bigg)
+        \Bigg(\sum_{[a, b] \subseteq \mathcal{D}} \prob{a = b}\Bigg)
+      + \Bigg(\sum_{[a, b] \subseteq \mathcal{R}} \prob{a = b}\Bigg)
       \\
     = &\left.\left(2\binom{\sigma_m}{2} + c
     \right)\middle/2^n\right. \\
     \intertext{where}
     c \defeq &
-    \Bigg(\sum_{a, b \in \mathcal{D}} 2^n\prob{a = b} -1\Bigg)
-    + \Bigg(\sum_{a, b \in \mathcal{R}} 2^n\prob{a = b} -1\Bigg)
+    \Bigg(\sum_{[a, b] \subseteq \mathcal{D}} 2^n\prob{a = b} -1\Bigg)
+    + \Bigg(\sum_{[a, b] \subseteq \mathcal{R}} 2^n\prob{a = b} -1\Bigg)
 \end{align*}
-This way of counting has the advantage that
-the fourteen grey boxes in \autoref{domaincollision} and \autoref{rangecollision}
-require a correction of zero and so needn't be considered further;
-only the two red and six green boxes need to be considered.
-We proceed by cases:
+This rearrangement is so that the fourteen cases above
+which have a probability of colliding of \(1/2^n\)
+make zero contribution to \(c\)
+and so need not be considered further;
+only the remaining eight
+%(red and green boxes in \autoref{domaincollision} and \autoref{rangecollision})
+need to be considered. Define
 \(c = c_b + c_f + c_w + c_a\) where
 \begin{itemize}
     \item \(c_b\) covers collisions within 
