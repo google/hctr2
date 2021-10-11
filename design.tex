@@ -36,7 +36,7 @@ features that make it an attractive design:
     whose flaws only manifest on the
     rare occasions that a counter overflows
     into the next word.
-    GCM\cite{gcm} uses a variant on CTR
+    GCM\cite{gcm} uses a variant of CTR
     in which only 32 bits are incremented
     for the same reason;
     XCTR seems a more elegant solution.
@@ -57,7 +57,7 @@ HCTR2 differs from HCTR in the following ways:
     This increases flexibility,
     and eliminates the risk of attacks where
     two users of the same key have different ideas
-    on what the tweak length is.
+    of what the tweak length is.
     \item We derive \(\hgen \gets E_k(\fromint(0))\)
     and \(L \gets E_k(\fromint(1))\) from the block cipher key;
     this makes HCTR2 more convenient to use.
@@ -77,7 +77,7 @@ HCTR2 differs from HCTR in the following ways:
 \subsection{Comparison of SPRP modes}
 We considered a number of modes aiming to provide
 tweakable super-pseudorandom permutations
-as the basis for our design before settling on HCTR.
+as the basis for our design before settling on HCTR:
 \begin{itemize}
     \item CMC\cite{cmc}, EME\cite{eme}, and EME*\cite{emestar}
     require two block cipher calls per input block.
