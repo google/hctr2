@@ -23,12 +23,14 @@
 #define E %xmm14
 #define SUM %xmm15
 
+#define BLOCKS_LEFT %rdx
 #define OP1 %rdi
+#define EXTRA_BYTES %r9
 #define OP2 %r10
 #define IDX %r11
 #define TMP %rax
 
-#define NUM_PRECOMPUTE_KEYS 14
+#define NUM_PRECOMPUTE_KEYS 64
 
 Lgstar:
 	.quad 0xc200000000000000, 0xc200000000000000
@@ -228,7 +230,11 @@ Lgstar:
 	pxor C, C
 	pxor D, D
 	pxor E, E
-	mov %rdx, TMP
+	mov BLOCKS_LEFT, TMP
+	test EXTRA_BYTES, EXTRA_BYTES
+	je .no_extra_block1
+	inc TMP
+.no_extra_block1:
 	shlq $4, TMP
 	mov %rsi, OP2
 	addq $(16*NUM_PRECOMPUTE_KEYS), OP2
@@ -245,10 +251,10 @@ Lgstar:
 	pxor E, E
 	xor IDX, IDX
 .LoopPartial:
-	cmpq %rdx, IDX # IDX < rdx
+	cmpq BLOCKS_LEFT, IDX # IDX < rdx
 	jae .LoopExitPartial
 	
-	movq %rdx, TMP
+	movq BLOCKS_LEFT, TMP
 	subq IDX, TMP # TMP = rdx - IDX
 
 	cmp $3, TMP # TMP < 3 ?
@@ -274,12 +280,25 @@ Lgstar:
 .outPartial:
 	jmp .LoopPartial
 .LoopExitPartial:
+	# Handle extra block
+	test EXTRA_BYTES, EXTRA_BYTES
+	je .no_extra_block2
+	movq %rcx, OP1
+	karatsuba1 1
+.no_extra_block2:
 	karatsuba2
 	montgomery_reduction
 	pxor PH, SUM
 .endm
 
-ENTRY(clmul_polyhash_mul)
+/*
+ * Perform montgomery multiplication in GF128 and store result in op1.
+ *
+ * Computes op1*op2*x^{-128} mod x^128 + x^127 + x^126 + x^121 + 1
+ *
+ * void clmul_hctr2_mul(u128* op1, const u128* op2);
+ */
+ENTRY(clmul_hctr2_mul)
 	FRAME_BEGIN
 	pxor C, C
 	pxor D, D
@@ -291,36 +310,44 @@ ENTRY(clmul_polyhash_mul)
 	movups PH, (%rdi)
 	FRAME_END
 	ret
-ENDPROC(clmul_polyhash_mul)
+ENDPROC(clmul_hctr2_mul)
 
 /* 
- * Perform polynomial evaluation as specified by HCTR2. XORs the evaluated
- * polynomial with the data stored at output.
+ * Perform polynomial evaluation as specified by HCTR2. Shifts the value stored
+ * at accumulator by h^n and XORs the evaluated polynomial into it.
  *
- * Computes h^nM_0 + ... + h^1M_{n-1} (No constant term)
+ * Computes h^n*accumulator + h^nM_0 + ... + h^1M_{n-1} (No constant term)
  *
  * rdi (OP1) - pointer to message blocks
  * rsi - pointer to precomputed key struct
- * rdx - number of blocks in rdi
- * rcx - output location
+ * rdx - number of bytes to hash
+ * rcx - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
+ * r8 - location to XOR with evaluated polynomial
  * 
- * void clmul_hctr2_poly(const u128 *in, const u128* keys, uint64_t nblocks, u128* out) 
+ * void clmul_hctr2_poly(const u128 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
  */
 ENTRY(clmul_hctr2_poly)
 	FRAME_BEGIN
-	pxor SUM, SUM
+	movq $0x0f, EXTRA_BYTES
+	andq BLOCKS_LEFT, EXTRA_BYTES
+	shr $4, BLOCKS_LEFT
+	movups (%r8), SUM
 .StrideLoop:
-	cmpq $NUM_PRECOMPUTE_KEYS, %rdx
+	cmpq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
 	jb .StrideLoopExit
 	full_stride
-	subq $NUM_PRECOMPUTE_KEYS, %rdx
+	subq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
 	jmp .StrideLoop
 .StrideLoopExit:
-	test %rdx, %rdx
-	je .SkipPartial
+	test BLOCKS_LEFT, BLOCKS_LEFT
+	jne .DoPartial
+	test EXTRA_BYTES, EXTRA_BYTES
+	jne .DoPartial
+	jmp .SkipPartial
+.DoPartial:
 	partial_stride
 .SkipPartial:
-	movups SUM, (%rcx)
+	movups SUM, (%r8)
 	FRAME_END
 	ret
 ENDPROC(clmul_hctr2_poly)

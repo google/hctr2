@@ -235,6 +235,14 @@ typedef union {
 		__le64 a;
 	};
 	__le32 w32[4];
+} u128;
+
+typedef union {
+	struct {
+		__le64 b;
+		__le64 a;
+	};
+	__le32 w32[4];
 } le128;
 
 typedef union {

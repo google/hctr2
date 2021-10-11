@@ -40,7 +40,9 @@
 	show_result(ALGNAME, "hashing", "generic", nbytes, best_time);
 
 #ifdef HASH_SIMD
+#if KEY_BYTES != 0
 	SETKEY_SIMD(&ctx, key);
+#endif
 	
     best_time = UINT64_MAX;
 	for (try = 0; try < ntries; try++) {
