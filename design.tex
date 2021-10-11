@@ -21,8 +21,9 @@ features that make it an attractive design:
     a multiple of the block size. 
     \item Use of \(\MM \xor \UU\) in generating \(S\), which means
     that an adversary's control over \(S\) is very limited for both
-    encryption and decryption queries; this is important in the
-    proof of security.
+    encryption and decryption queries; this is used in the
+    proof of security to bound \(S_i^r \qeq S_j^s\)
+    and avert a cubic term in the security bound.
     \item The CTR mode variant XCTR.
     Because of the extra constant \(L\), it would be straightforward
     to prove secure an HCTR2 variant that used CTR mode.

@@ -17,7 +17,7 @@
                 \Procedure{Encrypt}{$k, T, P$}
                 \State $\hgen \gets E_k(\fromint(0))$
                 \State $L \gets E_k(\fromint(1))$
-                \State $M \Concat N \gets P$, $|M| = n$
+                \State $M \Concat N \gets P$, $\abs{M} = n$
                 \State $\MM \gets M \xor H_{\hgen}(T, N)$
                 \State $\UU \gets E_k(\MM)$
                 \State $S \gets \MM \xor \UU \xor L$
@@ -35,7 +35,7 @@
                 \Procedure{Decrypt}{$k, T, C$}
                 \State $\hgen \gets E_k(\fromint(0))$
                 \State $L \gets E_k(\fromint(1))$
-                \State $U \Concat V \gets C$, $|U| = n$
+                \State $U \Concat V \gets C$, $\abs{U} = n$
                 \State $\UU \gets U \xor H_{\hgen}(T, V)$
                 \State $\MM \gets E_k^{-1}(\UU)$
                 \State $S \gets \MM \xor \UU \xor L$
