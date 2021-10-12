@@ -211,7 +211,7 @@ will always be the same; a transcript that
 does not start with this query is not a compatible transcript.
 For a given \(\tau \in \Tc\),
 a deterministic adversary must always
-return the same response; call this response \(A(\tau)\).
+return the same answer; call this answer \(A(\tau)\).
 
 Let random variables \(X\) and \(Y\)
 represent the distribution of transcripts
@@ -331,7 +331,7 @@ of inferred block cipher plaintexts and ciphertexts:
 We therefore infer
 \(\abs{\mathcal{D}} = \abs{\mathcal{R}} = \sigma_m \defeq 2 + \sum_s m^s\)
 block cipher plaintexts/ciphertexts
-from \(\sigma_m n\) bits of query response.
+from \(\sigma_m n\) bits of response.
 A transcript is ``bad'' (\(\tau \in \Tb\))
 iff any entry in \(\mathcal{D}\) or \(\mathcal{R}\)
 has multiplicity greater than one,
@@ -358,7 +358,7 @@ in either inferred plaintexts (\(\mathcal{D}\))
 or inferred ciphertexts (\(\mathcal{R}\)),
 and bound the probability in world Y each case.
 
-Responses to queries are random in world Y,
+Responses are random in world Y,
 but some caution is required.
 If we know the adversary's query \(s\), then conditioning on that,
 we cannot treat the response to query \(r < s\) as uniformly random;
@@ -368,6 +368,21 @@ However, conditioning on a query and all prior queries and responses,
 we still have that \(\hgen\), \(L\), and the
 query response are uniformly random and independent,
 and so we can consider them in any order.
+
+Consider for example the case \(S_i^r \qeq \MM^s\):
+for a given \(r, s, i\),
+we want to evaluate \(\prob{S_i^r = \MM^s}\).
+From our inference rules, \(S_i^r = \MM^s\)
+iff \(L = M^r \xor H_{\hgen}(T^r, N^r) \xor U^r \xor H_{\hgen}(T^r, V^r)
+\xor \fromint(i) \xor M^s \xor H_{\hgen}(T^s, N^s)\).
+\(\hgen\) and \(L\) are given at the end of the transcript
+and so are independent of all other queries and responses.
+If we knew the entire transcript except \(L\),
+we would know the entire right hand side of this equation.
+In world X, we would also know for example that \(L \neq \hgen\), but
+in world Y, conditioning on the rest of the transcript,
+all values of \(L\) are equally likely;
+therefore this equation holds with probability exactly \(1/2^n\).
 
 There are twenty-two cases to consider,
 ten of which arise because we use the block cipher
@@ -444,11 +459,11 @@ query \(s\) is an encryption query:
 
 \begin{itemize}
     \item \(\MM^r \qeq \MM^s\):
-    This holds if \(M^r \xor H_{\hgen}(T^r, N^r) = M^s \xor H_{\hgen}(T^s, N^s)\);
+    This holds iff \(M^r \xor H_{\hgen}(T^r, N^r) = M^s \xor H_{\hgen}(T^s, N^s)\);
     by hash function property 2, this holds with probability at most
     \(\max(d^r, d^s)/2^n\).
     \item \(\fromint(0) \qeq \MM^s\):
-    This holds if \(\fromint(0) = M^s \xor H_{\hgen}(T^s, N^s)\);
+    This holds iff \(\fromint(0) = M^s \xor H_{\hgen}(T^s, N^s)\);
     by hash function property 1, this holds with probability at most
     \(d^s/2^n\).
     \item \(\fromint(1) \qeq \MM^s\):
@@ -467,15 +482,15 @@ query \(s\) is a decryption query:
 
 \begin{itemize}
     \item \(\UU^r \qeq \UU^s\): 
-    This holds if \(U^r \xor H_{\hgen}(T^r, V^r) = U^s \xor H_{\hgen}(T^s, V^s)\);
+    This holds iff \(U^r \xor H_{\hgen}(T^r, V^r) = U^s \xor H_{\hgen}(T^s, V^s)\);
     by hash function property 2, this holds with probability at most
     \(\max(d^r, d^s)/2^n\).
     \item \(Y_i^r \qeq \UU^s\):
-    This holds if \(Y_i^r = U^s \xor H_{\hgen}(T^s, V^s)\);
+    This holds iff \(Y_i^r = U^s \xor H_{\hgen}(T^s, V^s)\);
     by hash function property 1, this holds with probability at most
     \(d^s/2^n\).
     \item \(\hgen \qeq \UU^s\):
-    This holds if \(\hgen = U^s \xor H_{\hgen}(T^s, V^s)\);
+    This holds iff \(\hgen = U^s \xor H_{\hgen}(T^s, V^s)\);
     by hash function property 3, this holds with probability at most
     \(d^s/2^n\).
 \end{itemize}
