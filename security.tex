@@ -370,6 +370,9 @@ we still have that \(\hgen\), \(L\), and the
 query response are uniformly random and independent,
 and so we can consider them in any order.
 
+There are twenty-two cases to consider,
+ten of which arise because we use the block cipher
+to generate \(\hgen\) and \(L\).
 In fourteen cases, the probability of a collision
 between two specific blocks is \(1/2^n\):
 
@@ -377,18 +380,18 @@ between two specific blocks is \(1/2^n\):
 \begin{itemize}
     \item
     \(\hgen \qeq L\),
+    \(L \qeq \UU^s\),
+    \(L \qeq Y_j^s\),
     \(\fromint(0) \qeq S_j^s\),
     \(\fromint(1) \qeq S_j^s\),
-    \(\MM^r \qeq S_j^s\),
-    \(\MM^s \qeq S_j^s\),
     \(S_i^r \qeq \MM^s\),
-    \(L \qeq \UU^s\):
+    \(\MM^r \qeq S_j^s\),
+    \(\MM^s \qeq S_j^s\):
     Given \(\hgen\) and all queries and responses,
     there is exactly one value of \(L\)
     which causes the equation to hold.
     \item
     \(\hgen \qeq Y_j^s\),
-    \(L \qeq Y_j^s\),
     \(\UU^r \qeq Y_j^s\),
     \(Y_i^r \qeq Y_j^s\),
     \(Y_i^s \qeq Y_j^s\) where \(i < j\): 
