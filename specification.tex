@@ -33,7 +33,7 @@
     \item \(\mathcal{T}\): the set of permissible tweaks
     \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^{n-1}-2\}}\bin^i\)
     \item \(\mathcal{M}\): the set of permissible messages
-    \(\mathcal{M} = \bin^n \times \mathcal{T} = \bigcup_{i \in \{n\ldots n + 2^{n-1}-2\}}\bin^i\)
+    \(\mathcal{M} = \bigcup_{i \in \{n\ldots n + 2^{n-1}-2\}}\bin^i\)
 \end{itemize}
 We map bytes to bitstrings with \(\fromint_8\). Subscripts may denote partial application; if we define $f: A \times B \rightarrow C$ and
 $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f_a(b)) = b$.
@@ -67,14 +67,14 @@ For hash key \(\hgen \in \bin^n\), tweak \(T\) and message \(M\), we define:
 
 \subsection{XCTR mode}
 HCTR and HCTR2 use an unusual mode of stream encryption,
-which we here name \emph{XCTR mode}:
+which we name \emph{XCTR mode}:
 \begin{displaymath}
     \XCTR_k(S) = E_k(S \xor \fromint(1)) \Concat E_k(S \xor \fromint(2)) \Concat E_k(S \xor \fromint(3)) \Concat \cdots
 \end{displaymath}
-Thus, generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls. 
+Generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls. 
 
 \subsection{HCTR2 encryption}
-From these definitions, HCTR2 is as defined in \autoref{pseudocode}.
+HCTR2 is defined in \autoref{pseudocode}.
 \autoref{decryptionpseudocode} gives the decryption algorithm.
 \subfile{algorithm.tex}
 \end{document}

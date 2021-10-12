@@ -34,7 +34,7 @@ the distinguishing advantage of an adversary \(A\) is:
     \\
     {}&\left. - \probsub{\pi \sample \Perm(n)}{A^{\pi,\pi^{-1}}\Rightarrow 1}\right\rvert
     \\
-    \intertext{We then define}
+    \intertext{Define}
     \advantage{\pm \mathrm{prp}}{E}[(q, t)] \defeq
     {}&\max_{A \in \mathcal{A}(q, t)} \advantage{\pm \mathrm{prp}}{E}[(A)]
 \end{align*}
@@ -63,7 +63,7 @@ the distinguishing advantage of an adversary $A$ is:
     {}&\left. - \probsub{\bm{\pi} \sample \Perm^\mathcal{T}(\mathcal{M})}
         {A^{\bm{\pi},\bm{\pi}^{-1}}\Rightarrow 1}\right\rvert
     \\
-    \intertext{We then define}
+    \intertext{Define}
     \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(q, \sigma, t)]
     \defeq {}&
     \max_{A \in \mathcal{A}(q, \sigma, t)} \advantage{\pm \widetilde{\mathrm{prp}}}{\bm{E}}[(A)]
@@ -89,7 +89,6 @@ ie \(\HCTR[E_k]\) for \(k \sample \mathcal{K}\), while
 for \(\pi \sample \Perm(n)\).
 
 \subsection{Hash function}\label{hproperties}
-
 Define \(\poly(M)\) to refer to the formal polynomial
 \(\poly(M_0 \Concat \cdots \Concat M_{l-1})
 \defeq  M_0\hpoly^{l-1} \xor \cdots \xor M_{l-1}\).
@@ -100,7 +99,7 @@ two formal polynomials are only equal
 if every coefficient is equal. Thus \(\poly(M) = \poly(M')\)
 only if \(M = 0^{ln} \Concat M'\) for some \(l\) or vice versa.
 
-We then define \(H(T, M)\) as the formal polynomial in \(\hpoly\) given
+Define \(H(T, M)\) as the formal polynomial in \(\hpoly\) given
 by that tweak and message.
 \(H_{\hgen}(T, M)\) is then evaluation of this polynomial at
 \(\hpoly = x^{-n}\hgen\); POLYVAL evaluates at this point for
@@ -141,7 +140,7 @@ such that \(p(\hpoly) = 0\), and therefore
 Since multiplication by a nonzero field element
 is a bijection of the field onto itself, it follows that
 \(\probsub{\hgen\sample{\bin^n}}{p(x^{-n}\hgen) = 0} \leq \deg(p)/2^n\).
-We thus infer three properties of \(H_{\hgen}(T, M)\):
+From this we infer three properties of \(H_{\hgen}(T, M)\):
 \begin{description}
     \item[Property 1]
     For any \(T, M\) and any \(g \in \bin^n\),
@@ -612,7 +611,7 @@ Summing across queries, we find
         \leq & (q-1)\sigma + \binom{\sigma}{2}
 \end{align*}
 
-Applying the H-coefficient technique, we therefore conclude that
+Applying the H-coefficient technique, we conclude that
 \begin{align*}
     & \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(q, \sigma, t)] \\
     \leq & \prob{Y \in \Tb} \\
@@ -640,7 +639,7 @@ Halevi and Rogaway's PRP-RND lemma
     \leq \left.\binom{q}{2}\middle/2^n\right.
     \leq q^2/2^{n+1}
 \end{displaymath}
-Putting these together with our main lemma, we have shown
+Putting these together with our main lemma, we conclude
 \begin{align*}
     &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
     \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')] \\
