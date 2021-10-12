@@ -152,12 +152,6 @@ static void _polyhash(const struct polyhash_key *key, const void *src,
 	polyhash_init(&polystate);
     polyhash_hash_message(key, &polystate, src, srclen, false);
 	polyhash_emit(key, &polystate, digest, false);
-
-    printf("generic\n");
-    for(int i = 0; i < 16; i++) {
-        printf("%02hhx", digest[i]);
-    }
-    printf("\n");
 }
 
 static void _polyhash_simd(const struct polyhash_key *key, const void *src,
@@ -168,12 +162,6 @@ static void _polyhash_simd(const struct polyhash_key *key, const void *src,
 	polyhash_init(&polystate);
     polyhash_hash_message(key, &polystate, src, srclen, true);
 	polyhash_emit(key, &polystate, digest, true);
-    
-    printf("simd\n");
-    for(int i = 0; i < 16; i++) {
-        printf("%02hhx", digest[i]);
-    }
-    printf("\n");
 }
 
 void test_hctr_polyhash(void)
