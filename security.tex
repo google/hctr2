@@ -573,11 +573,11 @@ the only nonzero contributions come from the pairs
 \(\fromint(0) \qeq \MM^s\) and
 \(\fromint(1) \qeq \MM^s\). In each of these
 cases the probability bound is not \(1/2^n\) but
-\(d^s/2^n\), implying a correction of
+\(d^s/2^n\), implying a correction of at most
 \(2(d^s - 1)\) for each encryption query.
 If query \(s\) is a decryption query,
 we need only consider the pair \(\hgen \qeq \UU^s\)
-for a correction of \(d^s - 1\). 
+for a correction of at most \(d^s - 1\). 
 Summing across all queries, we conclude that
 \begin{align*}
     c_f \leq &\sum_s \max(2(d^s - 1), d^s - 1) \\
@@ -593,11 +593,11 @@ which is impossible:
 \end{align*}
 
 For \(c_a\): if query \(s\) is an encryption query,
-\(\MM^r \qeq \MM^s\) gives us a correction of
-\(\max(d^r, d^s) -1\);
+\(\MM^r \qeq \MM^s\) gives a correction of
+at most \(\max(d^r, d^s) -1\);
 if it is a decryption query,
 \(\UU^r \qeq \UU^s\) and \(Y_i^r \qeq \UU^s\)
-give a correction of
+give a correction of at most
 \(\max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\)
 Summing across queries, we find
 \begin{align*}
