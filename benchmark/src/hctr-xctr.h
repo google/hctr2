@@ -13,9 +13,9 @@
 #include "aes_linux.h"
 #include "util.h"
 
-#define CTR_IV_SIZE	16
-#define CTR_BLOCK_SIZE 16
-#define CTR_KEY_SIZE 32
+#define XCTR_IV_SIZE	16
+#define XCTR_BLOCK_SIZE 16
+#define XCTR_KEY_SIZE 32
 
 void hctr_ctr_setkey(struct aes_ctx *ctx, const u8 *key);
 
