@@ -331,7 +331,8 @@ of inferred block cipher plaintexts and ciphertexts:
 We therefore infer
 \(\abs{\mathcal{D}} = \abs{\mathcal{R}} = \sigma_m \defeq 2 + \sum_s m^s\)
 block cipher plaintexts/ciphertexts
-from \(\sigma_m n\) bits of response.
+from \(\sigma_m n\) bits of response
+(including the extra information \(D^s\), \(\hgen\), \(L\)).
 A transcript is ``bad'' (\(\tau \in \Tb\))
 iff any entry in \(\mathcal{D}\) or \(\mathcal{R}\)
 has multiplicity greater than one,
@@ -370,7 +371,7 @@ query response are uniformly random and independent,
 and so we can consider them in any order.
 
 Consider for example the case \(S_i^r \qeq \MM^s\):
-for a given \(r, s, i\),
+for a given \(r\), \(s\), \(i\),
 we want to evaluate \(\prob{S_i^r = \MM^s}\).
 From our inference rules, \(S_i^r = \MM^s\)
 iff \(L = M^r \xor H_{\hgen}(T^r, N^r) \xor U^r \xor H_{\hgen}(T^r, V^r)
@@ -615,7 +616,7 @@ at most \(\max(d^r, d^s) -1\);
 if it is a decryption query,
 \(\UU^r \qeq \UU^s\) and \(Y_i^r \qeq \UU^s\)
 give a correction of at most
-\(\max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\)
+\(\max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\).
 Summing across queries, we find
 \begin{align*}
     c_a \leq &\sum_{r<s} \max(\max(d^r, d^s) -1, \max(d^r, d^s) -1 + (m^r -1 )(d^s -1)) \\
@@ -647,6 +648,7 @@ By a standard substitution argument~\cite{cbcsec,concrete} we have that
 where \(t'\) is a small constant
 representing the per-block cost of simulating HCTR2, and
 \(\sigma + 2\) bounds the number of block cipher calls made by the simulator.
+
 Halevi and Rogaway's PRP-RND lemma
 \cite[Appendix C, Lemma 6]{cmc} tells us that
 \begin{displaymath}
