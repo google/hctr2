@@ -19,15 +19,10 @@ asmlinkage void clmul_hctr2_mul(u128* op1, const u128* op2);
 #define MUL clmul_hctr2_mul
 #endif
 #ifdef __aarch64__
-asmlinkage void pmull_polyhash_mul(ble128 * op1, const ble128 * op2);
-asmlinkage void pmull_polyhash_mul_xor(const ble128 * op1_list, const ble128 * op2_list, ble128 * dst);
-asmlinkage void pmull_polyhash_mul4_xor(const ble128 * op1_list, const ble128 * op2_list, ble128 * dst);
-asmlinkage void pmull_polyhash_xor_reduction(const le128 *in, le128 *out);
-#define CLMUL(X, Y) pmull_polyhash_mul(X, Y)
-#define CLMUL_REDUCE_XOR(X, Y) pmull_polyhash_xor_reduction(X, Y)
-#define CLMUL_XOR(X, Y, Z) pmull_polyhash_mul_xor(X, Y, Z)
-#define CLMUL_STRIDE(X, Y, Z) pmull_polyhash_mul4_xor(X, Y, Z)
-#define STRIDE_SIZE 4
+asmlinkage void pmull_hctr2_poly(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
+asmlinkage void pmull_hctr2_mul(u128* op1, const u128* op2);
+#define POLY pmull_hctr2_poly
+#define MUL pmull_hctr2_mul
 #endif
 
 void reverse(be128* a){

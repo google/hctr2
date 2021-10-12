@@ -157,7 +157,6 @@ Lgstar:
  * All other xmm registers are preserved.
  */
 .macro montgomery_reduction
-	vmovdqa Lgstar(%rip), GSTAR
 	movdqa PL, T
 	pclmulqdq $0x00, GSTAR, T # T = [X0 * g*(x)]
 	pshufd $0b01001110, T, Z # Z = [T0 : T1]
@@ -300,6 +299,7 @@ Lgstar:
  */
 ENTRY(clmul_hctr2_mul)
 	FRAME_BEGIN
+	vmovdqa Lgstar(%rip), GSTAR
 	pxor C, C
 	pxor D, D
 	pxor E, E
@@ -328,6 +328,7 @@ ENDPROC(clmul_hctr2_mul)
  */
 ENTRY(clmul_hctr2_poly)
 	FRAME_BEGIN
+	vmovdqa Lgstar(%rip), GSTAR
 	movq $0x0f, EXTRA_BYTES
 	andq BLOCKS_LEFT, EXTRA_BYTES
 	shr $4, BLOCKS_LEFT
