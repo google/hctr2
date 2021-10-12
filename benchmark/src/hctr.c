@@ -132,8 +132,6 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
 
     hctr_ctr_crypt(&ctx->aes_ctx, D, N, N_bytes, &S, simd);
     
-    polyhash_init(&polystate2);
-    polyhash_hash_tweak(&ctx->polyhash_key, &polystate2, tweak, tweak_len, N_bytes % POLYHASH_BLOCK_SIZE == 0, simd);
     polyhash_hash_message(&ctx->polyhash_key, &polystate2, D, N_bytes, simd);
     polyhash_emit(&ctx->polyhash_key, &polystate2, (u8 *)&digest, simd);
     
