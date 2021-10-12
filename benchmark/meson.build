@@ -22,7 +22,7 @@ src = [
     'src/aes.c',
     'src/cipherbench.c',
     'src/hctr.c',
-    'src/hctr-ctr.c',
+    'src/hctr-xctr.c',
     'src/hctr-polyhash.c',
     'src/insn_timing.c',
     '../third_party/linux-kernel/aes_ti.c',
@@ -31,8 +31,8 @@ src = [
 
 if host_machine.cpu_family() == 'aarch64'
     src += [
+        'src/aarch64/hctr-polyhash-pmull_asm.S',
         '../third_party/linux-kernel/aarch64/aes-ce.S',
-        '../third_party/linux-kernel/aarch64/hctr-polyhash-pmull_asm.S',
     ]
 endif
 if host_machine.cpu_family() == 'x86_64'

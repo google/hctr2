@@ -11,7 +11,7 @@
 
 #include "aes.h"
 #include "aes_linux.h"
-#include "hctr-ctr.h"
+#include "hctr-xctr.h"
 #include "hctr-polyhash.h"
 #include "testvec.h"
 #include "util.h"
@@ -21,27 +21,55 @@
 
 /* Size of the hash key (H_K) in bytes */
 #define BLOCKCIPHER_KEY_SIZE 32
-#define HCTR_HASH_KEY_SIZE	POLYHASH_KEY_SIZE
-#define HCTR_KEY_SIZE BLOCKCIPHER_KEY_SIZE + POLYHASH_KEY_SIZE
+#define HCTR_KEY_SIZE BLOCKCIPHER_KEY_SIZE
 
 struct hctr_ctx {
-	struct aes_ctx aes_ctx;
-	unsigned int default_tweak_len;
+    struct aes_ctx aes_ctx;
+    unsigned int default_tweak_len;
     struct polyhash_key polyhash_key;
+    u8 L[BLOCKCIPHER_BLOCK_SIZE];
 };
 
 void hctr_setkey_generic(struct hctr_ctx *ctx, const u8 *key)
 {
-    polyhash_setkey_generic(&ctx->polyhash_key, key);
-	aesti_expand_key(&ctx->aes_ctx, key + HCTR_HASH_KEY_SIZE, BLOCKCIPHER_KEY_SIZE);
+    u8 h[BLOCKCIPHER_BLOCK_SIZE];
+    u128 buf;
+    aesti_expand_key(&ctx->aes_ctx, key, BLOCKCIPHER_KEY_SIZE);
     ctx->default_tweak_len = HCTR_DEFAULT_TWEAK_LEN;
+
+    buf.a = 0;
+    buf.b = 0;
+    aes_encrypt(&ctx->aes_ctx, &h, (u8*)&buf);
+    buf.b = cpu_to_le64(1);
+    aes_encrypt(&ctx->aes_ctx, &ctx->L, (u8*)&buf);
+
+    polyhash_setkey_generic(&ctx->polyhash_key, &h);
 }
 
 void hctr_setkey_simd(struct hctr_ctx *ctx, const u8 *key)
 {
-    polyhash_setkey_simd(&ctx->polyhash_key, key);
-	aesti_expand_key(&ctx->aes_ctx, key + HCTR_HASH_KEY_SIZE, BLOCKCIPHER_KEY_SIZE);
+    u8 h[BLOCKCIPHER_BLOCK_SIZE];
+    u128 buf;
+    aesti_expand_key(&ctx->aes_ctx, key, BLOCKCIPHER_KEY_SIZE);
     ctx->default_tweak_len = HCTR_DEFAULT_TWEAK_LEN;
+    
+    buf.a = 0;
+    buf.b = 0;
+    #ifdef __x86_64__
+        aesni_ecb_enc(&ctx->aes_ctx, &h, &buf, XCTR_BLOCK_SIZE);
+    #endif
+    #ifdef __aarch64__
+        ce_aes_ecb_encrypt(&h, &buf, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
+    #endif
+    buf.b = cpu_to_le64(1);
+    #ifdef __x86_64__
+        aesni_ecb_enc(&ctx->aes_ctx, &ctx->L, &buf, XCTR_BLOCK_SIZE);
+    #endif
+    #ifdef __aarch64__
+        ce_aes_ecb_encrypt(&ctx->L, &buf, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
+    #endif
+    
+    polyhash_setkey_simd(&ctx->polyhash_key, &h);
 }
 
 /*
@@ -52,7 +80,8 @@ void hctr_setkey_simd(struct hctr_ctx *ctx, const u8 *key)
 void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
 		       size_t nbytes, const u8 *tweak, size_t tweak_len, bool encrypt, bool simd)
 {
-    struct polyhash_state polystate;
+    struct polyhash_state polystate1;
+    struct polyhash_state polystate2;
     u8 digest[POLYHASH_DIGEST_SIZE];
     u8 MM[BLOCKCIPHER_BLOCK_SIZE];
     u8 CC[BLOCKCIPHER_BLOCK_SIZE];
@@ -73,13 +102,14 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     C = dst;
     D = dst + BLOCKCIPHER_BLOCK_SIZE;
 
-    polyhash_init(&polystate);
-    polyhash_update(&ctx->polyhash_key, &polystate, N, N_bytes, simd);
-    polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len, simd);
-    polyhash_emit(&ctx->polyhash_key, &polystate, (u8 *)&digest, simd);
-
-    xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
+    polyhash_init(&polystate1);
+    polyhash_hash_tweak(&ctx->polyhash_key, &polystate1, tweak, tweak_len, N_bytes % POLYHASH_BLOCK_SIZE == 0, simd);
+    memcpy(&polystate2, &polystate1, sizeof(polystate1));
+    polyhash_hash_message(&ctx->polyhash_key, &polystate1, N, N_bytes, simd);
+    polyhash_emit(&ctx->polyhash_key, &polystate1, (u8 *)&digest, simd);
     
+    xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
+
 #ifdef __x86_64__
     if(encrypt) {
         aesni_ecb_enc(&ctx->aes_ctx, &CC, MM, BLOCKCIPHER_BLOCK_SIZE);
@@ -98,14 +128,15 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
 #endif
     
     xor(&S, &MM, &CC, BLOCKCIPHER_BLOCK_SIZE);
+    xor(&S, &ctx->L, &S, BLOCKCIPHER_BLOCK_SIZE);
 
     hctr_ctr_crypt(&ctx->aes_ctx, D, N, N_bytes, &S, simd);
-
-    polyhash_init(&polystate);
-    polyhash_update(&ctx->polyhash_key, &polystate, D, N_bytes, simd);
-    polyhash_update(&ctx->polyhash_key, &polystate, tweak, tweak_len, simd);
-    polyhash_emit(&ctx->polyhash_key, &polystate, (u8 *)&digest, simd);
-
+    
+    polyhash_init(&polystate2);
+    polyhash_hash_tweak(&ctx->polyhash_key, &polystate2, tweak, tweak_len, N_bytes % POLYHASH_BLOCK_SIZE == 0, simd);
+    polyhash_hash_message(&ctx->polyhash_key, &polystate2, D, N_bytes, simd);
+    polyhash_emit(&ctx->polyhash_key, &polystate2, (u8 *)&digest, simd);
+    
     xor(C, &CC, digest, BLOCKCIPHER_BLOCK_SIZE);
 }
 
