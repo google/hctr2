@@ -6,6 +6,7 @@
 
 import copy
 
+
 class Cipher(object):
     def copy(self): return copy.deepcopy(self)
 
@@ -38,6 +39,7 @@ class Cipher(object):
 
     def test_input_lengths(self):
         yield self.lengths()
+
 
 class Blockcipher(Cipher):
     def make_testvector(self, input, description):

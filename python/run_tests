@@ -17,8 +17,10 @@ import tvgen
 verbose = False
 path = paths.top / "test_vectors" / "ours"
 
+
 def write_other(ciphers):
-    if ciphers is None: ciphers=cipherlist.common_ciphers
+    if ciphers is None:
+        ciphers = cipherlist.common_ciphers
     for cipher in ciphers:
         test = cipher.name().lower()
         fname = path / cipher.name() / "other.json"
@@ -26,17 +28,22 @@ def write_other(ciphers):
         testmod = importlib.import_module(f"test_{test}")
         hexjson.write_using_hex(fname, testmod.test_vectors(cipher))
 
+
 def write_ours(ciphers):
-    if ciphers is None: ciphers=cipherlist.our_test_ciphers
+    if ciphers is None:
+        ciphers = cipherlist.our_test_ciphers
     for cipher in ciphers:
         tvgen.write_tests(cipher, path)
+
 
 def write(ciphers):
     write_other(ciphers)
     write_ours(ciphers)
 
+
 def check_other(ciphers):
-    if ciphers is None: ciphers=cipherlist.common_ciphers
+    if ciphers is None:
+        ciphers = cipherlist.common_ciphers
     for cipher in ciphers:
         test = cipher.name().lower()
         print(f"======== {test} ========")
@@ -44,10 +51,13 @@ def check_other(ciphers):
         for r in testmod.test_vectors(cipher):
             tvgen.check_testvector(cipher, r, verbose)
 
+
 def check(ciphers):
-    if ciphers is None: ciphers=cipherlist.our_test_ciphers
+    if ciphers is None:
+        ciphers = cipherlist.our_test_ciphers
     for cipher in ciphers:
         tvgen.check_tests(cipher, path, verbose)
+
 
 def main():
     if len(sys.argv) not in [2, 3]:
@@ -55,7 +65,8 @@ def main():
     command = sys.argv[1]
     ciphers = None
     if len(sys.argv) == 3:
-        ciphers = [c for c in cipherlist.all_ciphers if c.name() == sys.argv[2]]
+        ciphers = [c for c in cipherlist.all_ciphers if c.name() ==
+                   sys.argv[2]]
         if not ciphers:
             raise Exception(f"No cipher known called {sys.argv[2]}")
     if command == "write_other":
@@ -70,6 +81,7 @@ def main():
         check(ciphers)
     else:
         raise Exception("Bad args: {} use write or check".format(sys.argv[1:]))
+
 
 if __name__ == "__main__":
     main()

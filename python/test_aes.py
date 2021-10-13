@@ -6,6 +6,7 @@
 
 import paths
 
+
 def parse_tvs():
     p = paths.top / "test_vectors" / "other" / "aes"
     for fn in p.iterdir():
@@ -29,9 +30,11 @@ def parse_tvs():
                 d.update(file=fn.name, stanza=stanza)
                 yield d
 
+
 def test_vectors(x):
     for d in parse_tvs():
-        bd = {k: bytes.fromhex(d[k]) for k in ["KEY", "PLAINTEXT", "CIPHERTEXT"]}
+        bd = {k: bytes.fromhex(d[k])
+              for k in ["KEY", "PLAINTEXT", "CIPHERTEXT"]}
         x.set_keylen(len(bd["KEY"]))
         yield {
             'cipher': x.variant,
@@ -41,10 +44,12 @@ def test_vectors(x):
             'ciphertext': bd['CIPHERTEXT'],
         }
 
+
 def run_test():
     x = aes.AES()
     for r in test_vectors(x):
         x.check_testvector(r)
+
 
 if __name__ == "__main__":
     run_test()

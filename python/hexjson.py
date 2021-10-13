@@ -6,26 +6,29 @@
 
 import json
 
+
 def recursive_hex(o):
-    if type(o) == dict:
+    if isinstance(o, dict):
         res = {}
         for k, v in o.items():
             if k.endswith("_hex"):
-                raise Exception(f"Disallowed dict key {k}: we reserve keys that end _hex")
-            if type(v) == bytes:
+                raise Exception(
+                    f"Disallowed dict key {k}: we reserve keys that end _hex")
+            if isinstance(v, bytes):
                 res[k + "_hex"] = v.hex()
             else:
                 res[k] = recursive_hex(v)
         return res
-    elif type(o) == list:
+    elif isinstance(o, list):
         return [recursive_hex(i) for i in o]
-    elif type(o) == bytes:
+    elif isinstance(o, bytes):
         raise Exception("Can't recursive_hex bytes not contained in dict")
     else:
         return o
 
+
 def recursive_unhex(o):
-    if type(o) == dict:
+    if isinstance(o, dict):
         res = {}
         for k, v in o.items():
             if k.endswith("_hex"):
@@ -33,19 +36,22 @@ def recursive_unhex(o):
             else:
                 res[k] = recursive_unhex(v)
         return res
-    elif type(o) == list:
+    elif isinstance(o, list):
         return [recursive_unhex(i) for i in o]
     else:
         return o
+
 
 def write_using_hex(fn, it):
     fn.parent.mkdir(parents=True, exist_ok=True)
     with fn.open("w") as f:
         json.dump([recursive_hex(tv) for tv in it], f, indent=4)
 
+
 def loadjson(fn):
     with fn.open() as f:
         return json.load(f)
+
 
 def iter_unhex(fn):
     for htv in loadjson(fn):
