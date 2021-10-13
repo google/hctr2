@@ -5,11 +5,13 @@
 # https://opensource.org/licenses/MIT.
 
 import aes
+import hctr2
 
 common_ciphers = [
 ]
 
 our_test_ciphers = common_ciphers + [
+    hctr2.HCTR2()
 ]
 
 all_ciphers = our_test_ciphers + [

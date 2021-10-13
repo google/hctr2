@@ -46,17 +46,17 @@ class HCTR2(cipher.Blockcipher):
           'blockcipher': bs.variant,
           'lengths': {
               'key': bs.variant['lengths']['key'],
-              'blocksize': 16,
+              'block': 16,
               'tweak': t
           }}
 
   def encrypt(self, pt, key, tweak):
     assert len(key) == self.lengths()['key']
-    assert len(pt) >= self.lengths()['blocksize']
+    assert len(pt) >= self.lengths()['block']
     assert len(tweak) >= self.lengths()['tweak']
     block_key = key
-    hash_key = self._block.encrypt((0).to_bytes(self.lengths()['blocksize'], byteorder='little'), key=block_key)
-    l = self._block.encrypt((1).to_bytes(self.lengths()['blocksize'], byteorder='little'), key=block_key)
+    hash_key = self._block.encrypt((0).to_bytes(self.lengths()['block'], byteorder='little'), key=block_key)
+    l = self._block.encrypt((1).to_bytes(self.lengths()['block'], byteorder='little'), key=block_key)
     m = pt[0:16]
     n = pt[16:]
     mm = Crypto.Util.strxor.strxor(m, self._polyhash.hash(hash_key, n, tweak))
@@ -68,11 +68,11 @@ class HCTR2(cipher.Blockcipher):
 
   def decrypt(self, ct, key, tweak):
     assert len(key) == self.lengths()['key']
-    assert len(ct) >= self.lengths()['blocksize']
+    assert len(ct) >= self.lengths()['block']
     assert len(tweak) >= self.lengths()['tweak']
     block_key = key
-    hash_key = self._block.encrypt((0).to_bytes(self.lengths()['blocksize'], byteorder='little'), key=block_key)
-    l = self._block.encrypt((1).to_bytes(self.lengths()['blocksize'], byteorder='little'), key=block_key)
+    hash_key = self._block.encrypt((0).to_bytes(self.lengths()['block'], byteorder='little'), key=block_key)
+    l = self._block.encrypt((1).to_bytes(self.lengths()['block'], byteorder='little'), key=block_key)
     u = ct[0:16]
     v = ct[16:]
     uu = Crypto.Util.strxor.strxor(u, self._polyhash.hash(hash_key, v, tweak))
@@ -85,3 +85,11 @@ class HCTR2(cipher.Blockcipher):
 
   def _setup_variant(self):
     self._block, self._xctr = self._lookup_block_pair(self.variant['blockcipher'])
+
+  def test_input_lengths(self):
+    v = dict(self.lengths())
+    b = v['block']
+    del v['block']
+    for i in range(b*10):
+      for m in "plaintext", "ciphertext":
+        yield {**v, m: b+i}
