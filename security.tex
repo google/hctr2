@@ -150,7 +150,7 @@ From this we infer three properties of \(H_{\hgen}(T, M)\):
     Proof: since \(H(T, M)\) is nonzero and has
     a zero constant term,
     the polynomial \(H(T, M) \xor g\) 
-    is nonzero and has the same degree, \(d(T, M)\).
+    is nonzero and has the same degree, at most \(d(T, M)\).
     \item[Property 2] 
     For any \((T_1, M_1) \neq (T_2, M_2)\) and any \(g \in \bin^n\)
     \begin{align*}
@@ -539,7 +539,7 @@ it is only decryption queries where
 probabilities may be above \(1/2^n\).
 
 \subsubsection{Summing collision bounds}
-To establish an upper bound that any pair will collide,
+To establish an upper bound on the probability that any pair will collide,
 we sum collision probabilities
 for all pairs in the multiset \(\mathcal{D}\)
 and all pairs in the multiset \(\mathcal{R}\).

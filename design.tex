@@ -16,8 +16,8 @@ features that make it an attractive design:
 \begin{itemize}
     \item An unbalanced Feistel-like network based on universal
     hashing, with a single block encryption on the narrow side.
-    This gives us excellent performance and parallelizability,
-    as well as very natural handling of messages that are not
+    This gives excellent performance and parallelizability,
+    as well as natural handling of messages that are not
     a multiple of the block size. 
     \item Use of \(\MM \xor \UU\) in generating \(S\), which means
     that an adversary's control over \(S\) is very limited for both
@@ -124,7 +124,7 @@ defined in \cite{aes_gcm_siv,aes_gcm_siv_rfc}.
 POLYVAL incurs a small cost in specification and proof complexity because 
 the polynomial is evaluated not at the parameter \(\hgen\)
 but at \(x^{-n}\hgen\)
-so that Montgomery mutiplication\cite{montmul} can be key-agile.
+so that Montgomery multiplication\cite{montmul} can be key-agile.
 However it is carefully designed, efficient
 on processors with carryless multiply instructions
 (1.2x faster than GHASH according to \cite{aes_gcm_siv})
@@ -197,8 +197,9 @@ We considered several alternatives:
 attractive since they only need \(\floor{l/2}\) multiplications
 to evaluate. However, they pose a number of difficulties. \cite{brweval} gives a
 nonrecursive algorithm that handles variable-length messages, but it is complex,
-uses temporary space that grows with the message length, and does not handle
-incremental computation well. Standard polynomials avoid these issues;
+uses temporary space that grows logarithmically with the message length,
+and does not handle incremental computation well.
+Standard polynomials avoid these issues;
 fast and correct implementations are easier to write,
 and implementers have much more control over
 code size, precomputation, instruction-level

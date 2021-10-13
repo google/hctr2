@@ -13,8 +13,9 @@
 \section{Implementation}\label{implementation}
 At \url{https://github.com/google/hctr2}
 we provide a (very slow) reference implementation of HCTR2 in Python,
-a portable C implementation, and assembly implementations for
-x86-64 and ARM64 making use of AES acceleration instructions.
+a portable C implementation,
+and assembly implementations for x86-64 and ARM64
+making use of AES acceleration and carryless multiplication instructions.
 We adapted our assembly implementation of XCTR mode from
 the Linux kernel's CTR mode implementation, retaining all parallelism.
 
