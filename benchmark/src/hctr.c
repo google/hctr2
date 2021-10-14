@@ -72,6 +72,16 @@ void hctr_setkey_simd(struct hctr_ctx *ctx, const u8 *key)
     polyhash_setkey_simd(&ctx->polyhash_key, &h);
 }
 
+void hctr_setkey(struct hctr_ctx *ctx, const u8 *key, bool simd)
+{
+    if(simd) {
+        hctr_setkey_simd(ctx, key);
+    }
+    else {
+        hctr_setkey_generic(ctx, key);
+    }
+}
+
 /*
  * Assume that nbytes is a multiple of BLOCKCIPHER_BLOCK_SIZE
  *
@@ -158,9 +168,47 @@ void hctr_decrypt_simd(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     hctr_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, false, true);
 }
 
+struct hctr2_testvec {
+    struct testvec_buffer key;
+    struct testvec_buffer tweak;
+    struct testvec_buffer plaintext;
+    struct testvec_buffer ciphertext;
+};
+
+#include "hctr2_testvecs.h"
+
+static void test_hctr2_testvec(const struct hctr2_testvec *v, bool simd)
+{
+    size_t len = v->plaintext.len;
+    u8 ptext[len];
+    u8 ctext[len];
+    struct hctr_ctx ctx;
+
+    ASSERT(v->key.len == HCTR_KEY_SIZE);
+    ASSERT(v->plaintext.len >= BLOCKCIPHER_BLOCK_SIZE);
+    ASSERT(v->ciphertext.len == v->plaintext.len);
+
+    hctr_setkey(&ctx, v->key.data, simd);
+    hctr_crypt(&ctx, &ctext, v->plaintext.data, v->plaintext.len, v->tweak.data, v->tweak.len, true, simd);
+    ASSERT(!memcmp(ctext, v->ciphertext.data, len));
+    hctr_crypt(&ctx, &ptext, &ctext, v->plaintext.len, v->tweak.data, v->tweak.len, false, simd);
+    ASSERT(!memcmp(ptext, v->plaintext.data, len));
+}
+
+static void test_hctr2_testvecs(void)
+{  
+    size_t i;
+
+    for (i = 0; i < ARRAY_SIZE(hctr2_aes256_tv); i++) {
+        test_hctr2_testvec(&hctr2_aes256_tv[i], false);
+        test_hctr2_testvec(&hctr2_aes256_tv[i], true);
+    }
+}
+
 
 void test_hctr(void)
 {
+    test_hctr2_testvecs();
 #define ALGNAME		"HCTR"
 #define KEY_BYTES	HCTR_KEY_SIZE
 #define IV_BYTES	HCTR_DEFAULT_TWEAK_LEN

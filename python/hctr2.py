@@ -23,7 +23,7 @@ class HCTR2(cipher.Blockcipher):
 
   def _blockcipher_pairs(self):
     ciphers = []
-    for kl in [16, 24, 32]:
+    for kl in [32]:
       a = aes.AES()
       a.set_keylen(kl)
       c = ctr.XCTR()
@@ -39,21 +39,18 @@ class HCTR2(cipher.Blockcipher):
 
   def variants(self):
     # tweak length in bytes
-    for t in [0, 1, 2, 4, 8, 16, 32, 64, 128, 256]:
       for (bs, ctr) in self._blockcipher_pairs():
         yield {
           'cipher': self.name(),
           'blockcipher': bs.variant,
           'lengths': {
-              'key': bs.variant['lengths']['key'],
-              'block': 16,
-              'tweak': t
-          }}
+            'key': bs.variant['lengths']['key'],
+            'block': 16,
+        }}
 
   def encrypt(self, pt, key, tweak):
     assert len(key) == self.lengths()['key']
     assert len(pt) >= self.lengths()['block']
-    assert len(tweak) >= self.lengths()['tweak']
     block_key = key
     hash_key = self._block.encrypt((0).to_bytes(self.lengths()['block'], byteorder='little'), key=block_key)
     l = self._block.encrypt((1).to_bytes(self.lengths()['block'], byteorder='little'), key=block_key)
@@ -69,7 +66,6 @@ class HCTR2(cipher.Blockcipher):
   def decrypt(self, ct, key, tweak):
     assert len(key) == self.lengths()['key']
     assert len(ct) >= self.lengths()['block']
-    assert len(tweak) >= self.lengths()['tweak']
     block_key = key
     hash_key = self._block.encrypt((0).to_bytes(self.lengths()['block'], byteorder='little'), key=block_key)
     l = self._block.encrypt((1).to_bytes(self.lengths()['block'], byteorder='little'), key=block_key)
@@ -90,6 +86,11 @@ class HCTR2(cipher.Blockcipher):
     v = dict(self.lengths())
     b = v['block']
     del v['block']
-    for i in range(b*10):
+    for t in [0, 1, 32, 256]:
       for m in "plaintext", "ciphertext":
-        yield {**v, m: b+i}
+        yield {**v, m: 17, "tweak": t}
+        yield {**v, m: 31, "tweak": t}
+        yield {**v, m: 255, "tweak": t}
+      for i in range(5):
+        for m in "plaintext", "ciphertext":
+          yield {**v, m: b+i*b, "tweak": t}

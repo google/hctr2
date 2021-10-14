@@ -67,7 +67,7 @@ def generate_random(lengths):
         yield d, f"Random ({i:2})"
 
 def generate_testinputs(lengths):
-    #yield from generate_onebit(lengths)
-    #yield from generate_ranges(lengths)
-    #yield from generate_repeated(lengths)
+    yield from generate_onebit(lengths)
+    yield from generate_ranges(lengths)
+    yield from generate_repeated(lengths)
     yield from generate_random(lengths)
