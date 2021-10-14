@@ -56,12 +56,11 @@ class Polyval(Hash):
     def hash(self, key, message):
         blocksize = self.lengths()['blocksize']
         assert len(message) % blocksize == 0
-        hgen = self.gf(int.from_bytes(key, byteorder="little"))
+        hgen = self.gf.from_bytes(key, byteorder="little")
         hpoly = hgen * self.polyval_const
         hash_result = self.gf(0)
         for i in range(0, len(message), blocksize):
-            hash_result += self.gf(int.from_bytes(
-                message[i:i + blocksize], byteorder='little'))
+            hash_result += self.gf.from_bytes(
+                message[i:i + blocksize], byteorder='little')
             hash_result *= hpoly
-        return int(hash_result).to_bytes(
-            self.lengths()['blocksize'], byteorder='little')
+        return hash_result.to_bytes(byteorder='little')

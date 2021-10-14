@@ -10,6 +10,8 @@ class GF(object):
     def __init__(self, poly_terms):
         exponents = list(map(lambda x: int(x.replace("X^", "")), poly_terms))
         self.degree = max(exponents)
+        assert self.degree % 8 == 0
+        self.blocksize = self.degree // 8
         self.modulus = sum(list(map(lambda x: 1 << x, exponents)))
 
     class Element(object):
@@ -19,23 +21,35 @@ class GF(object):
 
         def __add__(self, other):
             assert self.parent.modulus == other.parent.modulus
-            return self.parent.add(self.value, other.value)
+            return self.parent._add(self.value, other.value)
 
         def __mul__(self, other):
             assert self.parent.modulus == other.parent.modulus
-            return self.parent.mul(self.value, other.value)
+            return self.parent._mul(self.value, other.value)
 
         def __pow__(self, other):
             assert isinstance(other, int)
-            return self.parent.pow(self.value, other)
+            return self.parent._pow(self.value, other)
 
+        # FIXME remove this
         def __int__(self):
             return self.value
 
+        def to_bytes(self, *, byteorder):
+            return self.parent._to_bytes(self.value, byteorder=byteorder)
+
+    def from_bytes(self, b, *, byteorder):
+        assert len(b) == self.blocksize
+        return self.Element(self, int.from_bytes(b, byteorder=byteorder))
+
+    # FIXME remove this
     def __call__(self, value):
         return self.Element(self, value)
 
-    def mul(self, a, b):
+    def _add(self, a, b):
+        return self(a ^ b)
+
+    def _mul(self, a, b):
         p = 0
         for i in range(self.degree):
             if((b & 1) == 1):
@@ -48,12 +62,12 @@ class GF(object):
                 a ^= self.modulus
         return self(p)
 
-    def add(self, a, b):
-        return self(a ^ b)
-
     # TODO: Exponent by square
-    def pow(self, a, e):
+    def _pow(self, a, e):
         r = self(1)
         for i in range(e):
             r = r * self(a)
         return r
+
+    def _to_bytes(self, value, *, byteorder):
+        return value.to_bytes(self.blocksize, byteorder=byteorder)
