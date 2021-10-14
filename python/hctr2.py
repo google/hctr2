@@ -6,17 +6,17 @@
 #
 # Author: Nathan Huckleberry <nhuck@google.com>
 
-import Crypto.Util.strxor
+from Crypto.Util.strxor import strxor
 
 import aes
 import cipher
 import ctr
-import polyhash
+import polyval
 
 
 class HCTR2(cipher.Blockcipher):
     def __init__(self):
-        self._polyhash = polyhash.PolyHash()
+        self._polyval = polyval.Polyval()
 
     def variant_name(self):
         return "{}_{}".format(self.name(),
@@ -47,65 +47,62 @@ class HCTR2(cipher.Blockcipher):
                     'blockcipher': bs.variant,
                     'lengths': {
                         'key': bs.variant['lengths']['key'],
-                        'block': 16,
+                        'block': 16, # FIXME: blocksize, be consistent
                         'tweak': t
                     }}
+
+    def _pad(self, l, s):
+        return s + b'\x00' * ((-len(s)) % l)
+
+    def _hash(self, hash_key, message, tweak):
+        blocksize = self.lengths()['block']
+        awkward = len(message) % blocksize != 0
+        lengthint = len(tweak) * 8 * 2 + 2
+        if awkward:
+            lengthint += 1
+        blocks = lengthint.to_bytes(blocksize, byteorder='little')
+        blocks += self._pad(blocksize, tweak)
+        if awkward:
+            blocks += self._pad(blocksize, message + b'\x01')
+        else:
+            blocks += message
+        return self._polyval.hash(hash_key, blocks)
+
+    def _gen(self, key, i):
+        b = i.to_bytes(self.lengths()['block'], byteorder='little')
+        return self._block.encrypt(b, key=key)
 
     def encrypt(self, pt, key, tweak):
         assert len(key) == self.lengths()['key']
         assert len(pt) >= self.lengths()['block']
         assert len(tweak) >= self.lengths()['tweak']
-        block_key = key
-        hash_key = self._block.encrypt(
-            (0).to_bytes(
-                self.lengths()['block'],
-                byteorder='little'),
-            key=block_key)
-        l = self._block.encrypt(
-            (1).to_bytes(
-                self.lengths()['block'],
-                byteorder='little'),
-            key=block_key)
+        hash_key = self._gen(key, 0)
+        l = self._gen(key, 1)
         m = pt[0:16]
         n = pt[16:]
-        mm = Crypto.Util.strxor.strxor(
-            m, self._polyhash.hash(
-                hash_key, n, tweak))
-        uu = self._block.encrypt(mm, key=block_key)
-        s = Crypto.Util.strxor.strxor(Crypto.Util.strxor.strxor(mm, uu), l)
-        v = self._xctr.encrypt(n, block_key, s)
-        u = Crypto.Util.strxor.strxor(
-            uu, self._polyhash.hash(
-                hash_key, v, tweak))
-        return (u + v)[0:len(pt)]
+        mm = strxor(m, self._hash(hash_key, n, tweak))
+        uu = self._block.encrypt(mm, key=key)
+        s = strxor(strxor(mm, uu), l)
+        # FIXME shouldn't be necessary to clip
+        v = self._xctr.encrypt(n, key, s)[0:len(n)]
+        u = strxor(uu, self._hash(hash_key, v, tweak))
+        return u + v
 
     def decrypt(self, ct, key, tweak):
         assert len(key) == self.lengths()['key']
         assert len(ct) >= self.lengths()['block']
         assert len(tweak) >= self.lengths()['tweak']
-        block_key = key
-        hash_key = self._block.encrypt(
-            (0).to_bytes(
-                self.lengths()['block'],
-                byteorder='little'),
-            key=block_key)
-        l = self._block.encrypt(
-            (1).to_bytes(
-                self.lengths()['block'],
-                byteorder='little'),
-            key=block_key)
+        hash_key = self._gen(key, 0)
+        l = self._gen(key, 1)
         u = ct[0:16]
         v = ct[16:]
-        uu = Crypto.Util.strxor.strxor(
-            u, self._polyhash.hash(
-                hash_key, v, tweak))
-        mm = self._block.decrypt(uu, key=block_key)
-        s = Crypto.Util.strxor.strxor(Crypto.Util.strxor.strxor(mm, uu), l)
-        n = self._xctr.decrypt(v, block_key, s)
-        m = Crypto.Util.strxor.strxor(
-            mm, self._polyhash.hash(
-                hash_key, n, tweak))
-        return (m + n)[0:len(ct)]
+        uu = strxor(u, self._hash(hash_key, v, tweak))
+        mm = self._block.decrypt(uu, key=key)
+        s = strxor(strxor(mm, uu), l)
+        # FIXME shouldn't be necessary to clip
+        n = self._xctr.encrypt(v, key, s)[0:len(v)]
+        m = strxor(mm, self._hash(hash_key, n, tweak))
+        return m + n
 
     def _setup_variant(self):
         self._block, self._xctr = self._lookup_block_pair(
