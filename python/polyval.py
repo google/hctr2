@@ -5,6 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 import cipher
+import gf
 
 
 class Hash(cipher.Cipher):
@@ -24,6 +25,12 @@ class Hash(cipher.Cipher):
 class Polyval(Hash):
     def __init__(self):
         super().__init__()
+        self.gf = gf.GF(["X^128", "X^127", "X^126", "X^121", "X^0"])
+        self.polyval_const = self.gf(
+            (1 << 127) | (
+                1 << 124) | (
+                1 << 121) | (
+                1 << 114) | (1))
         self.choose_variant(lambda x: True)
 
     def variant_name(self):
@@ -47,4 +54,14 @@ class Polyval(Hash):
             yield {**v, "message": mlen}
 
     def hash(self, key, message):
-        return bytes([0] * 16)
+        blocksize = self.lengths()['blocksize']
+        assert len(message) % blocksize == 0
+        hgen = self.gf(int.from_bytes(key, byteorder="little"))
+        hpoly = hgen * self.polyval_const
+        hash_result = self.gf(0)
+        for i in range(0, len(message), blocksize):
+            hash_result += self.gf(int.from_bytes(
+                message[i:i + blocksize], byteorder='little'))
+            hash_result *= hpoly
+        return int(hash_result).to_bytes(
+            self.lengths()['blocksize'], byteorder='little')
