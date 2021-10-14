@@ -4,7 +4,9 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+import hexjson
 import paths
+import polyval
 
 
 def parse_tvs():
@@ -17,7 +19,7 @@ def parse_tvs():
             l = l.strip()
             if l == "":
                 if d:
-                    d[k] = v
+                    d[k] = bytes.fromhex(v)
                     yield d
                     d = None
                     k = None
@@ -26,22 +28,33 @@ def parse_tvs():
                 if d is None:
                     d = {}
                 else:
-                    d[k] = v
+                    d[k] = bytes.fromhex(v)
                 k, v = l.split("=", 2)
                 k = k.strip()
                 v = v.strip()
             else:
                 v += l
         if d is not None:
-            d[k] = v
+            d[k] = bytes.fromhex(v)
             yield d
 
 
+def test_vectors(pv):
+    for tv in parse_tvs():
+        yield {
+            'cipher': pv.variant,
+            'description': "From RFC",
+            'input': {
+                'key': tv['Record authentication key'],
+                'message': tv['POLYVAL input'],
+            },
+            'hash': tv['POLYVAL result'],
+        }
+
+
 def print_tvs():
-    for d in parse_tvs():
-        for k, v in d.items():
-            print(f"{k} = {v}")
-        print()
+    pv = polyval.Polyval()
+    hexjson.dump_using_hex(test_vectors(pv))
 
 
 if __name__ == "__main__":

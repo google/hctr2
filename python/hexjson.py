@@ -42,6 +42,11 @@ def recursive_unhex(o):
         return o
 
 
+def dump_using_hex(it):
+    for tv in it:
+        print(json.dumps([recursive_hex(tv) for tv in it], indent=4))
+
+
 def write_using_hex(fn, it):
     fn.parent.mkdir(parents=True, exist_ok=True)
     with fn.open("w") as f:
