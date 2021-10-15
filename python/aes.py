@@ -10,9 +10,6 @@ import cipher
 
 
 class AES(cipher.Blockcipher):
-    def set_keylen(self, k):
-        self.choose_variant(lambda v: v["lengths"]["key"] == k)
-
     def variant_name(self):
         l = self.lengths()
         return "{}{}".format(self.name(), l['key'] * 8)

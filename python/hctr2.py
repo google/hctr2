@@ -63,17 +63,18 @@ class HCTR2(cipher.Blockcipher):
             blocks += message
         return self._polyval.hash(hash_key, blocks)
 
-    def _gen(self, key, i):
+    def _schedule(self, key, i):
         b = i.to_bytes(self.lengths()['block'], byteorder='little')
         return self._block.encrypt(b, key=key)
 
     def encrypt(self, pt, key, tweak):
+        blocksize = self.lengths()['block']
         assert len(key) == self.lengths()['key']
-        assert len(pt) >= self.lengths()['block']
-        hash_key = self._gen(key, 0)
-        l = self._gen(key, 1)
-        m = pt[0:16]
-        n = pt[16:]
+        assert len(pt) >= blocksize
+        hash_key = self._schedule(key, 0)
+        l = self._schedule(key, 1)
+        m = pt[0:blocksize]
+        n = pt[blocksize:]
         mm = strxor(m, self._hash(hash_key, n, tweak))
         uu = self._block.encrypt(mm, key=key)
         s = strxor(strxor(mm, uu), l)
@@ -82,12 +83,13 @@ class HCTR2(cipher.Blockcipher):
         return u + v
 
     def decrypt(self, ct, key, tweak):
+        blocksize = self.lengths()['block']
         assert len(key) == self.lengths()['key']
-        assert len(ct) >= self.lengths()['block']
-        hash_key = self._gen(key, 0)
-        l = self._gen(key, 1)
-        u = ct[0:16]
-        v = ct[16:]
+        assert len(ct) >= blocksize
+        hash_key = self._schedule(key, 0)
+        l = self._schedule(key, 1)
+        u = ct[0:blocksize]
+        v = ct[blocksize:]
         uu = strxor(u, self._hash(hash_key, v, tweak))
         mm = self._block.decrypt(uu, key=key)
         s = strxor(strxor(mm, uu), l)

@@ -18,8 +18,6 @@ path = paths.top / "test_vectors" / "ours"
 
 
 def write(ciphers):
-    if ciphers is None:
-        ciphers = cipherlist.ciphers
     for cipher in ciphers:
         tvgen.write_tests(cipher, path)
 

@@ -44,7 +44,7 @@ def recursive_unhex(o):
 
 def dump_using_hex(it):
     for tv in it:
-        print(json.dumps([recursive_hex(tv) for tv in it], indent=4))
+        print(json.dumps(recursive_hex(tv), indent=4))
 
 
 def write_using_hex(fn, it):

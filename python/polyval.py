@@ -42,7 +42,7 @@ class Polyval(Hash):
         yield {
             'cipher': 'Polyval',
             'lengths': {
-                'key': 16,
+                'key': self.gf.blocksize,
             }
         }
 
