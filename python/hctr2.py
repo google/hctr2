@@ -25,9 +25,10 @@ class HCTR2(cipher.Blockcipher):
         self._xctr = xctr.XCTR()
 
     def _setup_variant(self):
-        self._block.variant = self.variant['blockcipher']
-        self._xctr.choose_variant(lambda v:
-            v['blockcipher'] == self.variant['blockcipher'])
+        bc = self.variant['blockcipher']
+        self._block.variant = bc
+        self._xctr.choose_variant(lambda v: v['blockcipher'] == bc)
+        assert bc['lengths']['block'] == self._polyval.lengths()['key']
         return super()._setup_variant()
 
     def variant_name(self):
@@ -36,14 +37,12 @@ class HCTR2(cipher.Blockcipher):
 
     def variants(self):
         for bs in self._block.variants():
-            assert bs['lengths']['block'] == 16
+            assert bs['lengths']['block'] == self._polyval.lengths()['key']
             yield {
                 'cipher': self.name(),
                 'blockcipher': bs,
-                'lengths': {
-                    'key': bs['lengths']['key'],
-                    'block': 16,
-                }}
+                'lengths': bs['lengths'],
+            }
 
     def _pad(self, l, s):
         return s + b'\x00' * ((-len(s)) % l)

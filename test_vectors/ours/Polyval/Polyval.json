@@ -3,9 +3,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 1)",
@@ -19,9 +17,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 2)",
@@ -35,9 +31,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 3)",
@@ -51,9 +45,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 4)",
@@ -67,9 +59,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 5)",
@@ -83,9 +73,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 1)",
@@ -99,9 +87,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 2)",
@@ -115,9 +101,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 3)",
@@ -131,9 +115,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 4)",
@@ -147,9 +129,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 5)",
@@ -163,9 +143,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 1)",
@@ -179,9 +157,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 2)",
@@ -195,9 +171,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 3)",
@@ -211,9 +185,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 4)",
@@ -227,9 +199,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 5)",
@@ -243,9 +213,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 1)",
@@ -259,9 +227,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 2)",
@@ -275,9 +241,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 3)",
@@ -291,9 +255,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 4)",
@@ -307,9 +269,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 5)",
@@ -323,9 +283,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 1)",
@@ -339,9 +297,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 2)",
@@ -355,9 +311,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 3)",
@@ -371,9 +325,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 4)",
@@ -387,9 +339,7 @@
         "cipher": {
             "cipher": "Polyval",
             "lengths": {
-                "key": 16,
-                "block": 16,
-                "output": 16
+                "key": 16
             }
         },
         "description": "Random ( 5)",

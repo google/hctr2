@@ -43,20 +43,16 @@ class Polyval(Hash):
             'cipher': 'Polyval',
             'lengths': {
                 'key': 16,
-                'block': 16,
-                'output': 16,
             }
         }
 
     def test_input_lengths(self):
         v = dict(self.lengths())
-        del v["block"]
-        del v["output"]
         for mlen in range(0, 80, 16):
             yield {**v, "message": mlen}
 
     def hash(self, key, message):
-        blocksize = self.lengths()['block']
+        blocksize = self.lengths()['key']
         assert len(message) % blocksize == 0
         hgen = self.gf.from_bytes(key, byteorder="little")
         hpoly = hgen * self.polyval_const
