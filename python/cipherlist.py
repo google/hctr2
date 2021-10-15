@@ -6,8 +6,10 @@
 
 import hctr2
 import polyval
+import xctr
 
 ciphers = [
     polyval.Polyval(),
+    xctr.XCTR(),
     hctr2.HCTR2()
 ]

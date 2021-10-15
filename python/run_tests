@@ -28,9 +28,10 @@ def check(ciphers):
     for cipher in ciphers:
         test = cipher.name().lower()
         print(f"======== {test} ========")
-        testmod = importlib.import_module(f"test_{test}")
-        for r in testmod.test_vectors(cipher):
-            tvgen.check_testvector(cipher, r, verbose)
+        if cipher._has_external_testvectors:
+            testmod = importlib.import_module(f"test_{test}")
+            for r in testmod.test_vectors(cipher):
+                tvgen.check_testvector(cipher, r, verbose)
         tvgen.check_tests(cipher, path, verbose)
 
 

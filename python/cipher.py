@@ -8,6 +8,8 @@ import copy
 
 
 class Cipher(object):
+    _has_external_testvectors = False
+
     def copy(self): return copy.deepcopy(self)
 
     def name(self):

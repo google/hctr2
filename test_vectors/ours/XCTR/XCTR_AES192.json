@@ -1,0 +1,117 @@
+[
+    {
+        "cipher": {
+            "cipher": "XCTR",
+            "blockcipher": {
+                "cipher": "AES",
+                "lengths": {
+                    "block": 16,
+                    "key": 24
+                }
+            },
+            "lengths": {
+                "key": 24,
+                "nonce": 16
+            }
+        },
+        "description": "Random ( 1)",
+        "input": {
+            "key_hex": "9ad033b2490e5d10b7cae04d4ac857a377c5280c2709de98",
+            "nonce_hex": "108a104a6a5f32bfdd6397170ba69f59",
+            "l": 47
+        },
+        "output_hex": "a35816cc9d1b307a268d41e0541f5f1234f316f8889367bd3e7a3bbba2ecd42e7f6d653d227fdd8aa73624c9be9cd9"
+    },
+    {
+        "cipher": {
+            "cipher": "XCTR",
+            "blockcipher": {
+                "cipher": "AES",
+                "lengths": {
+                    "block": 16,
+                    "key": 24
+                }
+            },
+            "lengths": {
+                "key": 24,
+                "nonce": 16
+            }
+        },
+        "description": "Random ( 2)",
+        "input": {
+            "key_hex": "c7fe313af73c52102d89bdde73474eb47f3819c0cdfae817",
+            "nonce_hex": "7b2f8291ed2e044c5498e9750c2b38e8",
+            "l": 47
+        },
+        "output_hex": "e03201a515db4224941bc15b28ccfedf82530b6dd415c5a67e7f4869cb6c796e2e256ecf6af60ae344918d16424a81"
+    },
+    {
+        "cipher": {
+            "cipher": "XCTR",
+            "blockcipher": {
+                "cipher": "AES",
+                "lengths": {
+                    "block": 16,
+                    "key": 24
+                }
+            },
+            "lengths": {
+                "key": 24,
+                "nonce": 16
+            }
+        },
+        "description": "Random ( 3)",
+        "input": {
+            "key_hex": "552a6136fe8d09016bec37759a7eb267c33e59896189c066",
+            "nonce_hex": "c0ff1be90e800ed4d9fe5d7ea8193b61",
+            "l": 47
+        },
+        "output_hex": "42289111a96c9e0bf159189f61f9431649b7bc5e6a3ff25b43c5e9c34a8dcbffc5c231d70d06a7e646c2dd51eb25ba"
+    },
+    {
+        "cipher": {
+            "cipher": "XCTR",
+            "blockcipher": {
+                "cipher": "AES",
+                "lengths": {
+                    "block": 16,
+                    "key": 24
+                }
+            },
+            "lengths": {
+                "key": 24,
+                "nonce": 16
+            }
+        },
+        "description": "Random ( 4)",
+        "input": {
+            "key_hex": "d8afc4d134ea25d782b65ca9b6f6e53b587a238a43daaad0",
+            "nonce_hex": "cc943e03c533ffbb7572335a11e3f791",
+            "l": 47
+        },
+        "output_hex": "25ba9d67bfa13acab31dcb7bd81315b3e9a92ea139c7a7b10d91b519f50fff0b80f68c19867d62c9231e5d3a1ace6b"
+    },
+    {
+        "cipher": {
+            "cipher": "XCTR",
+            "blockcipher": {
+                "cipher": "AES",
+                "lengths": {
+                    "block": 16,
+                    "key": 24
+                }
+            },
+            "lengths": {
+                "key": 24,
+                "nonce": 16
+            }
+        },
+        "description": "Random ( 5)",
+        "input": {
+            "key_hex": "77bc15f5431418c4bc7cdd57240bfa97262a48fb4ddb28a7",
+            "nonce_hex": "367f7c8da7a7b8ed6a355b9478a29e6f",
+            "l": 47
+        },
+        "output_hex": "d473898a057ddd4cfbba4440e09f498e411da824989fd0faf09a68b883074f9d82e41a5fac3ee889653de02450efee"
+    }
+]

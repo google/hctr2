@@ -23,6 +23,8 @@ class Hash(cipher.Cipher):
 
 
 class Polyval(Hash):
+    _has_external_testvectors = True
+    
     def __init__(self):
         super().__init__()
         self.gf = gf.GF(["X^128", "X^127", "X^126", "X^121", "X^0"])
@@ -41,20 +43,20 @@ class Polyval(Hash):
             'cipher': 'Polyval',
             'lengths': {
                 'key': 16,
-                'blocksize': 16,
+                'block': 16,
                 'output': 16,
             }
         }
 
     def test_input_lengths(self):
         v = dict(self.lengths())
-        del v["blocksize"]
+        del v["block"]
         del v["output"]
         for mlen in range(0, 80, 16):
             yield {**v, "message": mlen}
 
     def hash(self, key, message):
-        blocksize = self.lengths()['blocksize']
+        blocksize = self.lengths()['block']
         assert len(message) % blocksize == 0
         hgen = self.gf.from_bytes(key, byteorder="little")
         hpoly = hgen * self.polyval_const

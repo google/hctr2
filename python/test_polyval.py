@@ -11,6 +11,7 @@ import polyval
 
 def parse_tvs():
     p = paths.top / "test_vectors" / "other" / "polyval.txt"
+    print(f"Loading test vectors from {p}")
     with p.open() as f:
         d = None
         k = None

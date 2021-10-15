@@ -4,7 +4,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -20,7 +20,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -36,7 +36,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -52,7 +52,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -68,7 +68,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -84,7 +84,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -100,7 +100,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -116,7 +116,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -132,7 +132,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -148,7 +148,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -164,7 +164,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -180,7 +180,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -196,7 +196,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -212,7 +212,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -228,7 +228,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -244,7 +244,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -260,7 +260,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -276,7 +276,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -292,7 +292,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -308,7 +308,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -324,7 +324,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -340,7 +340,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -356,7 +356,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -372,7 +372,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },
@@ -388,7 +388,7 @@
             "cipher": "Polyval",
             "lengths": {
                 "key": 16,
-                "blocksize": 16,
+                "block": 16,
                 "output": 16
             }
         },

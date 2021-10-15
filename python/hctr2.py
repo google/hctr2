@@ -6,50 +6,47 @@
 #
 # Author: Nathan Huckleberry <nhuck@google.com>
 
-from Crypto.Util.strxor import strxor
+#from Crypto.Util.strxor import strxor
+import Crypto.Util.strxor
 
 import aes
 import cipher
-import ctr
 import polyval
+import xctr
 
+def strxor(a, b):
+    assert len(a) == len(b)
+    # Crypto.Util.strxor craps out on zero length input :(
+    if len(a) == 0:
+        return b''
+    return Crypto.Util.strxor.strxor(a, b)
 
 class HCTR2(cipher.Blockcipher):
     def __init__(self):
+        self._block = aes.AES()
         self._polyval = polyval.Polyval()
+        self._xctr = xctr.XCTR()
+
+    def _setup_variant(self):
+        self._block.variant = self.variant['blockcipher']
+        self._xctr.choose_variant(lambda v:
+            v['blockcipher'] == self.variant['blockcipher'])
+        return super()._setup_variant()
 
     def variant_name(self):
         return "{}_{}".format(self.name(),
                               self._block.variant_name())
 
-    def _blockcipher_pairs(self):
-        ciphers = []
-        for kl in [16, 24, 32]:
-            a = aes.AES()
-            a.set_keylen(kl)
-            c = ctr.XCTR()
-            c.set_keylen(kl)
-            ciphers.append((a, c))
-        return ciphers
-
-    def _lookup_block_pair(self, v):
-        for (b, c) in self._blockcipher_pairs():
-            if b.variant == v:
-                return (b, c)
-        raise Exception(f"Unknown block cipher: {v}")
-
     def variants(self):
-        # tweak length in bytes
-        for t in [0, 1, 2, 4, 8, 16, 32, 64, 128, 256]:
-            for (bs, ctr) in self._blockcipher_pairs():
-                yield {
-                    'cipher': self.name(),
-                    'blockcipher': bs.variant,
-                    'lengths': {
-                        'key': bs.variant['lengths']['key'],
-                        'block': 16, # FIXME: blocksize, be consistent
-                        'tweak': t
-                    }}
+        for bs in self._block.variants():
+            assert bs['lengths']['block'] == 16
+            yield {
+                'cipher': self.name(),
+                'blockcipher': bs,
+                'lengths': {
+                    'key': bs['lengths']['key'],
+                    'block': 16,
+                }}
 
     def _pad(self, l, s):
         return s + b'\x00' * ((-len(s)) % l)
@@ -75,7 +72,6 @@ class HCTR2(cipher.Blockcipher):
     def encrypt(self, pt, key, tweak):
         assert len(key) == self.lengths()['key']
         assert len(pt) >= self.lengths()['block']
-        assert len(tweak) >= self.lengths()['tweak']
         hash_key = self._gen(key, 0)
         l = self._gen(key, 1)
         m = pt[0:16]
@@ -83,15 +79,13 @@ class HCTR2(cipher.Blockcipher):
         mm = strxor(m, self._hash(hash_key, n, tweak))
         uu = self._block.encrypt(mm, key=key)
         s = strxor(strxor(mm, uu), l)
-        # FIXME shouldn't be necessary to clip
-        v = self._xctr.encrypt(n, key, s)[0:len(n)]
+        v = strxor(n, self._xctr.gen(len(n), nonce=s, key=key))
         u = strxor(uu, self._hash(hash_key, v, tweak))
         return u + v
 
     def decrypt(self, ct, key, tweak):
         assert len(key) == self.lengths()['key']
         assert len(ct) >= self.lengths()['block']
-        assert len(tweak) >= self.lengths()['tweak']
         hash_key = self._gen(key, 0)
         l = self._gen(key, 1)
         u = ct[0:16]
@@ -99,19 +93,15 @@ class HCTR2(cipher.Blockcipher):
         uu = strxor(u, self._hash(hash_key, v, tweak))
         mm = self._block.decrypt(uu, key=key)
         s = strxor(strxor(mm, uu), l)
-        # FIXME shouldn't be necessary to clip
-        n = self._xctr.encrypt(v, key, s)[0:len(v)]
+        n = strxor(v, self._xctr.gen(len(v), nonce=s, key=key))
         m = strxor(mm, self._hash(hash_key, n, tweak))
         return m + n
-
-    def _setup_variant(self):
-        self._block, self._xctr = self._lookup_block_pair(
-            self.variant['blockcipher'])
 
     def test_input_lengths(self):
         v = dict(self.lengths())
         b = v['block']
         del v['block']
-        for i in range(b * 10):
-            for m in "plaintext", "ciphertext":
-                yield {**v, m: b + i}
+        for t in [0, 1, 16, 32, 47]:
+            for l in [16, 17, 32, 33]:
+                for m in "plaintext", "ciphertext":
+                    yield {**v, 'tweak': t , m: l}
