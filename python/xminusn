@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+#
+# Copyright 2018 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+def main():
+    exponents = [128, 127, 126, 121, 0]
+    degree = max(exponents)
+    modulus = sum(1 << e for e in exponents)
+
+    xmn = 1
+    for i in range(degree):
+        if xmn & (1 << i):
+            xmn ^= modulus << i
+    xmn >>= degree
+    print([i for i in range(degree - 1, -1, -1) if xmn & (1 << i)])
+
+
+if __name__ == "__main__":
+    main()
