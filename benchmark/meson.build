@@ -25,6 +25,7 @@ src = [
     'src/hctr.c',
     'src/hctr-xctr.c',
     'src/hctr-polyhash.c',
+    'src/xts.c',
     'src/insn_timing.c',
     '../third_party/linux-kernel/aes_ti.c',
     '../third_party/linux-kernel/gf128.c',

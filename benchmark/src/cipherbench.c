@@ -22,6 +22,7 @@ static const struct cipher {
 	{ "HCTR",		test_hctr },
 	{ "HCTR-CTR",		test_hctr_ctr },
 	{ "HCTR-Polyhash",		test_hctr_polyhash },
+	{ "XTS",		test_xts },
 };
 
 static const struct cipher *find_cipher(const char *name)
