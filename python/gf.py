@@ -5,47 +5,50 @@
 # https://opensource.org/licenses/MIT.
 
 class GF(object):
-    def __init__(self, poly_terms):
-        exponents = list(map(lambda x: int(x.replace("X^", "")), poly_terms))
+    def __init__(self, exponents):
         self.degree = max(exponents)
         assert self.degree % 8 == 0
         self.blocksize = self.degree // 8
-        self.modulus = sum(list(map(lambda x: 1 << x, exponents)))
+        self.modulus = sum(1 << x for x in exponents)
 
     class Element(object):
         def __init__(self, parent, value):
-            self.parent = parent
-            self.value = value
+            self._parent = parent
+            self._value = value
 
         def __add__(self, other):
-            assert self.parent.modulus == other.parent.modulus
-            return self.parent._add(self.value, other.value)
+            assert self._parent.modulus == other._parent.modulus
+            return self._parent._add(self._value, other._value)
 
         def __mul__(self, other):
-            assert self.parent.modulus == other.parent.modulus
-            return self.parent._mul(self.value, other.value)
+            assert self._parent.modulus == other._parent.modulus
+            return self._parent._mul(self._value, other._value)
 
-        def __pow__(self, other):
-            assert isinstance(other, int)
-            return self.parent._pow(self.value, other)
-
-        # FIXME remove this
-        def __int__(self):
-            return self.value
+        def __pow__(self, exponent):
+            assert isinstance(exponent, int)
+            if exponent == 0:
+                return self._parent.from_int(1)
+            elif exponent == 1:
+                return self
+            else:
+                res = self**(exponent >> 1)
+                res *= res
+                if exponent & 1:
+                    res *= self
+                return res
 
         def to_bytes(self, *, byteorder):
-            return self.parent._to_bytes(self.value, byteorder=byteorder)
+            return self._parent._to_bytes(self._value, byteorder=byteorder)
+
+    def from_int(self, i):
+        return self.Element(self, i)
 
     def from_bytes(self, b, *, byteorder):
         assert len(b) == self.blocksize
-        return self.Element(self, int.from_bytes(b, byteorder=byteorder))
-
-    # FIXME remove this
-    def __call__(self, value):
-        return self.Element(self, value)
+        return self.from_int(int.from_bytes(b, byteorder=byteorder))
 
     def _add(self, a, b):
-        return self(a ^ b)
+        return self.from_int(a ^ b)
 
     def _mul(self, a, b):
         p = 0
@@ -58,14 +61,7 @@ class GF(object):
             b >>= 1
             if(carry):
                 a ^= self.modulus
-        return self(p)
-
-    # TODO: Exponent by square
-    def _pow(self, a, e):
-        r = self(1)
-        for i in range(e):
-            r = r * self(a)
-        return r
+        return self.from_int(p)
 
     def _to_bytes(self, value, *, byteorder):
         return value.to_bytes(self.blocksize, byteorder=byteorder)

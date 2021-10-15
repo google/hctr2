@@ -27,12 +27,9 @@ class Polyval(Hash):
 
     def __init__(self):
         super().__init__()
-        self.gf = gf.GF(["X^128", "X^127", "X^126", "X^121", "X^0"])
-        self.polyval_const = self.gf(
-            (1 << 127) | (
-                1 << 124) | (
-                1 << 121) | (
-                1 << 114) | (1))
+        self.gf = gf.GF([128, 127, 126, 121, 0])
+        self.polyval_const = self.gf.from_int(
+            sum(1 << x for x in [127, 124, 121, 114, 0]))
         self.choose_variant(lambda x: True)
 
     def variant_name(self):
@@ -56,7 +53,7 @@ class Polyval(Hash):
         assert len(message) % blocksize == 0
         hgen = self.gf.from_bytes(key, byteorder="little")
         hpoly = hgen * self.polyval_const
-        hash_result = self.gf(0)
+        hash_result = self.gf.from_int(0)
         for i in range(0, len(message), blocksize):
             hash_result += self.gf.from_bytes(
                 message[i:i + blocksize], byteorder='little')
