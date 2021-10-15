@@ -24,7 +24,7 @@ class Hash(cipher.Cipher):
 
 class Polyval(Hash):
     _has_external_testvectors = True
-    
+
     def __init__(self):
         super().__init__()
         self.gf = gf.GF(["X^128", "X^127", "X^126", "X^121", "X^0"])

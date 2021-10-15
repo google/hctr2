@@ -54,7 +54,7 @@ class XCTR(cipher.Cipher):
             "input": input,
             "output": self.gen(**input)
         }
-    
+
     def check_testvector(self, tv):
         self.variant = tv["cipher"]
         assert tv["output"] == self.gen(**tv["input"])

@@ -13,17 +13,19 @@ import subprocess
 wd = pathlib.Path(__file__).parent
 root = wd.resolve().parent
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--toolchain-prefix', required=True)
     parser.add_argument('--adb', default='adb')
     parser.add_argument('--build-dir', type=pathlib.Path,
-        default=(root / 'build'))
+                        default=(root / 'build'))
     parser.add_argument('--build-type', default='android-arm')
     parser.add_argument('--build-name')
     parser.add_argument('--meson', default='meson')
     parser.add_argument('--meson-arg', action='append', default=[])
     return parser.parse_args()
+
 
 def main():
     args = parse_args()
@@ -48,14 +50,15 @@ def main():
     for k, v in binaries.items():
         config['binaries'][k] = repr(v)
 
-    args.build_dir.mkdir(parents = True, exist_ok = True)
+    args.build_dir.mkdir(parents=True, exist_ok=True)
     config_out = args.build_dir / f'{args.build_name}.xcompile'
     with config_out.open('w') as f:
         config.write(f)
     subprocess.run([args.meson,
-        str(args.build_dir / args.build_name),
-        str(root),
-        '--cross-file', str(config_out)] + args.meson_arg)
+                    str(args.build_dir / args.build_name),
+                    str(root),
+                    '--cross-file', str(config_out)] + args.meson_arg)
+
 
 if __name__ == '__main__':
     main()

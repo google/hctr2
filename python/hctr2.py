@@ -11,12 +11,14 @@ import cipher
 import polyval
 import xctr
 
+
 def strxor(a, b):
     assert len(a) == len(b)
     # Crypto.Util.strxor craps out on zero length input :(
     if len(a) == 0:
         return b''
     return Crypto.Util.strxor.strxor(a, b)
+
 
 class HCTR2(cipher.Blockcipher):
     def __init__(self):
@@ -100,4 +102,4 @@ class HCTR2(cipher.Blockcipher):
         for t in [0, 1, 16, 32, 47]:
             for l in [16, 17, 32, 33]:
                 for m in "plaintext", "ciphertext":
-                    yield {**v, 'tweak': t , m: l}
+                    yield {**v, 'tweak': t, m: l}
