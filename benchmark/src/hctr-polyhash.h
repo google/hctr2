@@ -18,6 +18,7 @@ struct polyhash_key {
 	 * h^N, ..., h in reverse order
 	 */
 	u128 powers[NUM_PRECOMPUTE_KEYS];
+    u128 tweaklen_part[2];
 };
 
 struct polyhash_state {
@@ -26,11 +27,6 @@ struct polyhash_state {
 
 void polyhash_setkey_generic(struct polyhash_key *key, const u8 *raw_key);
 void polyhash_setkey_simd(struct polyhash_key *key, const u8 *raw_key);
-
-static inline void polyhash_init(struct polyhash_state *state)
-{
-	memset(&state->state, 0, sizeof(state->state));
-}
 
 void polyhash_update(const struct polyhash_key *key,
         		struct polyhash_state *state, const u8 *data,

@@ -12,7 +12,7 @@
 #include "testvec.h"
 #include "util.h"
 
-#define HCTR_DEFAULT_TWEAK_LEN	32
+#define HCTR_DEFAULT_TWEAK_LEN	16
 #define BLOCKCIPHER_BLOCK_SIZE		16
 
 /* Size of the hash key (H_K) in bytes */
@@ -39,7 +39,7 @@ void hctr_setkey_generic(struct hctr_ctx *ctx, const u8 *key)
     buf.b = cpu_to_le64(1);
     aes_encrypt(&ctx->aes_ctx, &ctx->L, (u8*)&buf);
 
-    polyhash_setkey_generic(&ctx->polyhash_key, &h);
+    polyhash_setup_generic(&ctx->polyhash_key, &h, ctx->default_tweak_len);
 }
 
 void hctr_setkey_simd(struct hctr_ctx *ctx, const u8 *key)
@@ -65,7 +65,49 @@ void hctr_setkey_simd(struct hctr_ctx *ctx, const u8 *key)
         ce_aes_ecb_encrypt(&ctx->L, &buf, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
     #endif
     
-    polyhash_setkey_simd(&ctx->polyhash_key, &h);
+    polyhash_setup_simd(&ctx->polyhash_key, &h, ctx->default_tweak_len);
+}
+
+void hctr_setkey(struct hctr_ctx *ctx, const u8 *key, bool simd)
+{
+    if(simd) {
+        hctr_setkey_simd(ctx, key);
+    }
+    else {
+        hctr_setkey_generic(ctx, key);
+    }
+}
+
+void hctr_change_tweak_len_simd(struct hctr_ctx *ctx, const size_t tweak_len) {
+    u8 h[BLOCKCIPHER_BLOCK_SIZE];
+    u128 buf;
+    buf.a = 0;
+    buf.b = 0;
+    #ifdef __x86_64__
+        aesni_ecb_enc(&ctx->aes_ctx, &h, &buf, XCTR_BLOCK_SIZE);
+    #endif
+    #ifdef __aarch64__
+        ce_aes_ecb_encrypt(&h, &buf, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
+    #endif
+    polyhash_setup_simd(&ctx->polyhash_key, &h, tweak_len);
+}
+
+void hctr_change_tweak_len_generic(struct hctr_ctx *ctx, const size_t tweak_len) {
+    u8 h[BLOCKCIPHER_BLOCK_SIZE];
+    u128 buf;
+    buf.a = 0;
+    buf.b = 0;
+    aes_encrypt(&ctx->aes_ctx, &h, (u8*)&buf);
+    polyhash_setup_generic(&ctx->polyhash_key, &h, tweak_len);
+}
+
+void hctr_change_tweak_len(struct hctr_ctx *ctx, const size_t tweak_len, bool simd) {
+    if(simd) {
+        hctr_change_tweak_len_simd(ctx, tweak_len);
+    }
+    else {
+        hctr_change_tweak_len_generic(ctx, tweak_len);
+    }
 }
 
 /*
@@ -98,7 +140,7 @@ void hctr_crypt(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     C = dst;
     D = dst + BLOCKCIPHER_BLOCK_SIZE;
 
-    polyhash_init(&polystate1);
+
     polyhash_hash_tweak(&ctx->polyhash_key, &polystate1, tweak, tweak_len, N_bytes % POLYHASH_BLOCK_SIZE == 0, simd);
     memcpy(&polystate2, &polystate1, sizeof(polystate1));
     polyhash_hash_message(&ctx->polyhash_key, &polystate1, N, N_bytes, simd);
@@ -154,9 +196,48 @@ void hctr_decrypt_simd(const struct hctr_ctx *ctx, u8 *dst, const u8 *src,
     hctr_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, false, true);
 }
 
+struct hctr2_testvec {
+    struct testvec_buffer key;
+    struct testvec_buffer tweak;
+    struct testvec_buffer plaintext;
+    struct testvec_buffer ciphertext;
+};
+
+#include "hctr2_testvecs.h"
+
+static void test_hctr2_testvec(const struct hctr2_testvec *v, bool simd)
+{
+    size_t len = v->plaintext.len;
+    u8 ptext[len];
+    u8 ctext[len];
+    struct hctr_ctx ctx;
+
+    ASSERT(v->key.len == HCTR_KEY_SIZE);
+    ASSERT(v->plaintext.len >= BLOCKCIPHER_BLOCK_SIZE);
+    ASSERT(v->ciphertext.len == v->plaintext.len);
+
+    hctr_setkey(&ctx, v->key.data, simd);
+    hctr_change_tweak_len(&ctx, v->tweak.len, simd);
+    hctr_crypt(&ctx, &ctext, v->plaintext.data, v->plaintext.len, v->tweak.data, v->tweak.len, true, simd);
+    ASSERT(!memcmp(ctext, v->ciphertext.data, len));
+    hctr_crypt(&ctx, &ptext, &ctext, v->plaintext.len, v->tweak.data, v->tweak.len, false, simd);
+    ASSERT(!memcmp(ptext, v->plaintext.data, len));
+}
+
+static void test_hctr2_testvecs(void)
+{  
+    size_t i;
+
+    for (i = 0; i < ARRAY_SIZE(hctr2_aes256_tv); i++) {
+        test_hctr2_testvec(&hctr2_aes256_tv[i], false);
+        test_hctr2_testvec(&hctr2_aes256_tv[i], true);
+    }
+}
+
 
 void test_hctr(void)
 {
+    test_hctr2_testvecs();
 #define ALGNAME		"HCTR"
 #define KEY_BYTES	HCTR_KEY_SIZE
 #define IV_BYTES	HCTR_DEFAULT_TWEAK_LEN

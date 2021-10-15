@@ -253,3 +253,205 @@ ST4(	st1		{v6.16b}, [x0])
 	b		.Lhctrctrout
 AES_FUNC_END(aes_hctr_ctr_encrypt)
 
+
+	/*
+	 * aes_xts_encrypt(u8 out[], u8 const in[], u8 const rk1[], int rounds,
+	 *		   int bytes, u8 const rk2[], u8 iv[], int first)
+	 * aes_xts_decrypt(u8 out[], u8 const in[], u8 const rk1[], int rounds,
+	 *		   int bytes, u8 const rk2[], u8 iv[], int first)
+	 */
+
+	.macro		next_tweak, out, in, tmp
+	sshr		\tmp\().2d,  \in\().2d,   #63
+	and		\tmp\().16b, \tmp\().16b, xtsmask.16b
+	add		\out\().2d,  \in\().2d,   \in\().2d
+	ext		\tmp\().16b, \tmp\().16b, \tmp\().16b, #8
+	eor		\out\().16b, \out\().16b, \tmp\().16b
+	.endm
+
+	.macro		xts_load_mask, tmp
+	movi		xtsmask.2s, #0x1
+	movi		\tmp\().2s, #0x87
+	uzp1		xtsmask.4s, xtsmask.4s, \tmp\().4s
+	.endm
+
+AES_FUNC_START(aes_xts_encrypt)
+	stp		x29, x30, [sp, #-16]!
+	mov		x29, sp
+
+	ld1		{v4.16b}, [x6]
+	xts_load_mask	v8
+	cbz		w7, .Lxtsencnotfirst
+
+	enc_prepare	w3, x5, x8
+	xts_cts_skip_tw	w7, .LxtsencNx
+	encrypt_block	v4, w3, x5, x8, w7		/* first tweak */
+	enc_switch_key	w3, x2, x8
+	b		.LxtsencNx
+
+.Lxtsencnotfirst:
+	enc_prepare	w3, x2, x8
+.LxtsencloopNx:
+	next_tweak	v4, v4, v8
+.LxtsencNx:
+	subs		w4, w4, #64
+	bmi		.Lxtsenc1x
+	ld1		{v0.16b-v3.16b}, [x1], #64	/* get 4 pt blocks */
+	next_tweak	v5, v4, v8
+	eor		v0.16b, v0.16b, v4.16b
+	next_tweak	v6, v5, v8
+	eor		v1.16b, v1.16b, v5.16b
+	eor		v2.16b, v2.16b, v6.16b
+	next_tweak	v7, v6, v8
+	eor		v3.16b, v3.16b, v7.16b
+	bl		aes_encrypt_block4x
+	eor		v3.16b, v3.16b, v7.16b
+	eor		v0.16b, v0.16b, v4.16b
+	eor		v1.16b, v1.16b, v5.16b
+	eor		v2.16b, v2.16b, v6.16b
+	st1		{v0.16b-v3.16b}, [x0], #64
+	mov		v4.16b, v7.16b
+	cbz		w4, .Lxtsencret
+	xts_reload_mask	v8
+	b		.LxtsencloopNx
+.Lxtsenc1x:
+	adds		w4, w4, #64
+	beq		.Lxtsencout
+	subs		w4, w4, #16
+	bmi		.LxtsencctsNx
+.Lxtsencloop:
+	ld1		{v0.16b}, [x1], #16
+.Lxtsencctsout:
+	eor		v0.16b, v0.16b, v4.16b
+	encrypt_block	v0, w3, x2, x8, w7
+	eor		v0.16b, v0.16b, v4.16b
+	cbz		w4, .Lxtsencout
+	subs		w4, w4, #16
+	next_tweak	v4, v4, v8
+	bmi		.Lxtsenccts
+	st1		{v0.16b}, [x0], #16
+	b		.Lxtsencloop
+.Lxtsencout:
+	st1		{v0.16b}, [x0]
+.Lxtsencret:
+	st1		{v4.16b}, [x6]
+	ldp		x29, x30, [sp], #16
+	ret
+
+.LxtsencctsNx:
+	mov		v0.16b, v3.16b
+	sub		x0, x0, #16
+.Lxtsenccts:
+	adr_l		x8, .Lcts_permute_table
+
+	add		x1, x1, w4, sxtw	/* rewind input pointer */
+	add		w4, w4, #16		/* # bytes in final block */
+	add		x9, x8, #32
+	add		x8, x8, x4
+	sub		x9, x9, x4
+	add		x4, x0, x4		/* output address of final block */
+
+	ld1		{v1.16b}, [x1]		/* load final block */
+	ld1		{v2.16b}, [x8]
+	ld1		{v3.16b}, [x9]
+
+	tbl		v2.16b, {v0.16b}, v2.16b
+	tbx		v0.16b, {v1.16b}, v3.16b
+	st1		{v2.16b}, [x4]			/* overlapping stores */
+	mov		w4, wzr
+	b		.Lxtsencctsout
+AES_FUNC_END(aes_xts_encrypt)
+
+AES_FUNC_START(aes_xts_decrypt)
+	stp		x29, x30, [sp, #-16]!
+	mov		x29, sp
+
+	/* subtract 16 bytes if we are doing CTS */
+	sub		w8, w4, #0x10
+	tst		w4, #0xf
+	csel		w4, w4, w8, eq
+
+	ld1		{v4.16b}, [x6]
+	xts_load_mask	v8
+	xts_cts_skip_tw	w7, .Lxtsdecskiptw
+	cbz		w7, .Lxtsdecnotfirst
+
+	enc_prepare	w3, x5, x8
+	encrypt_block	v4, w3, x5, x8, w7		/* first tweak */
+.Lxtsdecskiptw:
+	dec_prepare	w3, x2, x8
+	b		.LxtsdecNx
+
+.Lxtsdecnotfirst:
+	dec_prepare	w3, x2, x8
+.LxtsdecloopNx:
+	next_tweak	v4, v4, v8
+.LxtsdecNx:
+	subs		w4, w4, #64
+	bmi		.Lxtsdec1x
+	ld1		{v0.16b-v3.16b}, [x1], #64	/* get 4 ct blocks */
+	next_tweak	v5, v4, v8
+	eor		v0.16b, v0.16b, v4.16b
+	next_tweak	v6, v5, v8
+	eor		v1.16b, v1.16b, v5.16b
+	eor		v2.16b, v2.16b, v6.16b
+	next_tweak	v7, v6, v8
+	eor		v3.16b, v3.16b, v7.16b
+	bl		aes_decrypt_block4x
+	eor		v3.16b, v3.16b, v7.16b
+	eor		v0.16b, v0.16b, v4.16b
+	eor		v1.16b, v1.16b, v5.16b
+	eor		v2.16b, v2.16b, v6.16b
+	st1		{v0.16b-v3.16b}, [x0], #64
+	mov		v4.16b, v7.16b
+	cbz		w4, .Lxtsdecout
+	xts_reload_mask	v8
+	b		.LxtsdecloopNx
+.Lxtsdec1x:
+	adds		w4, w4, #64
+	beq		.Lxtsdecout
+	subs		w4, w4, #16
+.Lxtsdecloop:
+	ld1		{v0.16b}, [x1], #16
+	bmi		.Lxtsdeccts
+.Lxtsdecctsout:
+	eor		v0.16b, v0.16b, v4.16b
+	decrypt_block	v0, w3, x2, x8, w7
+	eor		v0.16b, v0.16b, v4.16b
+	st1		{v0.16b}, [x0], #16
+	cbz		w4, .Lxtsdecout
+	subs		w4, w4, #16
+	next_tweak	v4, v4, v8
+	b		.Lxtsdecloop
+.Lxtsdecout:
+	st1		{v4.16b}, [x6]
+	ldp		x29, x30, [sp], #16
+	ret
+
+.Lxtsdeccts:
+	adr_l		x8, .Lcts_permute_table
+
+	add		x1, x1, w4, sxtw	/* rewind input pointer */
+	add		w4, w4, #16		/* # bytes in final block */
+	add		x9, x8, #32
+	add		x8, x8, x4
+	sub		x9, x9, x4
+	add		x4, x0, x4		/* output address of final block */
+
+	next_tweak	v5, v4, v8
+
+	ld1		{v1.16b}, [x1]		/* load final block */
+	ld1		{v2.16b}, [x8]
+	ld1		{v3.16b}, [x9]
+
+	eor		v0.16b, v0.16b, v5.16b
+	decrypt_block	v0, w3, x2, x8, w7
+	eor		v0.16b, v0.16b, v5.16b
+
+	tbl		v2.16b, {v0.16b}, v2.16b
+	tbx		v0.16b, {v1.16b}, v3.16b
+
+	st1		{v2.16b}, [x4]			/* overlapping stores */
+	mov		w4, wzr
+	b		.Lxtsdecctsout
+AES_FUNC_END(aes_xts_decrypt)

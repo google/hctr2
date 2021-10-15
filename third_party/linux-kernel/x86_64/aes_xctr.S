@@ -493,6 +493,7 @@ ddq_add_8:
 /* main body of aes ctr load */
 
 .macro do_aes_ctrmain key_len
+	andq	$(~0xf), num_bytes
 	cmp	$16, num_bytes
 	jb	.Ldo_return2\key_len
 
