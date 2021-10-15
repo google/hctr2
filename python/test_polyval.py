@@ -4,13 +4,8 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-import hexjson
-import paths
-import polyval
-
-
-def parse_tvs():
-    p = paths.top / "test_vectors" / "other" / "polyval.txt"
+def parse_tvs(tvdir):
+    p = tvdir / "other" / "polyval.txt"
     print(f"Loading test vectors from {p}")
     with p.open() as f:
         d = None
@@ -38,25 +33,3 @@ def parse_tvs():
         if d is not None:
             d[k] = bytes.fromhex(v)
             yield d
-
-
-def test_vectors(pv):
-    for tv in parse_tvs():
-        yield {
-            'cipher': pv.variant,
-            'description': "From RFC",
-            'input': {
-                'key': tv['Record authentication key'],
-                'message': tv['POLYVAL input'],
-            },
-            'hash': tv['POLYVAL result'],
-        }
-
-
-def print_tvs():
-    pv = polyval.Polyval()
-    hexjson.dump_using_hex(test_vectors(pv))
-
-
-if __name__ == "__main__":
-    print_tvs()

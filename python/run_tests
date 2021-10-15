@@ -6,15 +6,16 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-import importlib
 import sys
 
 import cipherlist
+import hexjson
 import paths
 import tvgen
 
 verbose = False
-path = paths.top / "test_vectors" / "ours"
+tvdir = paths.top / "test_vectors"
+path = tvdir / "ours"
 
 
 def write(ciphers):
@@ -26,11 +27,16 @@ def check(ciphers):
     for cipher in ciphers:
         test = cipher.name().lower()
         print(f"======== {test} ========")
-        if cipher._has_external_testvectors:
-            testmod = importlib.import_module(f"test_{test}")
-            for r in testmod.test_vectors(cipher):
-                tvgen.check_testvector(cipher, r, verbose)
+        for r in cipher.other_testvectors(tvdir):
+            tvgen.check_testvector(cipher, r, verbose)
         tvgen.check_tests(cipher, path, verbose)
+
+
+def print_others(ciphers):
+    for cipher in ciphers:
+        test = cipher.name().lower()
+        print(f"======== {test} ========")
+        hexjson.dump_using_hex(cipher.other_testvectors(tvdir))
 
 
 def main():
@@ -47,6 +53,8 @@ def main():
         write(ciphers)
     elif command == "check":
         check(ciphers)
+    elif command == "print":
+        print_others(ciphers)
     else:
         raise Exception("Bad args: {} use write or check".format(sys.argv[1:]))
 

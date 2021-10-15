@@ -6,6 +6,7 @@
 
 import cipher
 import gf
+import test_polyval
 
 
 class Hash(cipher.Cipher):
@@ -23,8 +24,6 @@ class Hash(cipher.Cipher):
 
 
 class Polyval(Hash):
-    _has_external_testvectors = True
-
     def __init__(self):
         super().__init__()
         self.gf = gf.GF([128, 127, 126, 121, 0])
@@ -59,3 +58,15 @@ class Polyval(Hash):
                 message[i:i + blocksize], byteorder='little')
             hash_result *= hpoly
         return hash_result.to_bytes(byteorder='little')
+
+    def other_testvectors(self, tvdir):
+        for tv in test_polyval.parse_tvs(tvdir):
+            yield {
+                'cipher': self.variant,
+                'description': "From RFC",
+                'input': {
+                    'key': tv['Record authentication key'],
+                    'message': tv['POLYVAL input'],
+                },
+                'hash': tv['POLYVAL result'],
+            }

@@ -8,8 +8,6 @@ import copy
 
 
 class Cipher(object):
-    _has_external_testvectors = False
-
     def copy(self): return copy.deepcopy(self)
 
     def name(self):
@@ -41,6 +39,10 @@ class Cipher(object):
 
     def test_input_lengths(self):
         yield self.lengths()
+
+    def other_testvectors(self, tvdir):
+        if False:
+            yield None
 
 
 class Blockcipher(Cipher):
