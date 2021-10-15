@@ -132,7 +132,7 @@ void polyhash_hash_message(const struct polyhash_key *key,
         padded_final.a = 0;
         padded_final.b = 0;
         memcpy(&padded_final, data + POLYHASH_BLOCK_SIZE*(nbytes / POLYHASH_BLOCK_SIZE), nbytes % POLYHASH_BLOCK_SIZE);
-        ((u8*)(&padded_final))[nbytes % POLYHASH_BLOCK_SIZE] = 0x80;
+        ((u8*)(&padded_final))[nbytes % POLYHASH_BLOCK_SIZE] = 0x01;
     }
     if(simd) {
         POLY(data, key, nbytes, &padded_final, &state->state);
