@@ -6,13 +6,21 @@
 
 import itertools
 
-from Crypto.Util.strxor import strxor
+import Crypto.Util.strxor
 
 import aes
 import cipher
 
 
-class XCTR(cipher.Cipher):
+def strxor(a, b):
+    assert len(a) == len(b)
+    # Crypto.Util.strxor craps out on zero length input :(
+    if len(a) == 0:
+        return b''
+    return Crypto.Util.strxor.strxor(a, b)
+
+
+class XCTR(cipher.Bijection):
     def __init__(self):
         self._block = aes.AES()
 
@@ -38,23 +46,22 @@ class XCTR(cipher.Cipher):
         assert len(key) == self.lengths()['key']
         assert len(nonce) == self.lengths()['nonce']
         res = b''
-        for i in itertools.count(1):
-            block = strxor(nonce, i.to_bytes(len(nonce), byteorder='little'))
-            res += self._block.encrypt(block, key)
-            if len(res) >= l:
-                return res[:l]
+        count = 0
+        while len(res) < l:
+            count += 1
+            countblock = count.to_bytes(len(nonce), byteorder='little')
+            res += self._block.encrypt(strxor(nonce, countblock), key)
+        return res[:l]
 
-    _test_length = 47
+    # encrypt and decrypt are the same
+    def encrypt(self, plaintext, nonce, key):
+        return strxor(plaintext, self.gen(len(plaintext), nonce, key))
 
-    def make_testvector(self, input, description):
-        input['l'] = self._test_length
-        return {
-            "cipher": self.variant,
-            "description": description,
-            "input": input,
-            "output": self.gen(**input)
-        }
+    def decrypt(self, ciphertext, nonce, key):
+        return strxor(ciphertext, self.gen(len(ciphertext), nonce, key))
 
-    def check_testvector(self, tv):
-        self.variant = tv["cipher"]
-        assert tv["output"] == self.gen(**tv["input"])
+    def test_input_lengths(self):
+        v = dict(self.lengths())
+        for l in [0, 1, 32, 59]:
+            for m in "plaintext", "ciphertext":
+                yield {**v, m: l}

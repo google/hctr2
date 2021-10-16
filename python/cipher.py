@@ -45,7 +45,7 @@ class Cipher(object):
             yield None
 
 
-class Blockcipher(Cipher):
+class Bijection(Cipher):
     def make_testvector(self, input, description):
         input = input.copy()
         if "plaintext" in input:
@@ -69,6 +69,8 @@ class Blockcipher(Cipher):
         assert tv["ciphertext"] == self.encrypt(tv["plaintext"], **tv["input"])
         assert tv["plaintext"] == self.decrypt(tv["ciphertext"], **tv["input"])
 
+
+class Blockcipher(Bijection):
     def test_input_lengths(self):
         v = dict(self.lengths())
         b = v['block']

@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-import Crypto.Util.strxor
+from Crypto.Util.strxor import strxor
 
 import aes
 import cipher
@@ -12,15 +12,7 @@ import polyval
 import xctr
 
 
-def strxor(a, b):
-    assert len(a) == len(b)
-    # Crypto.Util.strxor craps out on zero length input :(
-    if len(a) == 0:
-        return b''
-    return Crypto.Util.strxor.strxor(a, b)
-
-
-class HCTR2(cipher.Blockcipher):
+class HCTR2(cipher.Bijection):
     def __init__(self):
         self._block = aes.AES()
         self._polyval = polyval.Polyval()
@@ -78,7 +70,7 @@ class HCTR2(cipher.Blockcipher):
         mm = strxor(m, self._hash(hash_key, n, tweak))
         uu = self._block.encrypt(mm, key=key)
         s = strxor(strxor(mm, uu), l)
-        v = strxor(n, self._xctr.gen(len(n), nonce=s, key=key))
+        v = self._xctr.encrypt(n, nonce=s, key=key)
         u = strxor(uu, self._hash(hash_key, v, tweak))
         return u + v
 
@@ -93,7 +85,7 @@ class HCTR2(cipher.Blockcipher):
         uu = strxor(u, self._hash(hash_key, v, tweak))
         mm = self._block.decrypt(uu, key=key)
         s = strxor(strxor(mm, uu), l)
-        n = strxor(v, self._xctr.gen(len(v), nonce=s, key=key))
+        n = self._xctr.decrypt(v, nonce=s, key=key)
         m = strxor(mm, self._hash(hash_key, n, tweak))
         return m + n
 
