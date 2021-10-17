@@ -53,15 +53,12 @@ void hctr2_setkey_simd(struct hctr2_ctx *ctx, const u8 *key)
     buf.b = 0;
     #ifdef __x86_64__
         aesni_ecb_enc(&ctx->aes_ctx, &h, &buf, XCTR_BLOCK_SIZE);
-    #endif
-    #ifdef __aarch64__
-        ce_aes_ecb_encrypt(&h, &buf, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
-    #endif
-    buf.b = cpu_to_le64(1);
-    #ifdef __x86_64__
+        buf.b = cpu_to_le64(1);
         aesni_ecb_enc(&ctx->aes_ctx, &ctx->L, &buf, XCTR_BLOCK_SIZE);
     #endif
     #ifdef __aarch64__
+        ce_aes_ecb_encrypt(&h, &buf, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
+        buf.b = cpu_to_le64(1);
         ce_aes_ecb_encrypt(&ctx->L, &buf, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
     #endif
     
@@ -110,11 +107,6 @@ void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len, bool 
     }
 }
 
-/*
- * Assume that nbytes is a multiple of BLOCKCIPHER_BLOCK_SIZE
- *
- * TODO: Modify XCTR code to allow for non-multiple plaintexts
- */
 void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 		       size_t nbytes, const u8 *tweak, size_t tweak_len, bool encrypt, bool simd)
 {
