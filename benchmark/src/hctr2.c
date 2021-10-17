@@ -114,12 +114,12 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
     struct polyhash_state polystate2;
     u8 digest[POLYHASH_DIGEST_SIZE];
     u8 MM[BLOCKCIPHER_BLOCK_SIZE];
-    u8 CC[BLOCKCIPHER_BLOCK_SIZE];
+    u8 UU[BLOCKCIPHER_BLOCK_SIZE];
     u8 S[BLOCKCIPHER_BLOCK_SIZE];
     const u8 * M;
     const u8 * N;
-    u8 * C;
-    u8 * D;
+    u8 * U;
+    u8 * V;
     size_t M_bytes;
     size_t N_bytes;
     size_t i;
@@ -129,8 +129,8 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
     N_bytes = nbytes - M_bytes;
     M = src;
     N = src + BLOCKCIPHER_BLOCK_SIZE;
-    C = dst;
-    D = dst + BLOCKCIPHER_BLOCK_SIZE;
+    U = dst;
+    V = dst + BLOCKCIPHER_BLOCK_SIZE;
 
 
     polyhash_hash_tweak(&ctx->polyhash_key, &polystate1, tweak, tweak_len, N_bytes % POLYHASH_BLOCK_SIZE == 0, simd);
@@ -142,30 +142,30 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 
 #ifdef __x86_64__
     if(encrypt) {
-        aesni_ecb_enc(&ctx->aes_ctx, &CC, MM, BLOCKCIPHER_BLOCK_SIZE);
+        aesni_ecb_enc(&ctx->aes_ctx, &UU, MM, BLOCKCIPHER_BLOCK_SIZE);
     }
     else {
-        aesni_ecb_dec(&ctx->aes_ctx, &CC, MM, BLOCKCIPHER_BLOCK_SIZE);
+        aesni_ecb_dec(&ctx->aes_ctx, &UU, MM, BLOCKCIPHER_BLOCK_SIZE);
     }
 #endif
 #ifdef __aarch64__
     if(encrypt) {
-        ce_aes_ecb_encrypt(&CC, MM, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
+        ce_aes_ecb_encrypt(&UU, MM, &ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
     }
     else {
-        ce_aes_ecb_decrypt(&CC, MM, &ctx->aes_ctx.aes_ctx.key_dec, 14, 1);
+        ce_aes_ecb_decrypt(&UU, MM, &ctx->aes_ctx.aes_ctx.key_dec, 14, 1);
     }
 #endif
     
-    xor(&S, &MM, &CC, BLOCKCIPHER_BLOCK_SIZE);
+    xor(&S, &MM, &UU, BLOCKCIPHER_BLOCK_SIZE);
     xor(&S, &ctx->L, &S, BLOCKCIPHER_BLOCK_SIZE);
 
-    hctr2_ctr_crypt(&ctx->aes_ctx, D, N, N_bytes, &S, simd);
+    hctr2_ctr_crypt(&ctx->aes_ctx, V, N, N_bytes, &S, simd);
     
-    polyhash_hash_message(&ctx->polyhash_key, &polystate2, D, N_bytes, simd);
+    polyhash_hash_message(&ctx->polyhash_key, &polystate2, V, N_bytes, simd);
     polyhash_emit(&ctx->polyhash_key, &polystate2, (u8 *)&digest, simd);
     
-    xor(C, &CC, digest, BLOCKCIPHER_BLOCK_SIZE);
+    xor(U, &UU, digest, BLOCKCIPHER_BLOCK_SIZE);
 }
 
 void hctr2_encrypt_generic(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
