@@ -9,15 +9,15 @@
 #include "hctr2-polyhash.h"
 
 #ifdef __x86_64__
-asmlinkage void clmul_hctr2_poly(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
+asmlinkage void clmul_hctr2_polyval(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
 asmlinkage void clmul_hctr2_mul(u128* op1, const u128* op2);
-#define POLY clmul_hctr2_poly
+#define POLYVAL clmul_hctr2_polyval
 #define MUL clmul_hctr2_mul
 #endif
 #ifdef __aarch64__
-asmlinkage void pmull_hctr2_poly(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
+asmlinkage void pmull_hctr2_polyval(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
 asmlinkage void pmull_hctr2_mul(u128* op1, const u128* op2);
-#define POLY pmull_hctr2_poly
+#define POLYVAL pmull_hctr2_polyval
 #define MUL pmull_hctr2_mul
 #endif
 
@@ -117,7 +117,7 @@ void polyhash_hash_tweak(const struct polyhash_key *key,
         memcpy(&padded_final, data + POLYHASH_BLOCK_SIZE*(nbytes / POLYHASH_BLOCK_SIZE), nbytes % POLYHASH_BLOCK_SIZE);
     }
     if(simd) {
-        POLY(data, key, nbytes, &padded_final, &state->state);
+        POLYVAL(data, key, nbytes, &padded_final, &state->state);
     }
     else {
         generic_hctr2_poly(data, key, nbytes, (u8*)&padded_final, (be128*)&state->state);
@@ -135,7 +135,7 @@ void polyhash_hash_message(const struct polyhash_key *key,
         ((u8*)(&padded_final))[nbytes % POLYHASH_BLOCK_SIZE] = 0x01;
     }
     if(simd) {
-        POLY(data, key, nbytes, &padded_final, &state->state);
+        POLYVAL(data, key, nbytes, &padded_final, &state->state);
     }
     else {
         generic_hctr2_poly(data, key, nbytes, (u8*)&padded_final, (be128*)&state->state);

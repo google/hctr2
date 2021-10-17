@@ -33,13 +33,13 @@ src = [
 
 if host_machine.cpu_family() == 'aarch64'
     src += [
-        'src/aarch64/hctr2-polyhash-pmull_asm.S',
+        'src/aarch64/hctr2-polyval-pmull_asm.S',
         '../third_party/linux-kernel/aarch64/aes-ce.S',
     ]
 endif
 if host_machine.cpu_family() == 'x86_64'
     src += [
-	    'src/x86_64/hctr2-polyhash-clmulni_asm.S',
+	    'src/x86_64/hctr2-polyval-clmulni_asm.S',
         '../third_party/linux-kernel/x86_64/aes_xctr.S',
         '../third_party/linux-kernel/x86_64/aesni-intel_asm.S',
     ]

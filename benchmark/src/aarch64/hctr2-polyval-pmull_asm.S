@@ -314,10 +314,10 @@ ENTRY(pmull_hctr2_mul)
 ENDPROC(pmull_hctr2_mul)
 
 /*
- * Perform polynomial evaluation as specified by HCTR2. Shifts the value stored
+ * Perform polynomial evaluation as specified by HCTR2. Multiplies the value stored
  * at accumulator by h^n and XORs the evaluated polynomial into it.
  *
- * Computes h^n*accumulator + h^nM_0 + ... + h^1M_{n-1} (No constant term)
+ * Computes h^k*accumulator + h^kM_0 + ... + h^1M_{k-1} (No constant term)
  *
  * x0 (OP1) - pointer to message blocks
  * x1 - pointer to precomputed key struct
@@ -325,9 +325,9 @@ ENDPROC(pmull_hctr2_mul)
  * x3 - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
  * x4 - location to XOR with evaluated polynomial
  *
- * void pmull_hctr2_poly(const u128 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
+ * void pmull_hctr2_polyval(const u128 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
  */
-ENTRY(pmull_hctr2_poly)
+ENTRY(pmull_hctr2_polyval)
 	adr					TMP, .Lgstar
 	ld1					{GSTAR.2d}, [TMP]
 	ands				EXTRA_BYTES, x2, 0xf
@@ -350,4 +350,4 @@ ENTRY(pmull_hctr2_poly)
 .SkipPartial:
 	st1					{SUM.16b}, [x4]
 	ret
-ENDPROC(pmull_hctr2_poly)
+ENDPROC(pmull_hctr2_polyval)
