@@ -19,9 +19,9 @@ static const struct cipher {
 	const char *name;
 	void (*test_func)(void);
 } ciphers[] = {
-	{ "HCTR",		test_hctr },
-	{ "HCTR-CTR",		test_hctr_ctr },
-	{ "HCTR-Polyhash",		test_hctr_polyhash },
+	{ "HCTR2",		test_hctr2 },
+	{ "HCTR2-CTR",		test_hctr2_ctr },
+	{ "HCTR2-Polyhash",		test_hctr2_polyhash },
 	{ "XTS",		test_xts },
 };
 

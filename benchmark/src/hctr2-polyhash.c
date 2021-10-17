@@ -6,7 +6,7 @@
  */
 
 #include "gf128.h"
-#include "hctr-polyhash.h"
+#include "hctr2-polyhash.h"
 
 #ifdef __x86_64__
 asmlinkage void clmul_hctr2_poly(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
@@ -178,9 +178,9 @@ void polyhash_setkey_simd(struct polyhash_key *key, const u8 *raw_key) {
     polyhash_setup_simd(key, raw_key, 0);
 }
 
-void test_hctr_polyhash(void)
+void test_hctr2_polyhash(void)
 {
-#define ALGNAME		"HCTR-Polyhash"
+#define ALGNAME		"HCTR2-Polyhash"
 #define HASH		_polyhash
 #define HASH_SIMD	_polyhash_simd
 #define SIMD_IMPL_NAME	"clmul"

@@ -22,9 +22,9 @@ add_project_arguments('-O2', '-Wall', '-Wno-pointer-sign', '-fno-strict-aliasing
 src = [
     'src/aes.c',
     'src/cipherbench.c',
-    'src/hctr.c',
-    'src/hctr-xctr.c',
-    'src/hctr-polyhash.c',
+    'src/hctr2.c',
+    'src/hctr2-xctr.c',
+    'src/hctr2-polyhash.c',
     'src/xts.c',
     'src/insn_timing.c',
     '../third_party/linux-kernel/aes_ti.c',
@@ -33,13 +33,13 @@ src = [
 
 if host_machine.cpu_family() == 'aarch64'
     src += [
-        'src/aarch64/hctr-polyhash-pmull_asm.S',
+        'src/aarch64/hctr2-polyhash-pmull_asm.S',
         '../third_party/linux-kernel/aarch64/aes-ce.S',
     ]
 endif
 if host_machine.cpu_family() == 'x86_64'
     src += [
-	    'src/x86_64/hctr-polyhash-clmulni_asm.S',
+	    'src/x86_64/hctr2-polyhash-clmulni_asm.S',
         '../third_party/linux-kernel/x86_64/aes_xctr.S',
         '../third_party/linux-kernel/x86_64/aesni-intel_asm.S',
     ]
@@ -47,7 +47,7 @@ endif
 cipherbench = executable('cipherbench', src,
     include_directories : include_dirs)
 benchmark('benchmark', cipherbench)
-ciphers = ['HCTR', 'HCTR-Polyhash', 'HCTR-CTR']
+ciphers = ['HCTR2', 'HCTR2-Polyhash', 'HCTR2-CTR']
 check4096 = custom_target('check4096',
     command: [cipherbench, '--bufsize=4096'] + ciphers,
     output: 'check4096', capture: 'true')

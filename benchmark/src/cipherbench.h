@@ -7,9 +7,9 @@
  */
 #pragma once
 
-void test_hctr_polyhash(void);
-void test_hctr_ctr(void);
-void test_hctr(void);
+void test_hctr2_polyhash(void);
+void test_hctr2_ctr(void);
+void test_hctr2(void);
 void test_xts(void);
 
 void do_insn_timing(void);

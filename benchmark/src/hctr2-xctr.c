@@ -7,9 +7,9 @@
 
 #include "aes.h"
 #include "aes_linux.h"
-#include "hctr-xctr.h"
+#include "hctr2-xctr.h"
 
-void hctr_ctr_setkey(struct aes_ctx *ctx, const u8 *key)
+void hctr2_ctr_setkey(struct aes_ctx *ctx, const u8 *key)
 {
     aes256_setkey(ctx, key);
 }
@@ -20,21 +20,21 @@ asmlinkage void aes_ctr_enc_256_avx_by8(const u8 * in, const u8 * iv,
         		const u8 * key, u8 * out, size_t num_bytes);
 #endif
 #ifdef __aarch64__
-asmlinkage void ce_aes_hctr_ctr_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
+asmlinkage void ce_aes_hctr2_ctr_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
                 int bytes, u8 ctr[]);
 #endif
 
-void hctr_ctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
+void hctr2_ctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
         size_t nbytes, const u8 *iv, bool simd) {
     if(simd) {
-        hctr_ctr_crypt_simd(ctx, dst, src, nbytes, iv);
+        hctr2_ctr_crypt_simd(ctx, dst, src, nbytes, iv);
     }
     else {
-        hctr_ctr_crypt_generic(ctx, dst, src, nbytes, iv);
+        hctr2_ctr_crypt_generic(ctx, dst, src, nbytes, iv);
     }
 }
 
-void hctr_ctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
+void hctr2_ctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		       size_t nbytes, const u8 *iv)
 {
     u128 extra;
@@ -44,7 +44,7 @@ void hctr_ctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
     aes_ctr_enc_256_avx_by8(src, iv, ctx, dst, nbytes);
 #endif
 #ifdef __aarch64__
-    ce_aes_hctr_ctr_encrypt(dst, src, ctx, 14, nbytes, iv);
+    ce_aes_hctr2_ctr_encrypt(dst, src, ctx, 14, nbytes, iv);
 #endif
 
     if(nbytes % XCTR_BLOCK_SIZE != 0) {
@@ -64,7 +64,7 @@ void hctr_ctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
     }
 }
 
-void hctr_ctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
+void hctr2_ctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		       size_t nbytes, const u8 *iv)
 {
     int i;
@@ -91,18 +91,18 @@ void hctr_ctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
     }
 }
 
-void test_hctr_ctr(void)
+void test_hctr2_ctr(void)
 {
-#define ALGNAME		"HCTR-CTR"
+#define ALGNAME		"HCTR2-CTR"
 #define KEY_BYTES	XCTR_KEY_SIZE
 #define IV_BYTES	XCTR_IV_SIZE
 #define KEY		struct aes_ctx
-#define SETKEY		hctr_ctr_setkey
-#define SETKEY_SIMD		hctr_ctr_setkey
-#define ENCRYPT		hctr_ctr_crypt_generic
-#define DECRYPT		hctr_ctr_crypt_generic
+#define SETKEY		hctr2_ctr_setkey
+#define SETKEY_SIMD		hctr2_ctr_setkey
+#define ENCRYPT		hctr2_ctr_crypt_generic
+#define DECRYPT		hctr2_ctr_crypt_generic
 #define SIMD_IMPL_NAME "simd"
-#define ENCRYPT_SIMD	hctr_ctr_crypt_simd
-#define DECRYPT_SIMD	hctr_ctr_crypt_simd
+#define ENCRYPT_SIMD	hctr2_ctr_crypt_simd
+#define DECRYPT_SIMD	hctr2_ctr_crypt_simd
 #include "cipher_benchmark_template.h"
 }
