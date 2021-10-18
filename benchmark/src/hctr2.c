@@ -100,7 +100,7 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	xor(&S, &MM, &UU, BLOCKCIPHER_BLOCK_SIZE);
 	xor(&S, &ctx->L, &S, BLOCKCIPHER_BLOCK_SIZE);
 
-	hctr2_ctr_crypt(&ctx->aes_ctx, V, N, N_bytes, (u8 *)&S, simd);
+	xctr_crypt(&ctx->aes_ctx, V, N, N_bytes, (u8 *)&S, simd);
 
 	hctr2_hash_hash_message(&ctx->hctr2_hash_key, &polystate2, V, N_bytes,
 				simd);

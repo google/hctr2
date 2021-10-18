@@ -490,9 +490,9 @@ ddq_add_8:
 	do_aes \val, 0, \key_len
 .endm
 
-/* main body of aes ctr load */
+/* main body of aes xctr load */
 
-.macro do_aes_ctrmain key_len
+.macro do_aes_xctrmain key_len
 	andq	$(~0xf), num_bytes
 	cmp	$16, num_bytes
 	jb	.Ldo_return2\key_len
@@ -598,37 +598,37 @@ ddq_add_8:
  * routine to do AES128 XCTR enc/decrypt "by8"
  * XMM registers are clobbered.
  * Saving/restoring must be done at a higher level
- * aes_ctr_enc_128_avx_by8(const u8 *in, const u8 *iv, const aes_ctx *keys, u8 *out,
+ * aes_xctr_enc_128_avx_by8(const u8 *in, const u8 *iv, const aes_ctx *keys, u8 *out,
  *			unsigned int num_bytes)
  */
-ENTRY(aes_ctr_enc_128_avx_by8)
+ENTRY(aes_xctr_enc_128_avx_by8)
 	/* call the aes main loop */
-	do_aes_ctrmain KEY_128
+	do_aes_xctrmain KEY_128
 
-ENDPROC(aes_ctr_enc_128_avx_by8)
+ENDPROC(aes_xctr_enc_128_avx_by8)
 
 /*
  * routine to do AES192 XCTR enc/decrypt "by8"
  * XMM registers are clobbered.
  * Saving/restoring must be done at a higher level
- * aes_ctr_enc_192_avx_by8(const u8 *in, const u8 *iv, const aes_ctx *keys, u8 *out,
+ * aes_xctr_enc_192_avx_by8(const u8 *in, const u8 *iv, const aes_ctx *keys, u8 *out,
  *			unsigned int num_bytes)
  */
-ENTRY(aes_ctr_enc_192_avx_by8)
+ENTRY(aes_xctr_enc_192_avx_by8)
 	/* call the aes main loop */
-	do_aes_ctrmain KEY_192
+	do_aes_xctrmain KEY_192
 
-ENDPROC(aes_ctr_enc_192_avx_by8)
+ENDPROC(aes_xctr_enc_192_avx_by8)
 
 /*
  * routine to do AES256 XCTR enc/decrypt "by8"
  * XMM registers are clobbered.
  * Saving/restoring must be done at a higher level
- * aes_ctr_enc_256_avx_by8(void *in, void *iv, void *keys, void *out,
+ * aes_xctr_enc_256_avx_by8(void *in, void *iv, void *keys, void *out,
  *			unsigned int num_bytes)
  */
-ENTRY(aes_ctr_enc_256_avx_by8)
+ENTRY(aes_xctr_enc_256_avx_by8)
 	/* call the aes main loop */
-	do_aes_ctrmain KEY_256
+	do_aes_xctrmain KEY_256
 
-ENDPROC(aes_ctr_enc_256_avx_by8)
+ENDPROC(aes_xctr_enc_256_avx_by8)

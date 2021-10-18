@@ -123,11 +123,11 @@ AES_FUNC_END(aes_ecb_decrypt)
 	.byte		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 	
     /*
-	 * aes_hctr2_ctr_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
+	 * aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
 	 *		   int bytes, u8 const ctr[])
 	 */
 
-AES_FUNC_START(aes_hctr2_ctr_encrypt)
+AES_FUNC_START(aes_xctr_encrypt)
 	stp		x29, x30, [sp, #-16]!
 	mov		x29, sp
 
@@ -137,7 +137,7 @@ AES_FUNC_START(aes_hctr2_ctr_encrypt)
 	umov		x12, vctr.d[0]		/* keep ctr in reg */
 	movz	x11, #1
 
-.Lhctr2ctrloopNx:
+.LxctrloopNx:
 	add		w7, w4, #15
 	sub		w4, w4, #MAX_STRIDE << 4
 	lsr		w7, w7, #4
@@ -165,7 +165,7 @@ ST5(	add		x10, x11, #4	)
 	eor		x10, x10, x12
 	mov		v3.d[0], x9
 ST5(	mov		v4.d[0], x10			)
-	tbnz		w4, #31, .Lhctr2ctrtail
+	tbnz		w4, #31, .Lxctrtail
 	ld1		{v5.16b-v7.16b}, [x1], #48
 ST4(	bl		aes_encrypt_block4x		)
 ST5(	bl		aes_encrypt_block5x		)
@@ -180,14 +180,14 @@ ST5(	eor		v4.16b, v6.16b, v4.16b		)
 ST5(	st1		{v4.16b}, [x0], #16		)
 ST4(add		x11, x11, #4)
 ST5(add		x11, x11, #5)
-	cbz		w4, .Lhctr2ctrout
-	b		.Lhctr2ctrloopNx
+	cbz		w4, .Lxctrout
+	b		.LxctrloopNx
 
-.Lhctr2ctrout:
+.Lxctrout:
 	ldp		x29, x30, [sp], #16
 	ret
 
-.Lhctr2ctrtail:
+.Lxctrtail:
 	/* XOR up to MAX_STRIDE * 16 - 1 bytes of in/output with v0 ... v3/v4 */
 	mov		x17, #16
 	ands		x13, x4, #0xf
@@ -202,7 +202,7 @@ ST5(	csel		x14, x17, xzr, gt		)
 	cmp		w4, #16 - (MAX_STRIDE << 4)
 	csel		x17, x17, xzr, gt
 	cmp		w4, #16 - (MAX_STRIDE << 4)
-	blt		.Lhctr2ctrout
+	blt		.Lxctrout
 
 	adr		x12, .Lcts_permute_table
 	add		x12, x12, x13
@@ -250,8 +250,8 @@ ST4(	st1		{v9.16b}, [x15])
 ST4(	st1		{v8.16b}, [x16])
 ST4(	st1		{v7.16b}, [x17])
 ST4(	st1		{v6.16b}, [x0])
-	b		.Lhctr2ctrout
-AES_FUNC_END(aes_hctr2_ctr_encrypt)
+	b		.Lxctrout
+AES_FUNC_END(aes_xctr_encrypt)
 
 
 	/*
