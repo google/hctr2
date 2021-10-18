@@ -62,6 +62,6 @@ class XCTR(cipher.Bijection):
 
     def test_input_lengths(self):
         v = dict(self.lengths())
-        for l in [0, 1, 32, 59]:
+        for l in [32, 255]:
             for m in "plaintext", "ciphertext":
                 yield {**v, m: l}

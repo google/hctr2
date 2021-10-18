@@ -94,6 +94,6 @@ class HCTR2(cipher.Bijection):
         b = v['block']
         del v['block']
         for t in [0, 1, 16, 32, 47]:
-            for l in [16, 17, 32, 33]:
+            for l in [16, 17, 48, 255]:
                 for m in "plaintext", "ciphertext":
                     yield {**v, 'tweak': t, m: l}
