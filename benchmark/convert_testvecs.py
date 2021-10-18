@@ -54,8 +54,8 @@ def write_testvec_structs(f, struct, name, entries):
     for vec in entries:
         f.write("\t{\n")
         for k, v in vec.items():
-            f.write(f"\t\t.{k}\t= {{.len = {len(v)}, .data =")
-            write_data_field(f, '\n\t\t\t', '\n\t\t\t', '\n\t\t', ' ""', v)
+            f.write(f"\t\t.{k} = {{.len = {len(v)}, .data =")
+            write_data_field(f, '\n\t\t\t', '\n\t\t\t', '', ' ""', v)
             f.write('},\n')
         f.write("\t},\n")
     f.write(f"}};\n\n")
