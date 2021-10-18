@@ -54,14 +54,7 @@ void hctr2_ctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		extra.b = cpu_to_le64(nbytes / XCTR_BLOCK_SIZE) + 1;
 		xor(&extra, &extra, iv, XCTR_BLOCK_SIZE);
 
-#ifdef __x86_64__
-		aesni_ecb_enc(&ctx->aes_ctx, (u8 *)&extra, (u8 *)&extra,
-			      XCTR_BLOCK_SIZE);
-#endif
-#ifdef __aarch64__
-		ce_aes_ecb_encrypt((u8 *)&extra, (u8 *)&extra,
-				   (u8 *)ctx->aes_ctx.key_enc, 14, 1);
-#endif
+		aes_encrypt(ctx, (u8 *)&extra, (u8*)&extra, true);
 
 		xor(&dst[offset], (u8 *)&extra, &src[offset],
 		    nbytes % XCTR_BLOCK_SIZE);
@@ -81,7 +74,7 @@ void hctr2_ctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		ctr.a = 0;
 		ctr.b = cpu_to_le64(i + 1);
 		xor(&ctr, &ctr, iv, XCTR_BLOCK_SIZE);
-		aes_encrypt(ctx, &dst[i * XCTR_BLOCK_SIZE], (u8 *)&ctr);
+		aes_encrypt(ctx, &dst[i * XCTR_BLOCK_SIZE], (u8 *)&ctr, false);
 		xor(&dst[i * XCTR_BLOCK_SIZE], &dst[i * XCTR_BLOCK_SIZE],
 		    &src[i * XCTR_BLOCK_SIZE], XCTR_BLOCK_SIZE);
 	}
@@ -91,7 +84,7 @@ void hctr2_ctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		ctr.a = 0;
 		ctr.b = cpu_to_le64(nbytes / XCTR_BLOCK_SIZE) + 1;
 		xor(&ctr, &ctr, iv, XCTR_BLOCK_SIZE);
-		aes_encrypt(ctx, (u8 *)&ctr, (u8 *)&ctr);
+		aes_encrypt(ctx, (u8 *)&ctr, (u8 *)&ctr, false);
 		xor(&dst[offset], (u8 *)&ctr, &src[offset],
 		    nbytes % XCTR_BLOCK_SIZE);
 	}

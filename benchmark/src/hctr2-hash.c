@@ -87,6 +87,17 @@ void hctr2_hash_setup_simd(struct hctr2_hash_key *key, const u8 *raw_key,
 	MUL(&key->tweaklen_part[1], &key->powers[NUM_PRECOMPUTE_KEYS - 1]);
 }
 
+void hctr2_hash_setup(struct hctr2_hash_key *key, const u8 *raw_key,
+			 size_t tweak_len, bool simd)
+{
+    if(simd) {
+        hctr2_hash_setup_simd(key, raw_key, tweak_len);
+    }
+    else {
+        hctr2_hash_setup_generic(key, raw_key, tweak_len);
+    }
+}
+
 void generic_hctr2_poly(const u8 *in, const struct hctr2_hash_key *key,
 			uint64_t nbytes, const u8 *final, be128 *accumulator)
 {

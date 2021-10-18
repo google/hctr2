@@ -26,96 +26,32 @@ struct hctr2_ctx {
 	u8 L[BLOCKCIPHER_BLOCK_SIZE];
 };
 
-void hctr2_setkey_generic(struct hctr2_ctx *ctx, const u8 *key)
-{
-	u8 h[BLOCKCIPHER_BLOCK_SIZE];
-	u128 buf;
-	aesti_expand_key(&ctx->aes_ctx.aes_ctx, key, BLOCKCIPHER_KEY_SIZE);
-	ctx->default_tweak_len = HCTR2_DEFAULT_TWEAK_LEN;
-
-	buf.a = 0;
-	buf.b = 0;
-	aes_encrypt(&ctx->aes_ctx, (u8 *)&h, (u8 *)&buf);
-	buf.b = cpu_to_le64(1);
-	aes_encrypt(&ctx->aes_ctx, (u8 *)&ctx->L, (u8 *)&buf);
-
-	hctr2_hash_setup_generic(&ctx->hctr2_hash_key, (u8 *)&h,
-			       ctx->default_tweak_len);
-}
-
-void hctr2_setkey_simd(struct hctr2_ctx *ctx, const u8 *key)
-{
-	u8 h[BLOCKCIPHER_BLOCK_SIZE];
-	u128 buf;
-	aesti_expand_key(&ctx->aes_ctx.aes_ctx, key, BLOCKCIPHER_KEY_SIZE);
-	ctx->default_tweak_len = HCTR2_DEFAULT_TWEAK_LEN;
-
-	buf.a = 0;
-	buf.b = 0;
-#ifdef __x86_64__
-	aesni_ecb_enc(&ctx->aes_ctx.aes_ctx, (u8 *)&h, (u8 *)&buf,
-		      XCTR_BLOCK_SIZE);
-	buf.b = cpu_to_le64(1);
-	aesni_ecb_enc(&ctx->aes_ctx.aes_ctx, (u8 *)&ctx->L, (u8 *)&buf,
-		      XCTR_BLOCK_SIZE);
-#endif
-#ifdef __aarch64__
-	ce_aes_ecb_encrypt((u8 *)&h, (u8 *)&buf,
-			   (u8 *)&ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
-	buf.b = cpu_to_le64(1);
-	ce_aes_ecb_encrypt((u8 *)&ctx->L, (u8 *)&buf,
-			   (u8 *)&ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
-#endif
-
-	hctr2_hash_setup_simd(&ctx->hctr2_hash_key, (u8 *)&h,
-			    ctx->default_tweak_len);
-}
-
 void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, bool simd)
 {
-	if (simd) {
-		hctr2_setkey_simd(ctx, key);
-	} else {
-		hctr2_setkey_generic(ctx, key);
-	}
+	u8 h[BLOCKCIPHER_BLOCK_SIZE];
+	u128 buf;
+	aesti_expand_key(&ctx->aes_ctx.aes_ctx, key, BLOCKCIPHER_KEY_SIZE);
+	ctx->default_tweak_len = HCTR2_DEFAULT_TWEAK_LEN;
+
+	buf.a = 0;
+	buf.b = 0;
+	aes_encrypt(&ctx->aes_ctx, (u8 *)&h, (u8 *)&buf, simd);
+	buf.b = cpu_to_le64(1);
+	aes_encrypt(&ctx->aes_ctx, (u8 *)&ctx->L, (u8 *)&buf, simd);
+
+	hctr2_hash_setup(&ctx->hctr2_hash_key, (u8 *)&h,
+			       ctx->default_tweak_len, simd);
 }
 
-void hctr2_change_tweak_len_simd(struct hctr2_ctx *ctx, const size_t tweak_len)
+void hctr2_change_tweak_len(struct hctr2_ctx *ctx,
+				    const size_t tweak_len, bool simd)
 {
 	u8 h[BLOCKCIPHER_BLOCK_SIZE];
 	u128 buf;
 	buf.a = 0;
 	buf.b = 0;
-#ifdef __x86_64__
-	aesni_ecb_enc(&ctx->aes_ctx.aes_ctx, (u8 *)&h, (u8 *)&buf,
-		      XCTR_BLOCK_SIZE);
-#endif
-#ifdef __aarch64__
-	ce_aes_ecb_encrypt((u8 *)&h, (u8 *)&buf,
-			   (u8 *)&ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
-#endif
-	hctr2_hash_setup_simd(&ctx->hctr2_hash_key, (u8 *)&h, tweak_len);
-}
-
-void hctr2_change_tweak_len_generic(struct hctr2_ctx *ctx,
-				    const size_t tweak_len)
-{
-	u8 h[BLOCKCIPHER_BLOCK_SIZE];
-	u128 buf;
-	buf.a = 0;
-	buf.b = 0;
-	aes_encrypt(&ctx->aes_ctx, (u8 *)&h, (u8 *)&buf);
-	hctr2_hash_setup_generic(&ctx->hctr2_hash_key, (u8 *)&h, tweak_len);
-}
-
-void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len,
-			    bool simd)
-{
-	if (simd) {
-		hctr2_change_tweak_len_simd(ctx, tweak_len);
-	} else {
-		hctr2_change_tweak_len_generic(ctx, tweak_len);
-	}
+	aes_encrypt(&ctx->aes_ctx, (u8 *)&h, (u8 *)&buf, simd);
+	hctr2_hash_setup(&ctx->hctr2_hash_key, (u8 *)&h, tweak_len, simd);
 }
 
 void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
@@ -153,24 +89,12 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 
 	xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
 
-#ifdef __x86_64__
-	if (encrypt) {
-		aesni_ecb_enc(&ctx->aes_ctx.aes_ctx, (u8 *)&UU, MM,
-			      BLOCKCIPHER_BLOCK_SIZE);
-	} else {
-		aesni_ecb_dec(&ctx->aes_ctx.aes_ctx, (u8 *)&UU, MM,
-			      BLOCKCIPHER_BLOCK_SIZE);
-	}
-#endif
-#ifdef __aarch64__
-	if (encrypt) {
-		ce_aes_ecb_encrypt((u8 *)&UU, MM,
-				   (u8 *)&ctx->aes_ctx.aes_ctx.key_enc, 14, 1);
-	} else {
-		ce_aes_ecb_decrypt((u8 *)&UU, MM,
-				   (u8 *)&ctx->aes_ctx.aes_ctx.key_dec, 14, 1);
-	}
-#endif
+    if(encrypt) {
+        aes_encrypt(&ctx->aes_ctx, (u8 *)&UU, MM, simd);
+    }
+    else {
+        aes_decrypt(&ctx->aes_ctx, (u8 *)&UU, MM, simd);
+    }
 
 	xor(&S, &MM, &UU, BLOCKCIPHER_BLOCK_SIZE);
 	xor(&S, &ctx->L, &S, BLOCKCIPHER_BLOCK_SIZE);
@@ -182,6 +106,14 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	hctr2_hash_emit(&ctx->hctr2_hash_key, &polystate2, (u8 *)&digest, simd);
 
 	xor(U, &UU, digest, BLOCKCIPHER_BLOCK_SIZE);
+}
+
+void hctr2_setkey_generic(struct hctr2_ctx *ctx, const u8 *key) {
+    hctr2_setkey(ctx, key, false);
+}
+
+void hctr2_setkey_simd(struct hctr2_ctx *ctx, const u8 *key) {
+    hctr2_setkey(ctx, key, true);
 }
 
 void hctr2_encrypt_generic(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,

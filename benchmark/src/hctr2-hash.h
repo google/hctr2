@@ -25,10 +25,8 @@ struct hctr2_hash_state {
 	u128 state;
 };
 
-void hctr2_hash_setup_generic(struct hctr2_hash_key *key, const u8 *raw_key,
-			    size_t tweak_len);
-void hctr2_hash_setup_simd(struct hctr2_hash_key *key, const u8 *raw_key,
-			 size_t tweak_len);
+void hctr2_hash_setup(struct hctr2_hash_key *key, const u8 *raw_key,
+			 size_t tweak_len, bool simd);
 
 void hctr2_hash_hash_tweak(const struct hctr2_hash_key *key,
 			 struct hctr2_hash_state *state, const u8 *data,
