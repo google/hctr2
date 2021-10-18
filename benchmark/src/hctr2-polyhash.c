@@ -27,7 +27,11 @@ asmlinkage void pmull_hctr2_mul(u128 *op1, const u128 *op2);
 #define MUL pmull_hctr2_mul
 #endif
 
-void reverse(be128 *a)
+/*
+ * Used to convert "GHASH-like" multiplication into "POLYVAL-like".
+ * See https://datatracker.ietf.org/doc/html/rfc8452 for more detail.
+ */
+void reverse_bytes(be128 *a)
 {
 	swap(a->a, a->b);
 	a->a = __builtin_bswap64(a->a);
@@ -40,7 +44,7 @@ void polyhash_setup_generic(struct polyhash_key *key, const u8 *raw_key,
 	/* set h */
 	memcpy(&key->powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(u128));
 
-	reverse((be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
+	reverse_bytes((be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
 	gf128mul_x_lle((be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1],
 		       (be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
 
@@ -53,12 +57,12 @@ void polyhash_setup_generic(struct polyhash_key *key, const u8 *raw_key,
 	}
 	key->tweaklen_part[0].b = tweak_len * 8 * 2 + 3;
 	key->tweaklen_part[0].a = 0;
-	reverse((be128 *)&key->tweaklen_part[0]);
+	reverse_bytes((be128 *)&key->tweaklen_part[0]);
 	gf128mul_lle((be128 *)&key->tweaklen_part[0],
 		     (be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
 	key->tweaklen_part[1].b = tweak_len * 8 * 2 + 2;
 	key->tweaklen_part[1].a = 0;
-	reverse((be128 *)&key->tweaklen_part[1]);
+	reverse_bytes((be128 *)&key->tweaklen_part[1]);
 	gf128mul_lle((be128 *)&key->tweaklen_part[1],
 		     (be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
 }
@@ -96,7 +100,7 @@ void generic_hctr2_poly(const u8 *in, const struct polyhash_key *key,
 		for (int i = 0; i < NUM_PRECOMPUTE_KEYS; i++) {
 			memcpy(&tmp, &in[(i + index) * POLYHASH_BLOCK_SIZE],
 			       sizeof(u128));
-			reverse(&tmp);
+			reverse_bytes(&tmp);
 			gf128mul_lle(&tmp, (be128 *)&key->powers[i]);
 			be128_xor(accumulator, accumulator, (be128 *)&tmp);
 		}
@@ -113,7 +117,7 @@ void generic_hctr2_poly(const u8 *in, const struct polyhash_key *key,
 		for (int i = 0; i < nblocks; i++) {
 			memcpy(&tmp, &in[(i + index) * POLYHASH_BLOCK_SIZE],
 			       sizeof(u128));
-			reverse(&tmp);
+			reverse_bytes(&tmp);
 			gf128mul_lle((be128 *)&tmp,
 				     (be128 *)&key->powers[NUM_PRECOMPUTE_KEYS
 							   - nblocks
@@ -124,7 +128,7 @@ void generic_hctr2_poly(const u8 *in, const struct polyhash_key *key,
 		nblocks -= nblocks;
 		if (final_shift == 1) {
 			memcpy(&tmp, final, sizeof(u128));
-			reverse(&tmp);
+			reverse_bytes(&tmp);
 			gf128mul_lle(
 				(be128 *)&tmp,
 				(be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
@@ -185,7 +189,7 @@ void polyhash_emit(const struct polyhash_key *key, struct polyhash_state *state,
 {
 	memcpy(out, &state->state, POLYHASH_BLOCK_SIZE);
 	if (!simd) {
-		reverse((be128 *)out);
+		reverse_bytes((be128 *)out);
 	}
 }
 
