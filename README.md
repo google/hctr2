@@ -1,19 +1,29 @@
 # HCTR2
 
-HCTR2 is a wide-block encryption mode that supports hardware acceleration. It is
-efficient on processors that support accelerated AES instructions and carry-less
-multiplication instructions (CLMUL/PMULL).
+HCTR2 is a wide-block encryption mode that is efficient on processors with
+instructions to accelerate AES and carryless multiplication, e.g. x86 processors
+with AES-NI and CLMUL, and ARM processors with the ARMv8 Crypto Extensions.
 
-HCTR2 is a super pseudorandom permuation, meaning it works on an arbitrary
-length block size, allowing arbitrary length plaintexts to be a single block.
-This means that any change to the plaintext will produce an unrecognizably
-different ciphertext.
+HCTR2 is intended for applications such as disk encryption that require
+length-preserving encryption, so authenticated algorithms such as AES-GCM cannot
+be used.  Usually AES-XTS is used in such cases, but XTS has the disadvantage
+that it is a "narrow-block mode": a 1-bit change to the plaintext changes only
+16 bytes of ciphertext and vice versa, revealing more information to the
+attacker than necessary.  HCTR2 is a wide-block mode ("super-pseudorandom
+permutation"), so any change to the plaintext will result in an unrecognizably
+different ciphertext and vice versa.
+
+For more information, see the HCTR2 paper.
 
 ## File layout
 
- * `benchmark/`: HCTR implementation in C and benchmarking code
- * `python/`: HCTR implementation in Python
- * `third_party`: derived works covered by a different licesnse than our main MIT license
+ * `benchmark/`: C implementation and benchmarking code
+ * `python/`: Python implementation and test vector generation
+ * `test_vectors/other/`: Test vectors we use to validate our implementations
+    of other primitives
+ * `test_vectors/ours/`: Test vectors we generate, in JSON format
+ * `third_party/`: derived works covered by a different license than our main
+   MIT license
 
 ## Notices
 
