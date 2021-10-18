@@ -203,45 +203,47 @@ void hctr2_hash_emit(const struct hctr2_hash_key *key,
 	}
 }
 
-static void _hctr2_hash(const struct hctr2_hash_key *key, const void *src,
+static void _polyval_generic(const struct hctr2_hash_key *key, const void *src,
 			unsigned int srclen, u8 *digest)
 {
 	struct hctr2_hash_state polystate;
+    polystate.state.a = 0;
+    polystate.state.b = 0;
 
-	hctr2_hash_hash_tweak(key, &polystate, src, 0, true, false);
 	hctr2_hash_hash_message(key, &polystate, src, srclen, false);
 	hctr2_hash_emit(key, &polystate, digest, false);
 }
 
-static void _hctr2_hash_simd(const struct hctr2_hash_key *key, const void *src,
+static void _polyval_simd(const struct hctr2_hash_key *key, const void *src,
 			     unsigned int srclen, u8 *digest)
 {
 	struct hctr2_hash_state polystate;
+    polystate.state.a = 0;
+    polystate.state.b = 0;
 
-	hctr2_hash_hash_tweak(key, &polystate, src, 0, true, true);
 	hctr2_hash_hash_message(key, &polystate, src, srclen, true);
 	hctr2_hash_emit(key, &polystate, digest, true);
 }
 
-void hctr2_hash_setkey_generic(struct hctr2_hash_key *key, const u8 *raw_key)
+void polyval_setkey_generic(struct hctr2_hash_key *key, const u8 *raw_key)
 {
 	hctr2_hash_setup_generic(key, raw_key, 0);
 }
 
-void hctr2_hash_setkey_simd(struct hctr2_hash_key *key, const u8 *raw_key)
+void polyval_setkey_simd(struct hctr2_hash_key *key, const u8 *raw_key)
 {
 	hctr2_hash_setup_simd(key, raw_key, 0);
 }
 
-void test_hctr2_hash(void)
+void test_polyval(void)
 {
-#define ALGNAME "HCTR2-Hash"
-#define HASH _hctr2_hash
-#define HASH_SIMD _hctr2_hash_simd
+#define ALGNAME "Polyval"
+#define HASH _polyval_generic
+#define HASH_SIMD _polyval_simd
 #define SIMD_IMPL_NAME "clmul"
 #define KEY struct hctr2_hash_key
-#define SETKEY hctr2_hash_setkey_generic
-#define SETKEY_SIMD hctr2_hash_setkey_simd
+#define SETKEY polyval_setkey_generic
+#define SETKEY_SIMD polyval_setkey_simd
 #define KEY_BYTES HCTR2_HASH_KEY_SIZE
 #define DIGEST_SIZE HCTR2_HASH_DIGEST_SIZE
 #include "hash_benchmark_template.h"

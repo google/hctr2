@@ -90,7 +90,7 @@ void hctr2_ctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	}
 }
 
-void test_hctr2_ctr(void)
+void test_xctr(void)
 {
 #define ALGNAME "HCTR2-CTR"
 #define KEY_BYTES XCTR_KEY_SIZE

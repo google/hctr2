@@ -20,8 +20,8 @@ static const struct cipher {
 	void (*test_func)(void);
 } ciphers[] = {
 	{"HCTR2", test_hctr2},
-	{"HCTR2-CTR", test_hctr2_ctr},
-	{"HCTR2-Hash", test_hctr2_hash},
+	{"XCTR", test_xctr},
+	{"Polyval", test_polyval},
 	{"XTS", test_xts},
 };
 
