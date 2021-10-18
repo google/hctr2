@@ -9,6 +9,7 @@
 #include "aes_linux.h"
 #include "hctr2-xctr.h"
 #include "hctr2-hash.h"
+#include "hctr2_testvecs.h"
 #include "testvec.h"
 #include "util.h"
 
@@ -39,12 +40,12 @@ void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, bool simd)
 	buf.b = cpu_to_le64(1);
 	aes_encrypt(&ctx->aes_ctx, (u8 *)&ctx->L, (u8 *)&buf, simd);
 
-	hctr2_hash_setup(&ctx->hctr2_hash_key, (u8 *)&h,
-			       ctx->default_tweak_len, simd);
+	hctr2_hash_setup(&ctx->hctr2_hash_key, (u8 *)&h, ctx->default_tweak_len,
+			 simd);
 }
 
-void hctr2_change_tweak_len(struct hctr2_ctx *ctx,
-				    const size_t tweak_len, bool simd)
+void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len,
+			    bool simd)
 {
 	u8 h[BLOCKCIPHER_BLOCK_SIZE];
 	u128 buf;
@@ -80,21 +81,21 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	V = dst + BLOCKCIPHER_BLOCK_SIZE;
 
 
-	hctr2_hash_hash_tweak(&ctx->hctr2_hash_key, &polystate1, tweak, tweak_len,
-			    N_bytes % HCTR2_HASH_BLOCK_SIZE == 0, simd);
+	hctr2_hash_hash_tweak(&ctx->hctr2_hash_key, &polystate1, tweak,
+			      tweak_len, N_bytes % HCTR2_HASH_BLOCK_SIZE == 0,
+			      simd);
 	memcpy(&polystate2, &polystate1, sizeof(polystate1));
 	hctr2_hash_hash_message(&ctx->hctr2_hash_key, &polystate1, N, N_bytes,
-			      simd);
+				simd);
 	hctr2_hash_emit(&ctx->hctr2_hash_key, &polystate1, (u8 *)&digest, simd);
 
 	xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
 
-    if(encrypt) {
-        aes_encrypt(&ctx->aes_ctx, (u8 *)&UU, MM, simd);
-    }
-    else {
-        aes_decrypt(&ctx->aes_ctx, (u8 *)&UU, MM, simd);
-    }
+	if (encrypt) {
+		aes_encrypt(&ctx->aes_ctx, (u8 *)&UU, MM, simd);
+	} else {
+		aes_decrypt(&ctx->aes_ctx, (u8 *)&UU, MM, simd);
+	}
 
 	xor(&S, &MM, &UU, BLOCKCIPHER_BLOCK_SIZE);
 	xor(&S, &ctx->L, &S, BLOCKCIPHER_BLOCK_SIZE);
@@ -102,18 +103,20 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	hctr2_ctr_crypt(&ctx->aes_ctx, V, N, N_bytes, (u8 *)&S, simd);
 
 	hctr2_hash_hash_message(&ctx->hctr2_hash_key, &polystate2, V, N_bytes,
-			      simd);
+				simd);
 	hctr2_hash_emit(&ctx->hctr2_hash_key, &polystate2, (u8 *)&digest, simd);
 
 	xor(U, &UU, digest, BLOCKCIPHER_BLOCK_SIZE);
 }
 
-void hctr2_setkey_generic(struct hctr2_ctx *ctx, const u8 *key) {
-    hctr2_setkey(ctx, key, false);
+void hctr2_setkey_generic(struct hctr2_ctx *ctx, const u8 *key)
+{
+	hctr2_setkey(ctx, key, false);
 }
 
-void hctr2_setkey_simd(struct hctr2_ctx *ctx, const u8 *key) {
-    hctr2_setkey(ctx, key, true);
+void hctr2_setkey_simd(struct hctr2_ctx *ctx, const u8 *key)
+{
+	hctr2_setkey(ctx, key, true);
 }
 
 void hctr2_encrypt_generic(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
@@ -143,8 +146,6 @@ void hctr2_decrypt_simd(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	hctr2_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, false,
 		    true);
 }
-
-#include "hctr2_testvecs.h"
 
 static void test_hctr2_testvec(const struct hctr2_testvec *v, bool simd)
 {

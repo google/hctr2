@@ -54,7 +54,7 @@ void hctr2_ctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		extra.b = cpu_to_le64(nbytes / XCTR_BLOCK_SIZE) + 1;
 		xor(&extra, &extra, iv, XCTR_BLOCK_SIZE);
 
-		aes_encrypt(ctx, (u8 *)&extra, (u8*)&extra, true);
+		aes_encrypt(ctx, (u8 *)&extra, (u8 *)&extra, true);
 
 		xor(&dst[offset], (u8 *)&extra, &src[offset],
 		    nbytes % XCTR_BLOCK_SIZE);

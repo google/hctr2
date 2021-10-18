@@ -26,15 +26,15 @@ struct hctr2_hash_state {
 };
 
 void hctr2_hash_setup(struct hctr2_hash_key *key, const u8 *raw_key,
-			 size_t tweak_len, bool simd);
+		      size_t tweak_len, bool simd);
 
 void hctr2_hash_hash_tweak(const struct hctr2_hash_key *key,
-			 struct hctr2_hash_state *state, const u8 *data,
-			 size_t nbytes, bool mdiv, bool simd);
+			   struct hctr2_hash_state *state, const u8 *data,
+			   size_t nbytes, bool mdiv, bool simd);
 
 void hctr2_hash_hash_message(const struct hctr2_hash_key *key,
-			   struct hctr2_hash_state *state, const u8 *data,
-			   size_t nbytes, bool simd);
+			     struct hctr2_hash_state *state, const u8 *data,
+			     size_t nbytes, bool simd);
 
-void hctr2_hash_emit(const struct hctr2_hash_key *key, struct hctr2_hash_state *state,
-		   u8 *out, bool simd);
+void hctr2_hash_emit(const struct hctr2_hash_key *key,
+		     struct hctr2_hash_state *state, u8 *out, bool simd);

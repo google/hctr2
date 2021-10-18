@@ -39,7 +39,7 @@ void reverse_bytes(be128 *a)
 }
 
 void hctr2_hash_setup_generic(struct hctr2_hash_key *key, const u8 *raw_key,
-			    size_t tweak_len)
+			      size_t tweak_len)
 {
 	/* set h */
 	memcpy(&key->powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(u128));
@@ -68,7 +68,7 @@ void hctr2_hash_setup_generic(struct hctr2_hash_key *key, const u8 *raw_key,
 }
 
 void hctr2_hash_setup_simd(struct hctr2_hash_key *key, const u8 *raw_key,
-			 size_t tweak_len)
+			   size_t tweak_len)
 {
 	/* set h */
 	memcpy(&key->powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(u128));
@@ -88,14 +88,13 @@ void hctr2_hash_setup_simd(struct hctr2_hash_key *key, const u8 *raw_key,
 }
 
 void hctr2_hash_setup(struct hctr2_hash_key *key, const u8 *raw_key,
-			 size_t tweak_len, bool simd)
+		      size_t tweak_len, bool simd)
 {
-    if(simd) {
-        hctr2_hash_setup_simd(key, raw_key, tweak_len);
-    }
-    else {
-        hctr2_hash_setup_generic(key, raw_key, tweak_len);
-    }
+	if (simd) {
+		hctr2_hash_setup_simd(key, raw_key, tweak_len);
+	} else {
+		hctr2_hash_setup_generic(key, raw_key, tweak_len);
+	}
 }
 
 void generic_hctr2_poly(const u8 *in, const struct hctr2_hash_key *key,
@@ -149,8 +148,8 @@ void generic_hctr2_poly(const u8 *in, const struct hctr2_hash_key *key,
 }
 
 void hctr2_hash_hash_tweak(const struct hctr2_hash_key *key,
-			 struct hctr2_hash_state *state, const u8 *data,
-			 size_t nbytes, bool mdiv, bool simd)
+			   struct hctr2_hash_state *state, const u8 *data,
+			   size_t nbytes, bool mdiv, bool simd)
 {
 	u128 padded_final;
 	memcpy(&state->state, &key->tweaklen_part[mdiv ? 1 : 0],
@@ -173,8 +172,8 @@ void hctr2_hash_hash_tweak(const struct hctr2_hash_key *key,
 }
 
 void hctr2_hash_hash_message(const struct hctr2_hash_key *key,
-			   struct hctr2_hash_state *state, const u8 *data,
-			   size_t nbytes, bool simd)
+			     struct hctr2_hash_state *state, const u8 *data,
+			     size_t nbytes, bool simd)
 {
 	u128 padded_final;
 	if (nbytes % HCTR2_HASH_BLOCK_SIZE != 0) {
@@ -195,8 +194,8 @@ void hctr2_hash_hash_message(const struct hctr2_hash_key *key,
 	}
 }
 
-void hctr2_hash_emit(const struct hctr2_hash_key *key, struct hctr2_hash_state *state,
-		   u8 *out, bool simd)
+void hctr2_hash_emit(const struct hctr2_hash_key *key,
+		     struct hctr2_hash_state *state, u8 *out, bool simd)
 {
 	memcpy(out, &state->state, HCTR2_HASH_BLOCK_SIZE);
 	if (!simd) {
@@ -205,7 +204,7 @@ void hctr2_hash_emit(const struct hctr2_hash_key *key, struct hctr2_hash_state *
 }
 
 static void _hctr2_hash(const struct hctr2_hash_key *key, const void *src,
-		      unsigned int srclen, u8 *digest)
+			unsigned int srclen, u8 *digest)
 {
 	struct hctr2_hash_state polystate;
 
@@ -215,7 +214,7 @@ static void _hctr2_hash(const struct hctr2_hash_key *key, const void *src,
 }
 
 static void _hctr2_hash_simd(const struct hctr2_hash_key *key, const void *src,
-			   unsigned int srclen, u8 *digest)
+			     unsigned int srclen, u8 *digest)
 {
 	struct hctr2_hash_state polystate;
 
