@@ -24,7 +24,7 @@ src = [
     'src/cipherbench.c',
     'src/hctr2.c',
     'src/hctr2-xctr.c',
-    'src/hctr2-polyhash.c',
+    'src/hctr2-hash.c',
     'src/xts.c',
     'src/insn_timing.c',
     'testvectors/hctr2_testvecs.c',

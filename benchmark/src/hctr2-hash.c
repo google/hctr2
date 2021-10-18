@@ -6,11 +6,11 @@
  */
 
 #include "gf128.h"
-#include "hctr2-polyhash.h"
+#include "hctr2-hash.h"
 
 #ifdef __x86_64__
 asmlinkage void clmul_hctr2_polyval(const u8 *in,
-				    const struct polyhash_key *keys,
+				    const struct hctr2_hash_key *keys,
 				    uint64_t nbytes, const u128 *final,
 				    u128 *accumulator);
 asmlinkage void clmul_hctr2_mul(u128 *op1, const u128 *op2);
@@ -19,7 +19,7 @@ asmlinkage void clmul_hctr2_mul(u128 *op1, const u128 *op2);
 #endif
 #ifdef __aarch64__
 asmlinkage void pmull_hctr2_polyval(const u8 *in,
-				    const struct polyhash_key *keys,
+				    const struct hctr2_hash_key *keys,
 				    uint64_t nbytes, const u128 *final,
 				    u128 *accumulator);
 asmlinkage void pmull_hctr2_mul(u128 *op1, const u128 *op2);
@@ -38,7 +38,7 @@ void reverse_bytes(be128 *a)
 	a->b = __builtin_bswap64(a->b);
 }
 
-void polyhash_setup_generic(struct polyhash_key *key, const u8 *raw_key,
+void hctr2_hash_setup_generic(struct hctr2_hash_key *key, const u8 *raw_key,
 			    size_t tweak_len)
 {
 	/* set h */
@@ -67,7 +67,7 @@ void polyhash_setup_generic(struct polyhash_key *key, const u8 *raw_key,
 		     (be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
 }
 
-void polyhash_setup_simd(struct polyhash_key *key, const u8 *raw_key,
+void hctr2_hash_setup_simd(struct hctr2_hash_key *key, const u8 *raw_key,
 			 size_t tweak_len)
 {
 	/* set h */
@@ -87,18 +87,18 @@ void polyhash_setup_simd(struct polyhash_key *key, const u8 *raw_key,
 	MUL(&key->tweaklen_part[1], &key->powers[NUM_PRECOMPUTE_KEYS - 1]);
 }
 
-void generic_hctr2_poly(const u8 *in, const struct polyhash_key *key,
+void generic_hctr2_poly(const u8 *in, const struct hctr2_hash_key *key,
 			uint64_t nbytes, const u8 *final, be128 *accumulator)
 {
 	be128 tmp;
 	int index = 0;
 	int final_shift;
 	size_t nblocks;
-	nblocks = nbytes / POLYHASH_BLOCK_SIZE;
+	nblocks = nbytes / HCTR2_HASH_BLOCK_SIZE;
 	while (nblocks >= NUM_PRECOMPUTE_KEYS) {
 		gf128mul_lle(accumulator, (be128 *)&key->powers[0]);
 		for (int i = 0; i < NUM_PRECOMPUTE_KEYS; i++) {
-			memcpy(&tmp, &in[(i + index) * POLYHASH_BLOCK_SIZE],
+			memcpy(&tmp, &in[(i + index) * HCTR2_HASH_BLOCK_SIZE],
 			       sizeof(u128));
 			reverse_bytes(&tmp);
 			gf128mul_lle(&tmp, (be128 *)&key->powers[i]);
@@ -107,7 +107,7 @@ void generic_hctr2_poly(const u8 *in, const struct polyhash_key *key,
 		index += NUM_PRECOMPUTE_KEYS;
 		nblocks -= NUM_PRECOMPUTE_KEYS;
 	}
-	final_shift = nbytes % POLYHASH_BLOCK_SIZE == 0 ? 0 : 1;
+	final_shift = nbytes % HCTR2_HASH_BLOCK_SIZE == 0 ? 0 : 1;
 	if (nblocks > 0 || final_shift == 1) {
 		/* 0 <= NUM_PRECOMPUTE_KEYS - nblocks - final_shift <
 		 * NUM_PRECOMPUTE_KEYS */
@@ -115,7 +115,7 @@ void generic_hctr2_poly(const u8 *in, const struct polyhash_key *key,
 			     (be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - nblocks
 						   - final_shift]);
 		for (int i = 0; i < nblocks; i++) {
-			memcpy(&tmp, &in[(i + index) * POLYHASH_BLOCK_SIZE],
+			memcpy(&tmp, &in[(i + index) * HCTR2_HASH_BLOCK_SIZE],
 			       sizeof(u128));
 			reverse_bytes(&tmp);
 			gf128mul_lle((be128 *)&tmp,
@@ -137,21 +137,21 @@ void generic_hctr2_poly(const u8 *in, const struct polyhash_key *key,
 	}
 }
 
-void polyhash_hash_tweak(const struct polyhash_key *key,
-			 struct polyhash_state *state, const u8 *data,
+void hctr2_hash_hash_tweak(const struct hctr2_hash_key *key,
+			 struct hctr2_hash_state *state, const u8 *data,
 			 size_t nbytes, bool mdiv, bool simd)
 {
 	u128 padded_final;
 	memcpy(&state->state, &key->tweaklen_part[mdiv ? 1 : 0],
 	       sizeof(state->state));
-	if (nbytes % POLYHASH_BLOCK_SIZE != 0) {
+	if (nbytes % HCTR2_HASH_BLOCK_SIZE != 0) {
 		padded_final.a = 0;
 		padded_final.b = 0;
 		memcpy(&padded_final,
 		       data
-			       + POLYHASH_BLOCK_SIZE
-					 * (nbytes / POLYHASH_BLOCK_SIZE),
-		       nbytes % POLYHASH_BLOCK_SIZE);
+			       + HCTR2_HASH_BLOCK_SIZE
+					 * (nbytes / HCTR2_HASH_BLOCK_SIZE),
+		       nbytes % HCTR2_HASH_BLOCK_SIZE);
 	}
 	if (simd) {
 		POLYVAL(data, key, nbytes, &padded_final, &state->state);
@@ -161,20 +161,20 @@ void polyhash_hash_tweak(const struct polyhash_key *key,
 	}
 }
 
-void polyhash_hash_message(const struct polyhash_key *key,
-			   struct polyhash_state *state, const u8 *data,
+void hctr2_hash_hash_message(const struct hctr2_hash_key *key,
+			   struct hctr2_hash_state *state, const u8 *data,
 			   size_t nbytes, bool simd)
 {
 	u128 padded_final;
-	if (nbytes % POLYHASH_BLOCK_SIZE != 0) {
+	if (nbytes % HCTR2_HASH_BLOCK_SIZE != 0) {
 		padded_final.a = 0;
 		padded_final.b = 0;
 		memcpy(&padded_final,
 		       data
-			       + POLYHASH_BLOCK_SIZE
-					 * (nbytes / POLYHASH_BLOCK_SIZE),
-		       nbytes % POLYHASH_BLOCK_SIZE);
-		((u8 *)(&padded_final))[nbytes % POLYHASH_BLOCK_SIZE] = 0x01;
+			       + HCTR2_HASH_BLOCK_SIZE
+					 * (nbytes / HCTR2_HASH_BLOCK_SIZE),
+		       nbytes % HCTR2_HASH_BLOCK_SIZE);
+		((u8 *)(&padded_final))[nbytes % HCTR2_HASH_BLOCK_SIZE] = 0x01;
 	}
 	if (simd) {
 		POLYVAL(data, key, nbytes, &padded_final, &state->state);
@@ -184,55 +184,55 @@ void polyhash_hash_message(const struct polyhash_key *key,
 	}
 }
 
-void polyhash_emit(const struct polyhash_key *key, struct polyhash_state *state,
+void hctr2_hash_emit(const struct hctr2_hash_key *key, struct hctr2_hash_state *state,
 		   u8 *out, bool simd)
 {
-	memcpy(out, &state->state, POLYHASH_BLOCK_SIZE);
+	memcpy(out, &state->state, HCTR2_HASH_BLOCK_SIZE);
 	if (!simd) {
 		reverse_bytes((be128 *)out);
 	}
 }
 
-static void _polyhash(const struct polyhash_key *key, const void *src,
+static void _hctr2_hash(const struct hctr2_hash_key *key, const void *src,
 		      unsigned int srclen, u8 *digest)
 {
-	struct polyhash_state polystate;
+	struct hctr2_hash_state polystate;
 
-	polyhash_hash_tweak(key, &polystate, src, 0, true, false);
-	polyhash_hash_message(key, &polystate, src, srclen, false);
-	polyhash_emit(key, &polystate, digest, false);
+	hctr2_hash_hash_tweak(key, &polystate, src, 0, true, false);
+	hctr2_hash_hash_message(key, &polystate, src, srclen, false);
+	hctr2_hash_emit(key, &polystate, digest, false);
 }
 
-static void _polyhash_simd(const struct polyhash_key *key, const void *src,
+static void _hctr2_hash_simd(const struct hctr2_hash_key *key, const void *src,
 			   unsigned int srclen, u8 *digest)
 {
-	struct polyhash_state polystate;
+	struct hctr2_hash_state polystate;
 
-	polyhash_hash_tweak(key, &polystate, src, 0, true, true);
-	polyhash_hash_message(key, &polystate, src, srclen, true);
-	polyhash_emit(key, &polystate, digest, true);
+	hctr2_hash_hash_tweak(key, &polystate, src, 0, true, true);
+	hctr2_hash_hash_message(key, &polystate, src, srclen, true);
+	hctr2_hash_emit(key, &polystate, digest, true);
 }
 
-void polyhash_setkey_generic(struct polyhash_key *key, const u8 *raw_key)
+void hctr2_hash_setkey_generic(struct hctr2_hash_key *key, const u8 *raw_key)
 {
-	polyhash_setup_generic(key, raw_key, 0);
+	hctr2_hash_setup_generic(key, raw_key, 0);
 }
 
-void polyhash_setkey_simd(struct polyhash_key *key, const u8 *raw_key)
+void hctr2_hash_setkey_simd(struct hctr2_hash_key *key, const u8 *raw_key)
 {
-	polyhash_setup_simd(key, raw_key, 0);
+	hctr2_hash_setup_simd(key, raw_key, 0);
 }
 
-void test_hctr2_polyhash(void)
+void test_hctr2_hash(void)
 {
-#define ALGNAME "HCTR2-Polyhash"
-#define HASH _polyhash
-#define HASH_SIMD _polyhash_simd
+#define ALGNAME "HCTR2-Hash"
+#define HASH _hctr2_hash
+#define HASH_SIMD _hctr2_hash_simd
 #define SIMD_IMPL_NAME "clmul"
-#define KEY struct polyhash_key
-#define SETKEY polyhash_setkey_generic
-#define SETKEY_SIMD polyhash_setkey_simd
-#define KEY_BYTES POLYHASH_KEY_SIZE
-#define DIGEST_SIZE POLYHASH_DIGEST_SIZE
+#define KEY struct hctr2_hash_key
+#define SETKEY hctr2_hash_setkey_generic
+#define SETKEY_SIMD hctr2_hash_setkey_simd
+#define KEY_BYTES HCTR2_HASH_KEY_SIZE
+#define DIGEST_SIZE HCTR2_HASH_DIGEST_SIZE
 #include "hash_benchmark_template.h"
 }

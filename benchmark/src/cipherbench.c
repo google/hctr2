@@ -21,7 +21,7 @@ static const struct cipher {
 } ciphers[] = {
 	{"HCTR2", test_hctr2},
 	{"HCTR2-CTR", test_hctr2_ctr},
-	{"HCTR2-Polyhash", test_hctr2_polyhash},
+	{"HCTR2-Hash", test_hctr2_hash},
 	{"XTS", test_xts},
 };
 

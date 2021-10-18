@@ -7,7 +7,7 @@
  */
 #pragma once
 
-void test_hctr2_polyhash(void);
+void test_hctr2_hash(void);
 void test_hctr2_ctr(void);
 void test_hctr2(void);
 void test_xts(void);
