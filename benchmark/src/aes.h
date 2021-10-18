@@ -11,7 +11,7 @@
 #include "aes_linux.h"
 
 struct aes_ctx {
-#ifdef __arm__	/* for aes-neonbs */
+#ifdef __arm__ /* for aes-neonbs */
 	int rounds;
 	u8 pad[12];
 	u8 rk[13 * (8 * AES_BLOCK_SIZE) + 32];
@@ -25,7 +25,8 @@ void aes_encrypt(const struct aes_ctx *ctx, u8 *out, const u8 *in);
 void aes_decrypt(const struct aes_ctx *ctx, u8 *out, const u8 *in);
 
 #ifdef __aarch64__
-void ce_aes_ecb_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds, int blocks);
-void ce_aes_ecb_decrypt(u8 out[], u8 const in[], u8 const rk[], int rounds, int blocks);
+void ce_aes_ecb_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
+			int blocks);
+void ce_aes_ecb_decrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
+			int blocks);
 #endif
-

@@ -10,7 +10,7 @@
 #include "cipherbench.h"
 
 #if defined(__linux__)
-#include <linux/types.h>	/* for __le32 etc. */
+#include <linux/types.h> /* for __le32 etc. */
 #endif
 
 #include <inttypes.h>
@@ -29,48 +29,62 @@ typedef int64_t s64;
 
 #define forceinline inline __attribute__((always_inline))
 #ifndef __always_inline
-#  define __always_inline	forceinline
+#define __always_inline forceinline
 #endif
 #define noinline __attribute__((noinline))
 
 #define __cacheline_aligned __attribute__((aligned(64)))
 
 #ifndef __noreturn
-#  define __noreturn	__attribute__((noreturn))
+#define __noreturn __attribute__((noreturn))
 #endif
 
 #ifndef __cold
-#  define __cold	__attribute__((cold))
+#define __cold __attribute__((cold))
 #endif
 
-#define ARRAY_SIZE(A)	(sizeof(A) / sizeof((A)[0]))
+#define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
-#define BUILD_BUG_ON(condition)	((void)sizeof(char[1 - 2*!!(condition)]))
+#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2 * !!(condition)]))
 
 #define asmlinkage
 
-#define swap(a, b) \
-        do { __typeof__(a) __tmp = (a); (a) = (b); (b) = __tmp; } while (0)
+#define swap(a, b)                                                             \
+	do {                                                                   \
+		__typeof__(a) __tmp = (a);                                     \
+		(a) = (b);                                                     \
+		(b) = __tmp;                                                   \
+	} while (0)
 
-#define min(a, b) ({ __typeof__(a) _a = (a); \
-		     __typeof__(b) _b = (b); \
-		     _a < _b ? _a : _b; })
+#define min(a, b)                                                              \
+	({                                                                     \
+		__typeof__(a) _a = (a);                                        \
+		__typeof__(b) _b = (b);                                        \
+		_a < _b ? _a : _b;                                             \
+	})
 
-#define max(a, b) ({ __typeof__(a) _a = (a); \
-		     __typeof__(b) _b = (b); \
-		     _a > _b ? _a : _b; })
+#define max(a, b)                                                              \
+	({                                                                     \
+		__typeof__(a) _a = (a);                                        \
+		__typeof__(b) _b = (b);                                        \
+		_a > _b ? _a : _b;                                             \
+	})
 
-#define __round_mask(x, y)  ((__typeof__(x))((y)-1))
-#define round_up(x, y)      ((((x)-1) | __round_mask(x, y))+1)
-#define round_down(x, y)    ((x) & ~__round_mask(x, y))
+#define __round_mask(x, y) ((__typeof__(x))((y)-1))
+#define round_up(x, y) ((((x)-1) | __round_mask(x, y)) + 1)
+#define round_down(x, y) ((x) & ~__round_mask(x, y))
 
-__cold __noreturn void assertion_failed(const char *expr,
-					const char *file, int line);
-#define ASSERT(e) ({ if (!(e)) assertion_failed(#e, __FILE__, __LINE__); })
+__cold __noreturn void assertion_failed(const char *expr, const char *file,
+					int line);
+#define ASSERT(e)                                                              \
+	({                                                                     \
+		if (!(e))                                                      \
+			assertion_failed(#e, __FILE__, __LINE__);              \
+	})
 
 #ifdef __CHECKER__
-#define __force		__attribute__((force))
-#define __bitwise__	__attribute__((bitwise))
+#define __force __attribute__((force))
+#define __bitwise__ __attribute__((bitwise))
 #else
 #define __force
 #define __bitwise__
@@ -85,21 +99,31 @@ typedef u64 __bitwise__ __be64;
 
 #endif
 
-#define cpu_to_le32(v)	((__force __le32)(u32)(v))
-#define le32_to_cpu(v)	((__force u32)(__le32)(v))
-#define cpu_to_le64(v)	((__force __le64)(u64)(v))
-#define le64_to_cpu(v)	((__force u64)(__le64)(v))
+#define cpu_to_le32(v) ((__force __le32)(u32)(v))
+#define le32_to_cpu(v) ((__force u32)(__le32)(v))
+#define cpu_to_le64(v) ((__force __le64)(u64)(v))
+#define le64_to_cpu(v) ((__force u64)(__le64)(v))
 
-#define cpu_to_be32(v)	((__force __be32)__builtin_bswap32(v))
-#define be32_to_cpu(v)	(__builtin_bswap32((__force u32)v))
-#define cpu_to_be64(v)	((__force __be64)__builtin_bswap64(v))
-#define be64_to_cpu(v)	(__builtin_bswap64((__force u64)v))
+#define cpu_to_be32(v) ((__force __be32)__builtin_bswap32(v))
+#define be32_to_cpu(v) (__builtin_bswap32((__force u32)v))
+#define cpu_to_be64(v) ((__force __be64)__builtin_bswap64(v))
+#define be64_to_cpu(v) (__builtin_bswap64((__force u64)v))
 
-struct ulong_unaligned { unsigned long v; } __attribute__((packed, may_alias));
-struct le32_unaligned { __le32 v; } __attribute__((packed));
-struct be32_unaligned { __be32 v; } __attribute__((packed));
-struct le64_unaligned { __le64 v; } __attribute__((packed));
-struct be64_unaligned { __be64 v; } __attribute__((packed));
+struct ulong_unaligned {
+	unsigned long v;
+} __attribute__((packed, may_alias));
+struct le32_unaligned {
+	__le32 v;
+} __attribute__((packed));
+struct be32_unaligned {
+	__be32 v;
+} __attribute__((packed));
+struct le64_unaligned {
+	__le64 v;
+} __attribute__((packed));
+struct be64_unaligned {
+	__be64 v;
+} __attribute__((packed));
 
 static inline u32 get_unaligned_le32(const void *p)
 {
@@ -217,11 +241,11 @@ static inline void ble128_xor(ble128 *dst, const ble128 *src)
 
 static inline void __gf128mul_x_ble(ble128 *x)
 {
-       u64 lo = x->lo;
-       u64 hi = x->hi;
+	u64 lo = x->lo;
+	u64 hi = x->hi;
 
-       x->lo = (lo << 1) ^ ((hi & (1ULL << 63)) ? 0x87 : 0);
-       x->hi = (hi << 1) | (lo >> 63);
+	x->lo = (lo << 1) ^ ((hi & (1ULL << 63)) ? 0x87 : 0);
+	x->hi = (hi << 1) | (lo >> 63);
 }
 
 typedef union {
@@ -250,8 +274,8 @@ typedef union {
 
 static inline void le128_xor(le128 *r, const le128 *p, const le128 *q)
 {
-    r->a = p->a ^ q->a;
-    r->b = p->b ^ q->b;
+	r->a = p->a ^ q->a;
+	r->b = p->b ^ q->b;
 }
 
 static inline void be128_xor(be128 *r, const be128 *p, const be128 *q)
@@ -267,8 +291,8 @@ static inline void le128_add(le128 *r, const le128 *v1, const le128 *v2)
 	u64 y = le64_to_cpu(v2->b);
 
 	r->b = cpu_to_le64(x + y);
-	r->a = cpu_to_le64(le64_to_cpu(v1->a) + le64_to_cpu(v2->a) +
-			   (x + y < x));
+	r->a = cpu_to_le64(le64_to_cpu(v1->a) + le64_to_cpu(v2->a)
+			   + (x + y < x));
 }
 
 /* Subtraction in Z/(2^{128}Z) */
@@ -278,8 +302,8 @@ static inline void le128_sub(le128 *r, const le128 *v1, const le128 *v2)
 	u64 y = le64_to_cpu(v2->b);
 
 	r->b = cpu_to_le64(x - y);
-	r->a = cpu_to_le64(le64_to_cpu(v1->a) - le64_to_cpu(v2->a) -
-			   (x - y > x));
+	r->a = cpu_to_le64(le64_to_cpu(v1->a) - le64_to_cpu(v2->a)
+			   - (x - y > x));
 }
 
 static inline void xor(void *a, const void *b, const void *c, size_t len)

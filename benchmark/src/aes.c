@@ -59,4 +59,3 @@ void aes_decrypt(const struct aes_ctx *ctx, u8 *out, const u8 *in)
 {
 	aesti_decrypt(&ctx->aes_ctx, out, in);
 }
-

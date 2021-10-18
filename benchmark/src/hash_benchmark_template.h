@@ -43,8 +43,8 @@
 #if KEY_BYTES != 0
 	SETKEY_SIMD(&ctx, key);
 #endif
-	
-    best_time = UINT64_MAX;
+
+	best_time = UINT64_MAX;
 	for (try = 0; try < ntries; try++) {
 		start = now();
 		for (i = 0; i < nbytes; i += bufsize)

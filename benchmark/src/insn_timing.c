@@ -99,7 +99,7 @@ void do_insn_timing(void)
 	insn_test("vzip+vswp", arm_test_vzip_vswp);
 	insn_test("vuzp", arm_test_vuzp);
 }
-#else /* __arm__ */
+#else  /* __arm__ */
 void do_insn_timing(void)
 {
 	printf("Instruction timing not implemented on this platform.\n");

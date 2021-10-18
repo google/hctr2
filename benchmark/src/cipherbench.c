@@ -19,10 +19,10 @@ static const struct cipher {
 	const char *name;
 	void (*test_func)(void);
 } ciphers[] = {
-	{ "HCTR2",		test_hctr2 },
-	{ "HCTR2-CTR",		test_hctr2_ctr },
-	{ "HCTR2-Polyhash",		test_hctr2_polyhash },
-	{ "XTS",		test_xts },
+	{"HCTR2", test_hctr2},
+	{"HCTR2-CTR", test_hctr2_ctr},
+	{"HCTR2-Polyhash", test_hctr2_polyhash},
+	{"XTS", test_xts},
 };
 
 static const struct cipher *find_cipher(const char *name)
@@ -44,7 +44,8 @@ static int get_num_cpus(void)
 		ncpus = sysconf(_SC_NPROCESSORS_ONLN);
 
 	if (ncpus <= 0) {
-		fprintf(stderr, "Unable to determine number of CPUs, assuming 1\n");
+		fprintf(stderr,
+			"Unable to determine number of CPUs, assuming 1\n");
 		ncpus = 1;
 	}
 	return ncpus;
@@ -73,8 +74,8 @@ static void set_cpufreq_governor(const char *governor)
 		}
 		res = read(fd, cur_governor, sizeof(cur_governor) - 1);
 		if (res < 0) {
-			fprintf(stderr, "Error reading '%s': %s\n",
-				path, strerror(errno));
+			fprintf(stderr, "Error reading '%s': %s\n", path,
+				strerror(errno));
 			close(fd);
 			continue;
 		}
@@ -89,7 +90,8 @@ static void set_cpufreq_governor(const char *governor)
 			if (errno == EACCES) {
 				fprintf(stderr,
 					"This program is not authorized to change the CPU frequency scaling governor (currently '%s').\n"
-					"Recommend re-running with sudo or 'adb root'\n", cur_governor);
+					"Recommend re-running with sudo or 'adb root'\n",
+					cur_governor);
 				break;
 			}
 			fprintf(stderr, "Unable to open '%s' for writing: %s\n",
@@ -97,7 +99,8 @@ static void set_cpufreq_governor(const char *governor)
 			break;
 		}
 		if (write(fd, governor, strlen(governor)) != strlen(governor)) {
-			fprintf(stderr, "Error setting '%s' CPU frequency scaling governor: %s\n",
+			fprintf(stderr,
+				"Error setting '%s' CPU frequency scaling governor: %s\n",
 				governor, strerror(errno));
 			close(fd);
 			break;
@@ -121,7 +124,8 @@ static u64 get_max_cpufreq(void)
 		int res;
 		unsigned long long freq;
 
-		sprintf(path, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq",
+		sprintf(path,
+			"/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq",
 			cpu);
 		fd = open(path, O_RDONLY);
 		if (fd < 0) {
@@ -132,21 +136,23 @@ static u64 get_max_cpufreq(void)
 		memset(buf, 0, sizeof(buf));
 		res = read(fd, buf, sizeof(buf));
 		if (res < 0) {
-			fprintf(stderr, "Error reading '%s': %s\n",
-				path, strerror(errno));
+			fprintf(stderr, "Error reading '%s': %s\n", path,
+				strerror(errno));
 			close(fd);
 			continue;
 		}
 		close(fd);
 		if (sscanf(buf, "%llu", &freq) != 1) {
-			fprintf(stderr, "'%s' contained unexpected contents: '%s'\n",
+			fprintf(stderr,
+				"'%s' contained unexpected contents: '%s'\n",
 				path, buf);
 			continue;
 		}
 		if (prev_freq == 0) {
 			prev_freq = freq;
 		} else if (freq != prev_freq) {
-			fprintf(stderr, "CPUs have different max frequencies.  Results may be unreliable.\n");
+			fprintf(stderr,
+				"CPUs have different max frequencies.  Results may be unreliable.\n");
 			freq = max(freq, prev_freq);
 		}
 	}
@@ -163,7 +169,8 @@ static void configure_cpu(void)
 	cpu_frequency_kHz = get_max_cpufreq();
 
 	if (cpu_frequency_kHz != 0)
-		printf("Detected max CPU frequency: %"PRIu64".%03"PRIu64" MHz\n",
+		printf("Detected max CPU frequency: %" PRIu64 ".%03" PRIu64
+		       " MHz\n",
 		       cpu_frequency_kHz / 1000, cpu_frequency_kHz % 1000);
 }
 
@@ -180,8 +187,8 @@ void show_result(const char *algname, const char *op, const char *impl,
 
 	sprintf(hdr, "%s %s (%s) ", algname, op, impl);
 
-	printf("%-45s %6.3f cpb (%" PRIu64 " KB/s)\n",
-	       hdr, cycles_per_byte(nbytes, ns_elapsed),
+	printf("%-45s %6.3f cpb (%" PRIu64 " KB/s)\n", hdr,
+	       cycles_per_byte(nbytes, ns_elapsed),
 	       KB_per_s(nbytes, ns_elapsed));
 	fflush(stdout);
 }
@@ -206,11 +213,11 @@ enum {
 };
 
 static const struct option longopts[] = {
-	{ "bufsize", required_argument, NULL, OPT_BUFSIZE },
-	{ "ntries", required_argument, NULL, OPT_NTRIES },
-	{ "time-insns", no_argument, NULL, OPT_TIME_INSNS },
-	{ "help", no_argument, NULL, OPT_HELP },
-	{ NULL, 0, NULL, 0 },
+	{"bufsize", required_argument, NULL, OPT_BUFSIZE},
+	{"ntries", required_argument, NULL, OPT_NTRIES},
+	{"time-insns", no_argument, NULL, OPT_TIME_INSNS},
+	{"help", no_argument, NULL, OPT_HELP},
+	{NULL, 0, NULL, 0},
 };
 
 static void show_available_ciphers(void)
@@ -225,13 +232,13 @@ static void show_available_ciphers(void)
 
 static void usage(void)
 {
-	static const char * const s =
-"Usage: cipherbench [OPTION...] [CIPHER]...\n"
-"Options:\n"
-"  --bufsize=BUFSIZE\n"
-"  --ntries=NTRIES\n"
-"  --time-insns\n"
-"  --help\n";
+	static const char *const s =
+		"Usage: cipherbench [OPTION...] [CIPHER]...\n"
+		"Options:\n"
+		"  --bufsize=BUFSIZE\n"
+		"  --ntries=NTRIES\n"
+		"  --time-insns\n"
+		"  --help\n";
 
 	fputs(s, stderr);
 	show_available_ciphers();

@@ -15,30 +15,27 @@
 #define CDECL_NAME(name) name
 #endif
 
-#define ENTRY(name)    .globl CDECL_NAME(name); CDECL_NAME(name):
+#define ENTRY(name)                                                            \
+	.globl CDECL_NAME(name);                                               \
+	CDECL_NAME(name) :
 #if defined(__linux__)
-#define ENDPROC(name)	\
-    .type CDECL_NAME(name), %function; \
-    .size CDECL_NAME(name), . - CDECL_NAME(name)
+#define ENDPROC(name)                                                          \
+	.type CDECL_NAME(name), % function;                                    \
+	.size CDECL_NAME(name), .- CDECL_NAME(name)
 #else
 #define ENDPROC(name)
 #endif
 
 #ifdef __arm__
-#  define __LINUX_ARM_ARCH__	7
+#define __LINUX_ARM_ARCH__ 7
 #endif
 
 #if defined(__arm__) || defined(__aarch64__)
-#  define MAX_L1_CACHE_SHIFT	7
-#  define adr_l	adr
+#define MAX_L1_CACHE_SHIFT 7
+#define adr_l adr
 #endif
 
 #ifdef __x86_64__
-.macro FRAME_BEGIN
-	push %rbp
-	mov %rsp, %rbp
-.endm
-.macro FRAME_END
-	pop %rbp
-.endm
+.macro FRAME_BEGIN push % rbp mov % rsp,
+	% rbp.endm.macro FRAME_END pop % rbp.endm
 #endif
