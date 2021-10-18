@@ -9,6 +9,7 @@
 #include "aes_linux.h"
 #include "hctr2-xctr.h"
 #include "hctr2-polyhash.h"
+#include "hctr2_testvecs.h"
 #include "testvec.h"
 #include "util.h"
 
@@ -212,15 +213,6 @@ void hctr2_decrypt_simd(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 		    true);
 }
 
-struct hctr2_testvec {
-	struct testvec_buffer key;
-	struct testvec_buffer tweak;
-	struct testvec_buffer plaintext;
-	struct testvec_buffer ciphertext;
-};
-
-#include "hctr2_testvecs.h"
-
 static void test_hctr2_testvec(const struct hctr2_testvec *v, bool simd)
 {
 	size_t len = v->plaintext.len;
@@ -246,7 +238,7 @@ static void test_hctr2_testvecs(void)
 {
 	size_t i;
 
-	for (i = 0; i < ARRAY_SIZE(hctr2_aes256_tv); i++) {
+	for (i = 0; i < hctr2_aes256_tv_count; i++) {
 		test_hctr2_testvec(&hctr2_aes256_tv[i], false);
 		test_hctr2_testvec(&hctr2_aes256_tv[i], true);
 	}
