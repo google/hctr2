@@ -124,7 +124,7 @@ AES_FUNC_END(aes_ecb_decrypt)
 	
     /*
 	 * aes_hctr2_ctr_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
-	 *		   int bytes, u8 ctr[])
+	 *		   int bytes, u8 const ctr[])
 	 */
 
 AES_FUNC_START(aes_hctr2_ctr_encrypt)

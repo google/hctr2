@@ -38,10 +38,10 @@ static inline int aes_nrounds(const struct crypto_aes_ctx *ctx)
 asmlinkage int aesni_set_key(struct crypto_aes_ctx *ctx, const u8 *in_key,
             unsigned int key_len);
 
-asmlinkage void aesni_ecb_enc(struct crypto_aes_ctx *ctx, const u8 *dst, u8 *src,
+asmlinkage void aesni_ecb_enc(const struct crypto_aes_ctx *ctx, u8 *dst, const u8 *src,
             size_t len);
 
-asmlinkage void aesni_dec_enc(struct crypto_aes_ctx *ctx, const u8 *dst, u8 *src,
+asmlinkage void aesni_ecb_dec(const struct crypto_aes_ctx *ctx, u8 *dst, const u8 *src,
             size_t len);
 
 int aesti_expand_key(struct crypto_aes_ctx *ctx, const u8 *in_key,

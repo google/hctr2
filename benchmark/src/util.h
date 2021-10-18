@@ -27,11 +27,6 @@ typedef uint64_t u64;
 
 typedef int64_t s64;
 
-#undef SIMD_IMPL_NAME
-#if defined(__arm__) || defined(__aarch64__)
-#  define SIMD_IMPL_NAME "NEON"
-#endif
-
 #define forceinline inline __attribute__((always_inline))
 #ifndef __always_inline
 #  define __always_inline	forceinline

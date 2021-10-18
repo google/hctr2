@@ -42,11 +42,11 @@ void polyhash_setup_generic(struct polyhash_key *key, const u8 *raw_key, size_t 
 	}
     key->tweaklen_part[0].b = tweak_len*8*2 + 3;
     key->tweaklen_part[0].a = 0;
-    reverse(&key->tweaklen_part[0]);
+    reverse((be128*)&key->tweaklen_part[0]);
     gf128mul_lle((be128*)&key->tweaklen_part[0], (be128*)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
     key->tweaklen_part[1].b = tweak_len*8*2 + 2;
     key->tweaklen_part[1].a = 0;
-    reverse(&key->tweaklen_part[1]);
+    reverse((be128*)&key->tweaklen_part[1]);
     gf128mul_lle((be128*)&key->tweaklen_part[1], (be128*)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
 }
 

@@ -25,12 +25,16 @@ struct polyhash_state {
 	u128 state;
 };
 
-void polyhash_setkey_generic(struct polyhash_key *key, const u8 *raw_key);
-void polyhash_setkey_simd(struct polyhash_key *key, const u8 *raw_key);
+void polyhash_setup_generic(struct polyhash_key *key, const u8 *raw_key, size_t tweak_len);
+void polyhash_setup_simd(struct polyhash_key *key, const u8 *raw_key, size_t tweak_len);
 
-void polyhash_update(const struct polyhash_key *key,
+void polyhash_hash_tweak(const struct polyhash_key *key,
         		struct polyhash_state *state, const u8 *data,
-        		size_t nbytes, bool simd);
+                size_t nbytes, bool mdiv, bool simd);
+
+void polyhash_hash_message(const struct polyhash_key *key,
+        		struct polyhash_state *state, const u8 *data,
+                size_t nbytes, bool simd);
 
 void polyhash_emit(const struct polyhash_key *key,
-				struct polyhash_state * state, u8 *out, bool simd);
+        struct polyhash_state * state, u8 *out, bool simd);
