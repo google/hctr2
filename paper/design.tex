@@ -1,0 +1,227 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr2.tex]{subfiles}
+\begin{document}
+\section{Design of HCTR2}\label{design}
+HCTR2 is intended as a successor to HCTR and retains several of the
+features that make it an attractive design:
+\begin{itemize}
+    \item An unbalanced Feistel-like network based on universal
+    hashing, with a single block encryption on the narrow side.
+    This gives excellent performance and parallelizability,
+    as well as natural handling of messages that are not
+    a multiple of the block size. 
+    \item Use of \(\MM \xor \UU\) in generating \(S\), which means
+    that an adversary's control over \(S\) is very limited for both
+    encryption and decryption queries; this is used in the
+    proof of security to bound \(S_i^r \qeq S_j^s\)
+    and avert a cubic term in the security bound.
+    \item The CTR mode variant XCTR.
+    Because of the extra constant \(L\), it would be straightforward
+    to prove secure an HCTR2 variant that used CTR mode.
+    However, unlike CTR, XCTR
+    never needs to maintain a counter larger
+    than needed for the message size;
+    when a 128-bit nonce is used, CTR 
+    must use a 128-bit counter, and is
+    at risk of implementations
+    whose flaws only manifest on the
+    rare occasions that a counter overflows
+    into the next word.
+    GCM\cite{gcm} uses a variant of CTR
+    in which only 32 bits are incremented
+    for the same reason;
+    XCTR seems a more elegant solution.
+\end{itemize}
+
+HCTR2 differs from HCTR in the following ways:
+
+\begin{itemize}
+    \item We introduce the extra
+    key-dependent constant \(L\),
+    so that where HCTR has \(S = \MM \xor \UU\)
+    we have \(S = \MM \xor \UU \xor L\),
+    fixing the issue described in \autoref{badproof}
+    and restoring the quadratic security bound.
+    \item We redesign the polynomial hash input format, as described in
+    \autoref{inputformatting}, fixing the issue described in \autoref{badhash}.
+    \item We accept a variable-length tweak.
+    This increases flexibility,
+    and eliminates the risk of attacks where
+    two users of the same key have different ideas
+    of what the tweak length is.
+    \item We derive \(\hgen \gets E_k(\fromint(0))\)
+    and \(L \gets E_k(\fromint(1))\) from the block cipher key;
+    this makes HCTR2 more convenient to use.
+    \item We specify POLYVAL\cite{aes_gcm_siv,aes_gcm_siv_rfc}
+    as the polynomial evaluation function,
+    for reasons set out in \autoref{choosingpolyval}.
+    \item We present a new proof, based on the H-coefficient technique,
+    with a tighter bound.
+    \item We specify endianness and the like so that implementations can be interoperable. We use little-endian representation everywhere,
+    since this is faster on nearly all modern platforms.
+    This is another difference between XCTR and CTR, since
+    CTR is defined to be big-endian.
+    \item We rename some variables in our exposition and proof to allow some more standard usage.
+    \item We provide a sample implementation and test vectors.
+\end{itemize}
+
+\subsection{Comparison of SPRP modes}
+We considered a number of modes aiming to provide
+tweakable super-pseudorandom permutations
+as the basis for our design before settling on HCTR:
+\begin{itemize}
+    \item CMC\cite{cmc}, EME\cite{eme}, and EME*\cite{emestar}
+    require two block cipher calls per input block.
+    \item PEP\cite{pep}, TET\cite{tet}, and HEH\cite{heh} are 
+    complex, and are either
+    unable to handle messages that are not multiples of the
+    block size, or require extra ciphertext-stealing like tricks
+    to handle such messages.
+    In addition, they require five passes over the data,
+    or three if passes are combined.
+    Thanks to the simplicity of the unbalanced Feistel network,
+    HCTR and HCTR2 require three passes, or two if combined.
+    \item HCH\cite{hch} is similar to HCTR
+    but uses \(S = E_k(\MM \xor \UU)\).
+    With this change the authors were able to prove a
+    quadratic security bound. Our modification,
+    \(S = \MM \xor \UU \xor E_k(\fromint(1))\), saves
+    a block cipher call per invocation.
+    \item HSE\cite{hse} achieves similar performance to
+    this mode, but is significantly more complicated,
+    and accepts only an \(n\)-bit tweak.
+    \item HMC\cite{hmc} allows the encryption of the
+    first block to run in parallel with subsequent blocks,
+    but at a cost of significant complication of decryption,
+    which does not gain this advantage;
+    at key setup time, the multiplicative inverse of
+    the hash key must be calculated.
+\end{itemize}
+
+\subsection{Hash function design}\label{hashdesign}
+
+\subsubsection{POLYVAL}\label{choosingpolyval}
+
+We aim to specify HCTR2 in sufficient detail
+for implementations to be interoperable,
+so we must be precise about endianness and the like
+in \(\GF(2^{128})\) polynomial evaluation.
+The most widely used  convention is that of GCM's GHASH\cite{gcm}.
+However, GHASH is not consistent in its endianness conventions,
+which increases implementation complexity and reduces efficiency.
+
+Instead, we use the POLYVAL function
+defined in \cite{aes_gcm_siv,aes_gcm_siv_rfc}.
+POLYVAL incurs a small cost in specification and proof complexity because 
+the polynomial is evaluated not at the parameter \(\hgen\)
+but at \(x^{-n}\hgen\)
+so that Montgomery multiplication\cite{montmul} can be key-agile.
+However it is carefully designed, efficient
+on processors with carryless multiply instructions
+(1.2x faster than GHASH according to \cite{aes_gcm_siv})
+and offers an efficient conversion between POLYVAL and GHASH hashing
+which allows code/hardware for one to be used for the other.
+
+\subsubsection{Input formatting}\label{inputformatting}
+
+The formatting of inputs to the polynomial hash in HCTR2 is significantly
+different from that in HCTR. Our design goals are:
+
+\begin{itemize}
+    \item fix the flaw described in \cite{kumarhctr}
+    \item allow a variable-length tweak
+    \item guarantee \(H(T, M) \neq \hgen\), required
+    because \(\hgen \gets E_k(\fromint(0))\)
+    \item allow implementations to precompute as much as possible, to reduce \(\GF(2^n)\) multiplications
+\end{itemize}
+
+See \autoref{hproperties}
+for the properties we require of the hash function.
+
+To fix the flaw described in \cite{kumarhctr},
+we eliminate the zero-length special case
+by adding one to the length before encoding it.
+
+We process the tweak before the message, so that implementations need only
+process the tweak once for each encryption/decryption, instead of twice.
+
+With the introduction of the constant \(L\)
+our security proof no longer relies on the hash function
+having property 2 of \cite[Section~3.3]{hctr}.
+This allows us to move the length block first, so
+that implementations need only process it once per encryption/decryption.
+It is never zero, so its position in the
+polynomial can be inferred from the degree.
+
+This change means that \(\ceil{\abs{T}/n} + \ceil{\abs{M}/n}\)
+can be inferred from the degree of the polynomial.  
+If we append a 1 to the message before padding with zeroes,
+we need only encode only the tweak length in the length block,
+and the message length can then be inferred.
+For users whose tweaks are always the same length
+this means the length block is always the same, 
+so the multiplication with \(\hpoly\) can be
+precomputed.
+
+However, in the very common case where 
+the message length is a multiple of the block size,
+we don't want an extra multiplication
+for an extra block containing only the appended 1 bit.
+Borrowing from~\cite{xcbc},
+we don't append a 1 bit to such messages.
+Instead, we indicate whether
+the message length is a multiple of the block size
+in the least significant bit of the length block.
+If all tweaks are of length \(t\), implementations can cache
+\(\fromint(2t + 2)\hpoly\) and \(\fromint(2t + 3)\hpoly\)
+and use one of these to start hashing as appropriate,
+XORing this value directly with the first block of the tweak.
+
+\subsubsection{Alternatives considered}
+
+Like HCTR, HCTR2's almost-XOR-universal hash function uses a standard polynomial
+evaluation in $\GF(2^n)$. This uses an $n$-bit key and requires $l$ field
+multiplications where $l$ is the number of blocks.
+We considered several alternatives:
+
+\emph{BRW polynomials}: BRW polynomials\cite{pema}\cite{heh2} are theoretically
+attractive since they only need \(\floor{l/2}\) multiplications
+to evaluate. However, they pose a number of difficulties. \cite{brweval} gives a
+nonrecursive algorithm that handles variable-length messages, but it is complex,
+uses temporary space that grows logarithmically with the message length,
+and does not handle incremental computation well.
+Standard polynomials avoid these issues;
+fast and correct implementations are easier to write,
+and implementers have much more control over
+code size, precomputation, instruction-level
+parallelism, number of reductions, and so forth.
+Finally, preserving our guarantees of injectivity on variable-length
+tweaks and messages, and the other hash function properties we need
+to guarantee, proved challenging.
+
+\emph{Polynomials over non-binary fields}: When CPU instructions for carryless
+multiplication are unavailable, hashes using non-binary fields such as
+Poly1305\cite{poly1305} tend to be faster than hashes using binary fields.
+However, HCTR2 primarily targets
+processors that support carryless multiplication, 
+and on such processors hashes
+using binary fields tend to be faster and simpler.
+
+\emph{Multivariate hashes}: Adiantum\cite{adiantum} builds an
+almost-$\Delta$-universal hash function using the multivariate hash
+NH\cite{umac1} combined with polynomial evaluation. Where NH is faster than
+polynomial evaluation, this increases performance. However, this adds
+complexity, and NH requires a long key which needs to be derived and cached. 
+HCTR2 primarily targets processors where polynomial evaluation is fast, so
+we do not add an NH layer.
+
+\end{document}

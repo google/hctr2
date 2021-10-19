@@ -1,0 +1,22 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr2.tex]{subfiles}
+\begin{document}
+\section{Implementation}\label{implementation}
+At \url{https://github.com/google/hctr2}
+we provide a (very slow) reference implementation of HCTR2 in Python,
+a portable C implementation,
+and assembly implementations for x86-64 and ARM64
+making use of AES acceleration and carryless multiplication instructions.
+We adapted our assembly implementation of XCTR mode from
+the Linux kernel's CTR mode implementation, retaining all parallelism.
+
+\end{document}

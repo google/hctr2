@@ -1,0 +1,69 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr2.tex]{subfiles}
+\begin{document}
+\begin{figure}
+  \begin{tikzpicture}
+    [thick,
+     box/.style = {
+       draw, rectangle, rounded corners
+     },
+     wire/.style = {
+       ->,rounded corners=4pt
+     },
+     cbox/.style={
+       rectangle,
+       thick,
+       draw,
+       minimum height=1cm,
+       text centered,
+       anchor=center,
+       rounded corners=2pt,
+     },
+     minimum size=0.4cm,
+     x=0.4cm, y=0.4cm
+    ]
+    %Draw nodes
+    \node[rectangle] at (0,0) (M) {$M$};
+    \node[rectangle] at (13,0) (N) {$N$};
+    \node[cbox] at (9,-3) (H1) {$H_{\hgen}$};
+    \node[XOR] at (M |- H1) (X1) {};
+    \node[cbox] at (0,-8) (E) {$E_k$};
+    \node[rectangle] at (17,-8) (T) {$T$};
+    \node[XOR] at (4, -8) (XS) {};
+    \node[rectangle] at (2, -8) (L) {\(L\)};
+    \node[cbox] at (H1 |- L) (XCTR) {$\XCTR_k$};
+    \node[XOR] at (N |- XCTR) (X2) {};
+    \node[cbox] at (9,-13) (H3) {$H_{\hgen}$};
+    \node[XOR] at (M |- H3) (X3) {};
+    \node[rectangle] at (0,-16) (U) {$U$};
+    \node[rectangle] at (X2 |- U) (V) {$V$};
+    \draw[wire] (M) -- (X1);
+    \draw[wire] (N) -- (X2);
+    \draw[wire] ([yshift=-1ex] X2 |- H1) -- ([yshift=-1ex] H1.east);
+    \draw[wire] (H1) -- (X1);
+    \draw[wire] (X1) -- node[left] {\(\MM\)} (E);
+    \draw[wire] (0,-5) -| (XS);
+    \draw[wire] (L) -- (XS);
+    \draw[wire] (XS) -- node[above] {\(S\)} (XCTR);
+    \draw[wire] (XCTR) -- (X2);
+    \draw[wire] (0,-11) -| (XS);
+    \draw[wire] (E) -- node[left] {\(\UU\)} (X3);
+    \draw[wire] (T) -- ++(-2, 0) |- ([yshift=+1ex] H1.east);
+    \draw[wire] (T) -- ++(-2, 0) |- ([yshift=+1ex] H3.east);
+    \draw[wire] ([yshift=-1ex] X2 |- H3) -- ([yshift=-1ex] H3.east);
+    \draw[wire] (H3) -- (X3);
+    \draw[wire] (X3) -- (U);
+    \draw[wire] (X2) -- (V);
+  \end{tikzpicture}
+  \caption{HCTR2}\label{hctr2fig}
+\end{figure}
+\end{document}

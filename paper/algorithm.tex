@@ -1,0 +1,53 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr2.tex]{subfiles}
+\begin{document}
+\begin{figure}
+    \begin{floatrow}
+        \ffigbox{
+            \begin{algorithmic}[1]
+                \Procedure{Encrypt}{$k, T, P$}
+                \State $\hgen \gets E_k(\fromint(0))$
+                \State $L \gets E_k(\fromint(1))$
+                \State $M \Concat N \gets P$, $\abs{M} = n$
+                \State $\MM \gets M \xor H_{\hgen}(T, N)$
+                \State $\UU \gets E_k(\MM)$
+                \State $S \gets \MM \xor \UU \xor L$
+                \State $V \gets N \xor \XCTR_k(S)[0;\abs{N}]$
+                \State $U \gets \UU \xor H_{\hgen}(T, V)$
+                \State $C \gets U \Concat V$
+                \State \textbf{return} $C$
+                \EndProcedure
+            \end{algorithmic}
+        }{
+            \caption{HCTR2 encryption}\label{pseudocode}
+        }
+        \ffigbox{
+            \begin{algorithmic}[1]
+                \Procedure{Decrypt}{$k, T, C$}
+                \State $\hgen \gets E_k(\fromint(0))$
+                \State $L \gets E_k(\fromint(1))$
+                \State $U \Concat V \gets C$, $\abs{U} = n$
+                \State $\UU \gets U \xor H_{\hgen}(T, V)$
+                \State $\MM \gets E_k^{-1}(\UU)$
+                \State $S \gets \MM \xor \UU \xor L$
+                \State $N \gets V \xor \XCTR_k(S)[0;\abs{V}]$
+                \State $M \gets \MM \xor H_{\hgen}(T, N)$
+                \State $P \gets M \Concat N$
+                \State \textbf{return} $P$
+                \EndProcedure
+            \end{algorithmic}
+        }{
+            \caption{HCTR2 decryption}\label{decryptionpseudocode}
+        }
+    \end{floatrow}
+\end{figure}
+\end{document}

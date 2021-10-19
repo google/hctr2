@@ -1,0 +1,116 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage[svgnames]{xcolor}
+\usepackage{floatrow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage[style=alphabetic,backend=biber,alldates=ymd]{biblatex}
+\usepackage{bm}
+\usepackage[logic,probability,advantage,adversary,landau,sets,operators]{cryptocode}
+\usepackage{hyperxmp}
+\usepackage{hyperref}
+\usepackage{tikz}
+
+\usepackage[parfill]{parskip}
+\usepackage[style]{abstract}
+\usepackage{titling}
+\usepackage{sectsty}
+\usepackage{authblk}
+
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Schola}
+\setsansfont{TeX Gyre Heros}
+\setmathrm{Latin Modern Roman}
+\setmathsf{Latin Modern Sans}
+\defaultfontfeatures{}
+\setmonofont{TeX Gyre Cursor}[Ligatures={NoCommon,NoRequired,NoContextual},Scale=0.9]
+
+\usetikzlibrary{groupops}
+
+\pretitle{\begin{center}\LARGE\bfseries\sffamily} % sf title
+\renewcommand{\abstitlestyle}{\sffamily\bfseries\centering} % sf abstract
+\allsectionsfont{\sffamily} % sf sections
+
+\raggedright
+\raggedbottom
+
+\author{Paul~Crowley}
+\author{Nathan~Huckleberry}
+\author{Eric~Biggers}
+\affil{Google}
+
+\usepackage{hyperref}
+\hypersetup{breaklinks}
+\hypersetup{colorlinks}
+\hypersetup{urlcolor=DarkBlue}
+\hypersetup{linkcolor=DarkRed}
+\hypersetup{citecolor=DarkGreen}
+\hypersetup{unicode}
+\hypersetup{pdfencoding=unicode}
+\hypersetup{pdfauthor={Paul Crowley, Nathan Huckleberry, Eric Biggers}}
+
+\addbibresource{bib.bib}
+
+\newcommand*{\Concat}{\Vert}
+\newcommand*{\defeq}{\stackrel{\text{def}}{=}}
+\newcommand*{\hgen}{\bar{h}}
+\newcommand*{\hpoly}{h}
+\newcommand*{\MM}{\mathit{MM}}
+\newcommand*{\qeq}{\stackrel{\text{?}}{=}}
+\newcommand*{\Tb}{\mathcal{T}_\mathrm{bad}}
+\newcommand*{\Tc}{\mathcal{T}_\mathrm{c}}
+\newcommand*{\Tg}{\mathcal{T}_\mathrm{good}}
+\newcommand*{\UU}{\mathit{UU}}
+
+\DeclareMathOperator{\fromint}{bin}
+\DeclareMathOperator{\GF}{GF}
+\DeclareMathOperator{\HCTR}{HCTR2}
+\DeclareMathOperator{\pad}{pad}
+\DeclareMathOperator{\Perm}{Perm}
+\DeclareMathOperator{\POLYVAL}{POLYVAL}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\XCTR}{XCTR}
+
+\title{Length-preserving encryption with HCTR2}
+
+\usepackage{subfiles}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+On modern processors HCTR\cite{hctr} is
+one of the most efficient constructions
+for building a tweakable super-pseudorandom permutation. However,
+a bug in the specification and another in the proof of~\cite{hctrquad}
+invalidate the claimed security bound. We here present HCTR2,
+which fixes these issues and improves the
+security bound, performance and flexibility.
+GitHub: \url{https://github.com/google/hctr2}
+\end{abstract}
+
+\subfile{introduction.tex}
+\newpage
+\subfile{specification.tex}
+\newpage
+\subfile{security.tex}
+\subfile{hctrissues.tex}
+\subfile{design.tex}
+\subfile{implementation.tex}
+
+\printbibliography[heading=bibintoc]
+\appendix
+\subfile{injective.tex}
+%\subfile{polyvalimpl.tex}
+
+\end{document}

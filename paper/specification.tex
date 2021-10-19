@@ -1,0 +1,80 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr2.tex]{subfiles}
+\begin{document}
+\section{Specification}\label{specification}
+\subsection{Notation}
+\begin{itemize}
+    \item $\abs{X}$: length of $X \in \bin^{*}$ in bits
+    \item $\lambda$: the empty string $\abs{\lambda} = 0$
+    \item $X[a;l]$: the substring of $X$ of length $l$ starting at the 0-based index $a$
+    \item $\Concat$: bitstring concatenation
+    \item \(\xor\): bitwise XOR
+    \item \(n\): block size in bits
+    \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
+    little-endian conversion of integers to binary; 
+    \(\fromint(x)\) means \(\fromint_n(x)\)
+    \item $\pad(X) = X \Concat 0^v$
+    where $v$ is the least integer $\geq 0$ such that $n$ divides $\abs{X} + v$
+    \item \(x, x^2, \ldots\): elements of the finite field \(\GF(2^n)\)
+    \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
+    \(n\)-bit block cipher with keyspace \(\mathcal{K}\);
+    our concrete proposal uses AES\cite{aes},
+    so \(n=128\) and \(\mathcal{K}\) is
+    \(\bin^{128}\), \(\bin^{192}\), or \(\bin^{256}\)
+    \item \(\mathcal{T}\): the set of permissible tweaks
+    \(\mathcal{T} = \bigcup_{i \in \{0\ldots2^{n-1}-2\}}\bin^i\)
+    \item \(\mathcal{M}\): the set of permissible messages
+    \(\mathcal{M} = \bigcup_{i \in \{n\ldots n + 2^{n-1}-2\}}\bin^i\)
+\end{itemize}
+We map bytes to bitstrings with \(\fromint_8\). Subscripts may denote partial application; if we define $f: A \times B \rightarrow C$ and
+$a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f_a(b)) = b$.
+
+\subsection{Polynomial hash function}\label{hashspec}
+We interpret \(n\)-bit blocks as little-endian field elements of \(\GF(2^n)\),
+so \(001 \Concat 0^{n-3}\) is interpreted as the element \(x^2\).
+Per \cite{aes_gcm_siv,aes_gcm_siv_rfc} we define
+\begin{align*}
+    \POLYVAL(\hgen, \lambda) & = 0^n\\
+    \POLYVAL(\hgen, A \Concat B) & = (\POLYVAL(\hgen, A) \xor B) \otimes \hgen \otimes x^{-n}
+\end{align*}
+where \(\abs{\hgen} = \abs{B} = n\) and
+\(\otimes\) is multiplication in the finite field.
+In our concrete proposal, \(n=128\), we reduce by
+\(x^{128} + x^{127} + x^{126} + x^{121} + 1\),
+and the value of the field element \(x^{-n}\)
+is equal to \(x^{127} + x^{124} + x^{121} + x^{114} + 1\).
+
+For hash key \(\hgen \in \bin^n\), tweak \(T\) and message \(M\), we define:
+\begin{align*}
+    & H_{\hgen}(T, M) \\
+    \defeq & 
+    \begin{cases}
+        \POLYVAL(\hgen, \fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M) &
+        \text{if } n \text{ divides } \abs{M} \\
+        \POLYVAL(\hgen, \fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1)) &
+        \text{otherwise}
+    \end{cases}
+\end{align*}
+
+\subsection{XCTR mode}
+HCTR and HCTR2 use an unusual mode of stream encryption,
+which we name \emph{XCTR mode}:
+\begin{displaymath}
+    \XCTR_k(S) = E_k(S \xor \fromint(1)) \Concat E_k(S \xor \fromint(2)) \Concat E_k(S \xor \fromint(3)) \Concat \cdots
+\end{displaymath}
+Generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls. 
+
+\subsection{HCTR2 encryption}
+HCTR2 is defined in \autoref{pseudocode}.
+\autoref{decryptionpseudocode} gives the decryption algorithm.
+\subfile{algorithm.tex}
+\end{document}

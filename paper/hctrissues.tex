@@ -1,0 +1,116 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr2.tex]{subfiles}
+\begin{document}
+\section{HCTR issues}
+Our presentation of HCTR2 uses
+names that differ from those used to present HCTR.
+
+\begin{itemize}
+    \item HCTR and HCTR2 use an unusual mode of stream encryption.
+    \cite{hctr,hctrquad} refer to this mode as ``CTR mode'',
+    but note the differences between this mode and 
+    standard CTR mode\cite{ctr}.
+    For the avoidance of ambiguity
+    we name this mode \emph{XCTR mode}.
+    \item What \cite{hctr,hctrquad} refer to as \(C, \mathit{CC}, D\)
+    we refer to as \(U, \UU, V\)
+    so that we can use \(P, C\) to refer to plaintext and ciphertext.
+    We will use our names in what follows.
+    \item Because of our use of POLYVAL, HCTR2 draws a distinction
+    between the raw hash key \(\hgen\)
+    and the value at which the polynomial is evaluated \(\hpoly\).
+    HCTR has no such distinction
+    and we use \(h\) in our discussion of HCTR.
+\end{itemize}
+
+Two errors in previous work on HCTR are addressed in HCTR2.
+
+\subsection{Hash function}\label{badhash}
+HCTR uses a hash function based on the polynomial
+\begin{displaymath}
+    H(X) = \poly(\pad(X) \Concat \fromint(\abs{X}) \Concat 0^n)
+\end{displaymath}
+Because it assumes a fixed-length tweak it simply sets \(X = M \Concat T\).
+However, HCTR requires that the resulting polynomial be nonzero
+even when \(X = \lambda\),
+so as a special case \(H(\lambda) = h\).
+
+Unfortunately, as \cite{kumarhctr} observes this is no longer
+an injective map from \(X\)---we also have \(H(0) = h\). This
+breaks the almost-XOR-universal property relied on
+in the security bound and
+straightforwardly leads to an attack in which two encryption queries
+are presented, one of a block width, and the second extending
+the first with a single zero (and assuming a zero length tweak).
+
+\subsection{Security bound}\label{badproof}
+HCTR was initially presented in \cite{hctr} with a security bound cubic
+in the total size of all queries combined.  This is a little low
+for comfort; if a 128-bit block cipher is used, it suggests a
+distinguisher can be effective given tens of terabytes of queries,
+which can quickly be reached over a fast link. 
+\cite{hctrquad} presents a much more satisfactory quadratic bound,
+but the proof has an error that invalidates the claimed bound.
+
+While presented in a different way, 
+the proof of~\cite{hctrquad} is very similar
+to that of this paper: in the game RAND2, all queries get random
+responses, the block cipher inputs are inferred, and a collision
+in either the inferred plaintext or inferred ciphertext of the block cipher
+sets the ``bad'' flag.  
+Where HCTR2 has \(S = \MM \xor \UU \xor L\),
+HCTR simply has \(S = \MM \xor \UU\). 
+HCTR uses a fixed-length tweak;
+for simplicity we assume a zero-length tweak in what follows.
+
+For equation 17, the paper observes that the collision
+\(Y_i^r \qeq \UU^s\) occurs iff \(h\) is one of the zeroes
+of the polynomial \(Y_i^r \xor U^s \xor H(T^s, V^s)\).
+This polynomial has degree at most
+\(m^s\), and so can have
+at most that many solutions. From this the paper infers
+a quadratic bound on the probability of any such collision
+given \(\sigma\) input blocks.
+
+In equation 21, the paper considers collisions of the form 
+\(S_i^r \qeq \MM^s\) and asserts that they are
+quadratically bounded for the same reason. However this equation
+is crucially different: unlike with \(Y_i^r\), the value we
+infer for \(S_i^r\) depends on \(h\). The values of \(h\)
+for which this collision occurs are
+the zeroes of the polynomial
+\begin{displaymath}
+    M^r \xor H(T^r, N^r)
+    \xor U^r \xor H(T^r, V^r) \xor \fromint(i) 
+    \xor M^s \xor H(T^s, N^s)        
+\end{displaymath}
+This polynomial can have degree up to 
+\(\max(m^r, m^s)\), and so the bound of
+equation 17 does not apply.
+If queries are permitted to be of any length,
+this leads to a cubic security bound.
+Consider an adversary who
+sends a single query with \(x+1\) blocks, followed by
+\(x\) queries of one block. For each \(i \in \{1\ldots x\}\) and
+for each \(s \in \{2 \ldots x + 1\}\), we have at best
+\(\prob{S_i^r = \MM^s} \leq (x + 1)/2^n\). Summing
+all these bounds for each such pair, we find that
+for queries with \(\sigma = 2x + 1\)
+this technique yields an upper bound on 
+the total probability of such a collision of
+\((x^3 + x^2)/2^n\).
+
+\cite{nandimail} observes that a quadratic bound can be recovered
+if a bound \(l_\mathrm{max}\) is set on the maximum size of
+a single query; in this case we can prove a bound
+which is some small multiple of \(l_\mathrm{max}q\sigma/2^n\).
+\end{document}

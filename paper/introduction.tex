@@ -1,0 +1,54 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr2.tex]{subfiles}
+\begin{document}
+\section{Introduction}
+A symmetric encryption construction such as AES-GCM\cite{gcm}
+will produce a ciphertext which is larger than
+the plaintext, once the nonce and authentication tag are included. However,
+there are situations such as disk sector encryption
+where the ciphertext must be the same size as the
+plaintext, and what is required is a tweakable
+super-pseudorandom permutation\cite{cmc} (SPRP). 
+\cite{adiantum} includes a detailed history of length-preserving encryption.
+Where AES and multiplication in \(\GF(2^{128})\) are hardware-accelerated,
+HCTR\cite{hctr} is among the most efficient 
+tweakable SPRP constructions, using
+a single block cipher invocation and two \(\GF(2^{128})\) multiplications
+per 16-byte block.
+
+In this paper, we present 
+a specification (\autoref{specification})
+and security bound (\autoref{security})
+for a revised version, HCTR2, which 
+addresses the following issues:
+\begin{itemize}
+    \item \cite{kumarhctr} observes that HCTR's hash function
+    is not almost-XOR-universal\cite{eadu} as claimed (\autoref{badhash}).
+    HCTR2's hash function fixes this property.
+    \item Separately,
+    an error in the proof presented in \cite{hctrquad}
+    invalidates the security bound claimed in that paper (\autoref{badproof}); with our revised
+    mode we can claim a tighter bound.
+    \item HCTR2 supports using tweaks of any length with a single key.
+    \item HCTR's key is a block cipher key, plus an \(n\)-bit
+    hash key. HCTR2's key is simply
+    the block cipher key.
+    \item We modify the hash function to allow more precomputation
+    for greater performance.
+    \item We specify endianness and the like for interoperability.
+    \item We provide a sample implementation and test vectors.
+\end{itemize}
+We discuss our design decisions (\autoref{design})
+and report on its implementation on x86-64 and ARM64 (\autoref{implementation}).
+We know of no patents affecting HCTR2.
+\subfile{hctr2fig.tex}
+\end{document}
