@@ -1,17 +1,20 @@
 # HCTR2
 
-HCTR2 is a wide-block encryption mode that is efficient on processors with
+HCTR2 is a length-preserving encryption mode that is efficient on processors with
 instructions to accelerate AES and carryless multiplication, e.g. x86 processors
 with AES-NI and CLMUL, and ARM processors with the ARMv8 Crypto Extensions.
 
-HCTR2 is intended for applications such as disk encryption that require
-length-preserving encryption, so authenticated algorithms such as AES-GCM cannot
-be used.  Usually AES-XTS is used in such cases, but XTS has the disadvantage
-that it is a "narrow-block mode": a 1-bit change to the plaintext changes only
-16 bytes of ciphertext and vice versa, revealing more information to the
-attacker than necessary.  HCTR2 is a wide-block mode ("super-pseudorandom
-permutation"), so any change to the plaintext will result in an unrecognizably
-different ciphertext and vice versa.
+Usually, the right mode to use for encryption is a mode like AES-GCM or
+AES-GCM-SIV which includes a tag as well as a fresh nonce. However there
+are some applications, such as disk encryption, where the ciphertext
+must be the same size as the plaintext and there is no room for such
+information. For disk encryption, AES-XTS is often used, but it operates
+on each block of the plaintext independently, so changes to a given
+plaintext block affect only the corresponding ciphertext block
+and vice versa, revealing more information to the attacker than necessary.
+HCTR2 is a tweakable super-pseudorandom permutation: any change to the
+plaintext will result in an unrecognizably different ciphertext
+and vice versa.
 
 For more information, see the HCTR2 paper.
 
