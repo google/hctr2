@@ -29,8 +29,8 @@ static inline int aes_nrounds(const struct crypto_aes_ctx *ctx)
 {
 	/*
 	 * AES-128: 6 + 16 / 4 = 10 rounds
-	 * AES-192: 6 + 24 / 6 = 12 rounds
-	 * AES-256: 6 + 32 / 8 = 14 rounds
+	 * AES-192: 6 + 24 / 4 = 12 rounds
+	 * AES-256: 6 + 32 / 4 = 14 rounds
 	 */
 	return 6 + ctx->key_length / 4;
 }
