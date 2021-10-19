@@ -41,7 +41,7 @@ void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	if (nbytes % XCTR_BLOCK_SIZE != 0) {
 		offset = (nbytes / XCTR_BLOCK_SIZE) * XCTR_BLOCK_SIZE;
 		extra.a = 0;
-		extra.b = cpu_to_le64(nbytes / XCTR_BLOCK_SIZE) + 1;
+		extra.b = cpu_to_le64(nbytes / XCTR_BLOCK_SIZE + 1);
 		xor(&extra, &extra, iv, XCTR_BLOCK_SIZE);
 
 		aes_encrypt(ctx, (u8 *)&extra, (u8 *)&extra, true);
@@ -72,7 +72,7 @@ void xctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	if (nbytes % XCTR_BLOCK_SIZE != 0) {
 		offset = (nbytes / XCTR_BLOCK_SIZE) * XCTR_BLOCK_SIZE;
 		ctr.a = 0;
-		ctr.b = cpu_to_le64(nbytes / XCTR_BLOCK_SIZE) + 1;
+		ctr.b = cpu_to_le64(nbytes / XCTR_BLOCK_SIZE + 1);
 		xor(&ctr, &ctr, iv, XCTR_BLOCK_SIZE);
 		aes_encrypt(ctx, (u8 *)&ctr, (u8 *)&ctr, false);
 		xor(&dst[offset], (u8 *)&ctr, &src[offset],
