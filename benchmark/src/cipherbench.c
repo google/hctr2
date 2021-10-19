@@ -208,14 +208,12 @@ struct cipherbench_params g_params = {
 enum {
 	OPT_BUFSIZE,
 	OPT_NTRIES,
-	OPT_TIME_INSNS,
 	OPT_HELP,
 };
 
 static const struct option longopts[] = {
 	{"bufsize", required_argument, NULL, OPT_BUFSIZE},
 	{"ntries", required_argument, NULL, OPT_NTRIES},
-	{"time-insns", no_argument, NULL, OPT_TIME_INSNS},
 	{"help", no_argument, NULL, OPT_HELP},
 	{NULL, 0, NULL, 0},
 };
@@ -237,7 +235,6 @@ static void usage(void)
 		"Options:\n"
 		"  --bufsize=BUFSIZE\n"
 		"  --ntries=NTRIES\n"
-		"  --time-insns\n"
 		"  --help\n";
 
 	fputs(s, stderr);
@@ -249,7 +246,6 @@ int main(int argc, char *argv[])
 {
 	int i;
 	int c;
-	bool time_insns = false;
 
 	while ((c = getopt_long(argc, argv, "", longopts, NULL)) != -1) {
 		switch (c) {
@@ -258,9 +254,6 @@ int main(int argc, char *argv[])
 			break;
 		case OPT_NTRIES:
 			g_params.ntries = atoi(optarg);
-			break;
-		case OPT_TIME_INSNS:
-			time_insns = true;
 			break;
 		case OPT_HELP:
 		default:
@@ -285,11 +278,6 @@ int main(int argc, char *argv[])
 
 	configure_cpu();
 
-	if (time_insns) {
-		do_insn_timing();
-		goto out;
-	}
-
 	printf("Benchmark parameters:\n");
 	printf("\tbufsize\t\t%d\n", g_params.bufsize);
 	printf("\tntries\t\t%d\n", g_params.ntries);
@@ -302,7 +290,6 @@ int main(int argc, char *argv[])
 		for (i = 0; i < ARRAY_SIZE(ciphers); i++)
 			ciphers[i].test_func();
 	}
-out:
 	deconfigure_cpu();
 	return 0;
 }
