@@ -1,0 +1,405 @@
+% Copyright 2021 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+%!BIB program = biber
+%!TeX program = lualatex
+%!TeX spellcheck = en-US
+
+\documentclass[hctr2.tex]{subfiles}
+\begin{document}
+\subsection{Main lemma}\label{mainlemma}
+In what follows, we take world X (the ``real world'') 
+to be \(\HCTR[\Perm(n)]\),
+ie HCTR with all calls to the block cipher
+replaced with calls to a random permutation,
+and world Y (the ``ideal world'') to be \(\pm\widetilde{\mathrm{rnd}}\),
+which maps every query to a random response such that
+all responses of the appropriate length are equally likely;
+we then use the H-coefficient technique to bound
+the distinguishing advantage between them
+for a fixed adversary \(A \in \mathcal{A}(q, \sigma, t)\)
+as defined in \autoref{definitions}.
+
+We use superscripts to distinguish between queries;
+where we refer to \(r\), \(s\), we assume that \(r < s\).
+An encryption query \((T^s, P^s)\) yields ciphertext \(C^s\)
+while a decryption query \((T^s, C^s)\)
+yields plaintext \(P^s\).
+We forbid ``pointless queries'':
+encryption queries \((T^s, P^s)\)
+such that \((T^r, P^r) = (T^s, P^s)\) for some \(r < s\), 
+or decryption queries \((T^s, C^s)\)
+such that \((T^r, C^r) = (T^s, C^s)\) for some \(r < s\),
+whether query \(r\) was an encryption or decryption query.
+
+For each query \(s\), 
+let \(m^s \defeq \ceil{\abs{P^s}/n} = \ceil{\abs{C^s}/n}\)
+be the number of blocks in the response,
+and let \(d^s \defeq m^s + \ceil{\abs{T^s}/n}\)
+be the number of blocks in the query.
+Note that \(d^s\) is the degree of the hash
+function polynomial used in query \(s\)
+(since all but one block of the message is hashed),
+and that \(\sum_s d^s \leq \sigma\).
+We give the adversary some extra information
+which is included in the transcript.
+In world X, this information is:
+\begin{itemize}
+    \item the ``leftover block'' for each query:
+    where a query has plaintext/ciphertext
+    that is not a multiple of the block size,
+    this is the extra output from the last
+    block cipher call that is not used.
+    For query \(s\), this is 
+    \begin{displaymath}
+        D^s = \XCTR_\pi(S^s)[\abs{P^s} - n; nm^s-\abs{P^s}]
+    \end{displaymath}
+    \item the hash key \(\hgen\), given after all queries are complete
+    \item the mask \(L\), given after all queries are complete
+\end{itemize}
+In world Y, random output of the expected
+length is substituted. Since the adversary can always ignore
+this information, giving it to them cannot make their performance worse.
+
+\subsubsection{Good and bad transcripts}
+For \(j \in \{1 \ldots m^s-1\}\) we define \(S_j^s = S^s \xor \fromint(j)\),
+the block cipher inputs used in XCTR, and \(Y_j^s\) the corresponding
+outputs, so that in world X \(Y_j^s = \pi(S_j^s)\) and 
+\(Y_1^s \Concat \cdots \Concat Y_{m^s-1}^s = \XCTR_\pi(S^s)[0;n(m^s -1)]\).
+
+Given the full transcript, including \(\hgen\) and \(L\),
+we can infer all block cipher plaintexts and ciphertexts.
+For each query
+(omitting the query superscript \(s\) for readability)
+we know \(T\), \(P\), \(C\) and \(D\) and so can infer:
+\begin{align*}
+    M \Concat N &= P \\
+    U \Concat V &= C \\
+    \MM &= M \xor H_{\hgen}(T, N)\\
+    \UU &= U \xor H_{\hgen}(T, V)\\
+    S &= \MM \xor \UU \xor L\\ 
+    S_j &= S \xor \fromint(j)\\
+    Y_1 \Concat \cdots \Concat Y_{m-1} &= (N \xor V) \Concat D
+\end{align*}
+This gives us multisets \(\mathcal{D}\) and \(\mathcal{R}\)
+of inferred block cipher plaintexts and ciphertexts:
+\begin{align*}
+    \mathcal{D} \defeq [\fromint(0), \fromint(1)] \uplus &
+    \biguplus_s [\MM^s, S_1^s, \ldots, S_{m^s-1}^s]\\
+    \mathcal{R} \defeq [\hgen, L] \uplus &
+    \biguplus_s [\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s]
+\end{align*}
+We therefore infer
+\(\abs{\mathcal{D}} = \abs{\mathcal{R}} = \sigma_m \defeq 2 + \sum_s m^s\)
+block cipher plaintexts/ciphertexts
+from \(\sigma_m n\) bits of response
+(including the extra information \(D^s\), \(\hgen\), \(L\)).
+A transcript is ``bad'' (\(\tau \in \Tb\))
+iff any entry in \(\mathcal{D}\) or \(\mathcal{R}\)
+has multiplicity greater than one,
+ie if any pair of inferred plaintexts are the same, or
+if any pair of inferred ciphertexts are the same.
+
+Since responses in world Y are coin flips,
+the probability of a 
+particular \(\tau \in \Tc\), good or bad,
+in world Y is always simply \(2^{-\sigma_m n}\).
+For a transcript \(\tau \in \Tg\),
+the probability in world X
+is the probability of all of those plaintext/ciphertext
+pairs being part of a given random permutation.
+This is 
+\(\prod_{i=0}^{\sigma_m -1}1/(2^n - i)\).
+Thus \(\prob{Y = \tau} \leq \prob{X = \tau}\)
+for all \(\tau \in \Tg\) as required (\autoref{hco}).
+
+\subsubsection{Case analysis of collisions}
+Next we bound \(\prob{Y \in \Tb}\).
+We consider a case by case analysis of possible collisions,
+in either inferred plaintexts (\(\mathcal{D}\))
+or inferred ciphertexts (\(\mathcal{R}\)),
+and bound the probability in world Y each case.
+
+Responses are random in world Y,
+but some caution is required.
+If we know the adversary's query \(s\), then conditioning on that,
+we cannot treat the response to query \(r < s\) as uniformly random;
+if the choice of later query depends on the earlier response,
+knowing the later query is information about the earlier response.
+However, conditioning on a query and all prior queries and responses,
+we still have that \(\hgen\), \(L\), and the
+query response are uniformly random and independent,
+and so we can consider them in any order.
+
+Consider for example the case \(S_i^r \qeq \MM^s\):
+for a given \(r\), \(s\), \(i\),
+we want to evaluate \(\prob{S_i^r = \MM^s}\).
+From our inference rules, \(S_i^r = \MM^s\)
+iff \(L = M^r \xor H_{\hgen}(T^r, N^r) \xor U^r \xor H_{\hgen}(T^r, V^r)
+\xor \fromint(i) \xor M^s \xor H_{\hgen}(T^s, N^s)\).
+\(\hgen\) and \(L\) are given at the end of the transcript
+and so are independent of all other queries and responses.
+If we knew the entire transcript except \(L\),
+we would know the entire right hand side of this equation.
+In world X, we would also know for example that \(L \neq \hgen\), but
+in world Y, conditioning on the rest of the transcript,
+all values of \(L\) are equally likely;
+therefore this equation holds with probability exactly \(1/2^n\).
+
+There are twenty-two cases to consider,
+ten of which arise because we use the block cipher
+to generate \(\hgen\) and \(L\).
+In fourteen cases, the probability of a collision
+between two specific blocks is \(1/2^n\):
+
+\subfile{casetable.tex}
+\begin{itemize}
+    \item
+    \(\hgen \qeq L\),
+    \(L \qeq \UU^s\),
+    \(L \qeq Y_j^s\),
+    \(\fromint(0) \qeq S_j^s\),
+    \(\fromint(1) \qeq S_j^s\),
+    \(S_i^r \qeq \MM^s\),
+    \(\MM^r \qeq S_j^s\),
+    \(\MM^s \qeq S_j^s\):
+    Given \(\hgen\) and all queries and responses,
+    there is exactly one value of \(L\)
+    which causes the equation to hold.
+    \item
+    \(\hgen \qeq Y_j^s\),
+    \(\UU^r \qeq Y_j^s\),
+    \(Y_i^r \qeq Y_j^s\),
+    \(Y_i^s \qeq Y_j^s\) where \(i < j\): 
+    If query \(s\) is an encryption query,
+    then given \(\hgen\), \(L\), query \(s\), 
+    all prior queries and responses, and
+    \(C^s[0;jn]\), there is exactly one value of
+    \(C^s[jn;n]\) that results in the equation holding.
+    If \(s\) is a decryption query, the same reasoning holds
+    with \(P^s\), \(C^s\) swapped.
+    \item 
+    \(\UU^s \qeq Y_j^s\):
+    If query \(s\) is a decryption query,
+    the exact argument above applies.
+    If it is an encryption query,
+    then given \(\hgen\), \(L\), \(T^s\), \(P^s\),
+    and \(V^s\), there is exactly
+    one value of \(U^s\) that results
+    in the equation holding.
+    \item 
+    \(S_i^r \qeq S_j^s\):
+    If query \(s\) is an encryption query,
+    then given \(\hgen\), \(L\), \(T^s\),
+    \(P^s\), \(V^s\)
+    and all prior queries and responses,
+    there is exactly one response value \(U^s\)
+    that results in the equation holding.
+    For a decryption query, 
+    given \(\hgen\), \(L\), \(T^s\),
+    \(C^s\), \(N^s\)
+    and all prior queries and responses,
+    there is exactly one response value \(M^s\)
+    that results in the equation holding.
+\end{itemize}
+
+In two cases, a collision is impossible:
+
+\begin{itemize}
+    \item \(\fromint(0) \qeq \fromint(1)\): 
+    Trivially impossible.
+    \item 
+    \(S_i^s \qeq S_j^s\):
+    This is impossible; 
+    \(S_i^s \xor S_j^s = \fromint(i) \xor \fromint(j)\).
+\end{itemize}
+
+There are six cases where the probability may
+be greater than \(1/2^n\).
+Considering first collisions with \(\MM^s\) where
+query \(s\) is an encryption query:
+
+\begin{itemize}
+    \item \(\MM^r \qeq \MM^s\):
+    This holds iff \(M^r \xor H_{\hgen}(T^r, N^r) = M^s \xor H_{\hgen}(T^s, N^s)\);
+    by hash function property 2, this holds with probability at most
+    \(\max(d^r, d^s)/2^n\).
+    \item \(\fromint(0) \qeq \MM^s\):
+    This holds iff \(\fromint(0) = M^s \xor H_{\hgen}(T^s, N^s)\);
+    by hash function property 1, this holds with probability at most
+    \(d^s/2^n\).
+    \item \(\fromint(1) \qeq \MM^s\):
+    As above.
+\end{itemize}
+
+In each case, if query \(s\) is a decryption query,
+then given \(\hgen\), \(T^s\), \(C^s\), \(N^s\),
+and all prior queries and responses,
+all values of \(M^s\) are equally likely 
+and a single value causes the equation to hold,
+for a probability of \(1/2^n\).
+
+Similarly, considering collisions with \(\UU^s\) where
+query \(s\) is a decryption query:
+
+\begin{itemize}
+    \item \(\UU^r \qeq \UU^s\): 
+    This holds iff \(U^r \xor H_{\hgen}(T^r, V^r) = U^s \xor H_{\hgen}(T^s, V^s)\);
+    by hash function property 2, this holds with probability at most
+    \(\max(d^r, d^s)/2^n\).
+    \item \(Y_i^r \qeq \UU^s\):
+    This holds iff \(Y_i^r = U^s \xor H_{\hgen}(T^s, V^s)\);
+    by hash function property 1, this holds with probability at most
+    \(d^s/2^n\).
+    \item \(\hgen \qeq \UU^s\):
+    This holds iff \(\hgen = U^s \xor H_{\hgen}(T^s, V^s)\);
+    by hash function property 3, this holds with probability at most
+    \(d^s/2^n\).
+\end{itemize}
+
+As above, if query \(s\) is an encryption query,
+then given \(\hgen\), \(T^s\), \(P^s\), \(V^s\),
+and all prior queries and responses,
+all values of \(U^s\) are equally likely
+and a single value causes the equation to hold,
+for a probability of \(1/2^n\).
+
+\autoref{domaincollision} illustrates the various cases
+we consider for inferred block cipher plaintext collisions.
+Rows represent the terms
+on the left hand side of the collision, while
+columns represent the terms on the right; 
+for example, the top left box represents
+\(\fromint(0) \qeq \fromint(1)\). Where a square is left blank
+it is either because it represents
+comparing a term to itself (eg \(\MM^s \qeq \MM^s\))
+or because it represents something that
+is already handled elsewhere
+(eg considering \(\fromint(1) \qeq \MM^s\)
+handles the \(\MM^r \qeq \fromint(1)\) case).
+A square is colored red
+and marked \(0\) if the
+probability of a particular collision
+of that kind is zero, grey
+and marked \(1\) if
+the probability is always \(1/2^n\),
+and green if the probability may be
+greater than \(1/2^n\) and depends
+on the number of solutions to a
+particular polynomial;
+\(d^s\) when there are at most \(d^s\) solutions,
+\(\max\) where there are at most
+\(\max(d^r, d^s)\) solutions.
+Even where a square is green,
+if query \(s\) is a decryption query,
+the probability of a particular collision of
+that kind is \(1/2^n\).
+\autoref{rangecollision} covers
+block cipher ciphertext collisions; in this case,
+it is only decryption queries where
+probabilities may be above \(1/2^n\).
+
+\subsubsection{Summing collision bounds}
+To establish an upper bound on the probability that any pair will collide,
+we sum collision probabilities
+for all pairs in the multiset \(\mathcal{D}\)
+and all pairs in the multiset \(\mathcal{R}\).
+To make summing easier, we define a ``correction'' \(c\):
+\begin{align*}
+    & \prob{Y \in \Tb} \\
+    = &\prob{\exists [a, b] \subseteq \mathcal{D}: a = b \vee \exists [a, b] \subseteq \mathcal{R} : a = b} \\
+    \leq &
+        \Bigg(\sum_{[a, b] \subseteq \mathcal{D}} \prob{a = b}\Bigg)
+      + \Bigg(\sum_{[a, b] \subseteq \mathcal{R}} \prob{a = b}\Bigg)
+      \\
+    = &\left.\left(2\binom{\sigma_m}{2} + c
+    \right)\middle/2^n\right. \\
+    \intertext{where}
+    c \defeq &
+    \Bigg(\sum_{[a, b] \subseteq \mathcal{D}} 2^n\prob{a = b} -1\Bigg)
+    + \Bigg(\sum_{[a, b] \subseteq \mathcal{R}} 2^n\prob{a = b} -1\Bigg)
+\end{align*}
+This rearrangement is so that the fourteen cases above
+which have a probability of colliding of \(1/2^n\)
+make zero contribution to \(c\)
+and so need not be considered further;
+only the remaining eight
+%(red and green boxes in \autoref{domaincollision} and \autoref{rangecollision})
+need to be considered. Define
+\(c = c_b + c_f + c_w + c_a\) where
+\begin{itemize}
+    \item \(c_b\) covers collisions within 
+    \(\{\fromint(0), \fromint(1)\}\) and within \(\{\hgen, L\}\)
+    \item \(c_f\) covers collisions
+    for all \(s\)
+    between \(\{\fromint(0), \fromint(1)\}\) and \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
+    and between \(\{\hgen, L\}\) and \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
+    \item \(c_w\) covers collisions
+    for all \(s\)
+    within \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
+    and within \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
+    \item \(c_a\) covers collisions
+    for all \(r < s\)
+    between \(\{\MM^r, S_1^r, \ldots, S_{m^r-1}^r\}\) and \(\{\MM^s, S_1^s, \ldots, S_{m^s-1}^s\}\)
+    and between \(\{\UU^r, Y_1^r, \ldots, Y_{m^r-1}^r\}\) and \(\{\UU^s, Y_1^s, \ldots, Y_{m^s-1}^s\}\)
+\end{itemize}
+
+\(c_b = -1\), since 
+\(\fromint(0) \qeq \fromint(1)\) is impossible.
+
+For \(c_f\): if query \(s\) is an encryption query,
+the only nonzero contributions come from the pairs
+\(\fromint(0) \qeq \MM^s\) and
+\(\fromint(1) \qeq \MM^s\). In each of these
+cases the probability bound is not \(1/2^n\) but
+\(d^s/2^n\), implying a correction of at most
+\(2(d^s - 1)\) for each encryption query.
+If query \(s\) is a decryption query,
+we need only consider the pair \(\hgen \qeq \UU^s\)
+for a correction of at most \(d^s - 1\). 
+Summing across all queries, we conclude that
+\begin{align*}
+    c_f \leq &\sum_s \max(2(d^s - 1), d^s - 1) \\
+        = &\sum_s 2(d^s - 1) \\
+        \leq & 2\sigma
+\end{align*}
+
+For \(c_w\): we need only consider \(S_i^s \qeq S_j^s\),
+which is impossible:
+\begin{align*}
+    c_w = &\sum_s -\binom{m^s -1}{2} \\
+        \leq &0
+\end{align*}
+
+For \(c_a\): if query \(s\) is an encryption query,
+\(\MM^r \qeq \MM^s\) gives a correction of
+at most \(\max(d^r, d^s) -1\);
+if it is a decryption query,
+\(\UU^r \qeq \UU^s\) and \(Y_i^r \qeq \UU^s\)
+give a correction of at most
+\(\max(d^r, d^s) -1 + (m^r -1 )(d^s -1)\).
+Summing across queries, we find
+\begin{align*}
+    c_a \leq &\sum_{r<s} \max(\max(d^r, d^s) -1, \max(d^r, d^s) -1 + (m^r -1 )(d^s -1)) \\
+           = &\sum_{r<s} \max(d^r, d^s) -1 + (m^r -1 )(d^s -1) \\
+        \leq & \sum_{r < s} d^r + d^s -1 + (m^r -1 )(d^s -1)\\
+        \leq & (q-1)\sigma + \sum_{r < s} (m^r -1 )(d^s -1) \\
+        \leq & (q-1)\sigma + \sum_{r < s} (d^r -1)(d^s -1) \\
+        \leq & (q-1)\sigma + \binom{\sigma}{2}
+\end{align*}
+
+Applying the H-coefficient technique, we conclude that
+\begin{align*}
+    & \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(q, \sigma, t)] \\
+    \leq & \prob{Y \in \Tb} \\
+    \leq & \left.\left(2\binom{\sigma_m}{2} + c_b + c_f + c_w + c_a\right)\middle/2^n\right. \\
+    \leq & \left.\left(2\binom{\sigma_m}{2} - 1 + 2\sigma + (q-1)\sigma + \binom{\sigma}{2}\right)\middle/2^n\right. \\
+    \leq & \left.\left(2\binom{\sigma + 2}{2} - 1 + 2\sigma + (q-1)\sigma + \binom{\sigma}{2}\right)\middle/2^n\right. \\
+    = & \left.\left(2\left(\binom{\sigma}{2} + 2\sigma + 1\right) - 1 + 2\sigma + (q-1)\sigma + \binom{\sigma}{2}\right)\middle/2^n\right. \\
+    = & \left.\left(3\sigma(\sigma - 1)/2 + q\sigma + 5\sigma + 1\right)\middle/2^n\right. \\
+    = & \left.\left(3\sigma^2 + 2q\sigma + 7\sigma + 2\right)\middle/2^{n+1}\right.
+\end{align*}
+\end{document}
