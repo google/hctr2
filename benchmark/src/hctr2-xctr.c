@@ -17,16 +17,16 @@ void xctr_setkey(struct aes_ctx *ctx, const u8 *key)
 
 #ifdef __x86_64__
 asmlinkage void aes_xctr_enc_256_avx_by8(const u8 *in, const u8 *iv,
-					const struct aes_ctx *key, u8 *out,
-					size_t num_bytes);
+					 const struct aes_ctx *key, u8 *out,
+					 size_t num_bytes);
 #endif
 #ifdef __aarch64__
 asmlinkage void ce_aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[],
-					 int rounds, int bytes, const u8 ctr[]);
+				    int rounds, int bytes, const u8 ctr[]);
 #endif
 
 void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
-			  size_t nbytes, const u8 *iv)
+		     size_t nbytes, const u8 *iv)
 {
 	u128 extra;
 	size_t offset;
@@ -34,8 +34,8 @@ void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	aes_xctr_enc_256_avx_by8(src, iv, ctx, dst, nbytes);
 #endif
 #ifdef __aarch64__
-	ce_aes_xctr_encrypt(dst, src, (u8 *)&ctx->aes_ctx.key_enc, 14,
-				 nbytes, iv);
+	ce_aes_xctr_encrypt(dst, src, (u8 *)&ctx->aes_ctx.key_enc, 14, nbytes,
+			    iv);
 #endif
 
 	if (nbytes % XCTR_BLOCK_SIZE != 0) {
@@ -52,7 +52,7 @@ void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 }
 
 void xctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
-			     size_t nbytes, const u8 *iv)
+			size_t nbytes, const u8 *iv)
 {
 	int i;
 	int nblocks;
@@ -81,7 +81,7 @@ void xctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 }
 
 void xctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
-		     size_t nbytes, const u8 *iv, bool simd)
+		size_t nbytes, const u8 *iv, bool simd)
 {
 	if (simd) {
 		xctr_crypt_simd(ctx, dst, src, nbytes, iv);

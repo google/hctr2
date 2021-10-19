@@ -16,4 +16,4 @@
 void xctr_setkey(struct aes_ctx *ctx, const u8 *key);
 
 void xctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
-		     size_t nbytes, const u8 *iv, bool simd);
+		size_t nbytes, const u8 *iv, bool simd);

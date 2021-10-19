@@ -204,22 +204,22 @@ void hctr2_hash_emit(const struct hctr2_hash_key *key,
 }
 
 static void _polyval_generic(const struct hctr2_hash_key *key, const void *src,
-			unsigned int srclen, u8 *digest)
+			     unsigned int srclen, u8 *digest)
 {
 	struct hctr2_hash_state polystate;
-    polystate.state.a = 0;
-    polystate.state.b = 0;
+	polystate.state.a = 0;
+	polystate.state.b = 0;
 
 	hctr2_hash_hash_message(key, &polystate, src, srclen, false);
 	hctr2_hash_emit(key, &polystate, digest, false);
 }
 
 static void _polyval_simd(const struct hctr2_hash_key *key, const void *src,
-			     unsigned int srclen, u8 *digest)
+			  unsigned int srclen, u8 *digest)
 {
 	struct hctr2_hash_state polystate;
-    polystate.state.a = 0;
-    polystate.state.b = 0;
+	polystate.state.a = 0;
+	polystate.state.b = 0;
 
 	hctr2_hash_hash_message(key, &polystate, src, srclen, true);
 	hctr2_hash_emit(key, &polystate, digest, true);
