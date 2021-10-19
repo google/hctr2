@@ -9,14 +9,19 @@
 #include "aes_linux.h"
 #include "hctr2-xctr.h"
 
-void xctr_setkey(struct aes_ctx *ctx, const u8 *key)
+void xctr_setkey(struct aes_ctx *ctx, const u8 *key, size_t key_len)
 {
-	aes256_setkey(ctx, key);
+	aes_setkey(ctx, key, key_len);
 }
-
 
 #ifdef __x86_64__
 asmlinkage void aes_xctr_enc_256_avx_by8(const u8 *in, const u8 *iv,
+					 const struct aes_ctx *key, u8 *out,
+					 size_t num_bytes);
+asmlinkage void aes_xctr_enc_192_avx_by8(const u8 *in, const u8 *iv,
+					 const struct aes_ctx *key, u8 *out,
+					 size_t num_bytes);
+asmlinkage void aes_xctr_enc_128_avx_by8(const u8 *in, const u8 *iv,
 					 const struct aes_ctx *key, u8 *out,
 					 size_t num_bytes);
 #endif
@@ -31,10 +36,23 @@ void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	u128 extra;
 	size_t offset;
 #ifdef __x86_64__
-	aes_xctr_enc_256_avx_by8(src, iv, ctx, dst, nbytes);
+    switch(ctx->aes_ctx.key_length) {
+        case AES_KEYSIZE_256:
+	        aes_xctr_enc_256_avx_by8(src, iv, ctx, dst, nbytes);
+            break;
+        case AES_KEYSIZE_192:
+	        aes_xctr_enc_192_avx_by8(src, iv, ctx, dst, nbytes);
+            break;
+        case AES_KEYSIZE_128:
+	        aes_xctr_enc_128_avx_by8(src, iv, ctx, dst, nbytes);
+            break;
+        default:
+            ASSERT("Invalid AES key size.");
+    }
 #endif
 #ifdef __aarch64__
-	ce_aes_xctr_encrypt(dst, src, (u8 *)&ctx->aes_ctx.key_enc, 14, nbytes,
+	int rounds = 6 + ctx->aes_ctx.key_length / 4;
+	ce_aes_xctr_encrypt(dst, src, (u8 *)&ctx->aes_ctx.key_enc, rounds, nbytes,
 			    iv);
 #endif
 
@@ -90,14 +108,55 @@ void xctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	}
 }
 
+void xctr_aes128_setkey(struct aes_ctx *ctx, const u8 *key)
+{
+	xctr_setkey(ctx, key, AES_KEYSIZE_128);
+}
+
+void xctr_aes192_setkey(struct aes_ctx *ctx, const u8 *key)
+{
+	xctr_setkey(ctx, key, AES_KEYSIZE_192);
+}
+
+void xctr_aes256_setkey(struct aes_ctx *ctx, const u8 *key)
+{
+	xctr_setkey(ctx, key, AES_KEYSIZE_256);
+}
+
 void test_xctr(void)
 {
-#define ALGNAME "XCTR"
-#define KEY_BYTES XCTR_KEY_SIZE
+#define ALGNAME "AES-128-XCTR"
+#define KEY_BYTES AES_KEYSIZE_128
 #define IV_BYTES XCTR_IV_SIZE
 #define KEY struct aes_ctx
-#define SETKEY xctr_setkey
-#define SETKEY_SIMD xctr_setkey
+#define SETKEY xctr_aes128_setkey
+#define SETKEY_SIMD xctr_aes128_setkey
+#define ENCRYPT xctr_crypt_generic
+#define DECRYPT xctr_crypt_generic
+#define SIMD_IMPL_NAME "simd"
+#define ENCRYPT_SIMD xctr_crypt_simd
+#define DECRYPT_SIMD xctr_crypt_simd
+#include "cipher_benchmark_template.h"
+
+#define ALGNAME "AES-192-XCTR"
+#define KEY_BYTES AES_KEYSIZE_192
+#define IV_BYTES XCTR_IV_SIZE
+#define KEY struct aes_ctx
+#define SETKEY xctr_aes192_setkey
+#define SETKEY_SIMD xctr_aes192_setkey
+#define ENCRYPT xctr_crypt_generic
+#define DECRYPT xctr_crypt_generic
+#define SIMD_IMPL_NAME "simd"
+#define ENCRYPT_SIMD xctr_crypt_simd
+#define DECRYPT_SIMD xctr_crypt_simd
+#include "cipher_benchmark_template.h"
+
+#define ALGNAME "AES-256-XCTR"
+#define KEY_BYTES AES_KEYSIZE_256
+#define IV_BYTES XCTR_IV_SIZE
+#define KEY struct aes_ctx
+#define SETKEY xctr_aes256_setkey
+#define SETKEY_SIMD xctr_aes256_setkey
 #define ENCRYPT xctr_crypt_generic
 #define DECRYPT xctr_crypt_generic
 #define SIMD_IMPL_NAME "simd"

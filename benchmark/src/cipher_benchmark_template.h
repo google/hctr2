@@ -28,6 +28,7 @@
 	rand_bytes(orig_iv, sizeof(iv));
 	rand_bytes(orig, bufsize);
 
+#ifdef ENCRYPT
 	SETKEY(&ctx, key);
 
 	best_time = UINT64_MAX;
@@ -51,6 +52,7 @@
 	}
 	ASSERT(!memcmp(orig, ptext, bufsize));
 	show_result(ALGNAME, "decryption", "generic", nbytes, best_time);
+#endif /* ENCRYPT */
 
 #ifdef ENCRYPT_SIMD
 	SETKEY_SIMD(&ctx, key);
@@ -62,7 +64,9 @@
 			ENCRYPT_SIMD(&ctx, ctext_simd, orig, bufsize, iv);
 		best_time = min(best_time, now() - start);
 		ASSERT(memcmp(orig, ctext_simd, bufsize));
+#ifdef ENCRYPT
 		ASSERT(!memcmp(ctext, ctext_simd, bufsize));
+#endif
 	}
 	show_result(ALGNAME, "encryption", SIMD_IMPL_NAME, nbytes, best_time);
 	best_time = UINT64_MAX;

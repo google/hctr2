@@ -19,8 +19,7 @@ struct aes_ctx {
 	struct crypto_aes_ctx aes_ctx;
 } __attribute__((aligned(32)));
 
-void aes128_setkey(struct aes_ctx *ctx, const u8 *key);
-void aes256_setkey(struct aes_ctx *ctx, const u8 *key);
+void aes_setkey(struct aes_ctx *ctx, const u8 *key, int key_len);
 void aes_encrypt(const struct aes_ctx *ctx, u8 *out, const u8 *in, bool simd);
 void aes_decrypt(const struct aes_ctx *ctx, u8 *out, const u8 *in, bool simd);
 

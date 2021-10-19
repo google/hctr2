@@ -21,10 +21,10 @@ struct aes_xts_ctx {
 	struct aes_ctx tweak_ctx;
 };
 
-void xts_setkey(struct aes_xts_ctx *ctx, const u8 *key)
+void xts_setkey(struct aes_xts_ctx *ctx, const u8 *key, size_t key_len)
 {
-	aes256_setkey(&ctx->crypt_ctx, key);
-	aes256_setkey(&ctx->tweak_ctx, key + BLOCKCIPHER_KEY_SIZE);
+	aes_setkey(&ctx->crypt_ctx, key, key_len);
+	aes_setkey(&ctx->tweak_ctx, key + BLOCKCIPHER_KEY_SIZE, key_len);
 }
 
 
@@ -55,7 +55,8 @@ void xts_encrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst, const u8 *src,
 	aesni_xts_encrypt(&ctx->crypt_ctx.aes_ctx, dst, src, nbytes, &alpha);
 #endif
 #ifdef __aarch64__
-	ce_aes_xts_encrypt(dst, src, (u8 *)&ctx->tweak_ctx.aes_ctx.key_enc, 14,
+	int rounds = 6 + ctx->tweak_ctx.aes_ctx.key_length / 4;
+	ce_aes_xts_encrypt(dst, src, (u8 *)&ctx->tweak_ctx.aes_ctx.key_enc, rounds,
 			   nbytes, (u8 *)&ctx->crypt_ctx.aes_ctx.key_enc, iv,
 			   true);
 #endif
@@ -71,22 +72,52 @@ void xts_decrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst, const u8 *src,
 	aesni_xts_decrypt(&ctx->crypt_ctx.aes_ctx, dst, src, nbytes, &alpha);
 #endif
 #ifdef __aarch64__
-	ce_aes_xts_decrypt(dst, src, (u8 *)&ctx->tweak_ctx.aes_ctx.key_dec, 14,
+	int rounds = 6 + ctx->tweak_ctx.aes_ctx.key_length / 4;
+	ce_aes_xts_decrypt(dst, src, (u8 *)&ctx->tweak_ctx.aes_ctx.key_dec, rounds,
 			   nbytes, (u8 *)&ctx->crypt_ctx.aes_ctx.key_enc, iv,
 			   true);
 #endif
 }
 
+void xts_aes128_setkey(struct aes_xts_ctx *ctx, const u8 *key) {
+    xts_setkey(ctx, key, AES_KEYSIZE_128);
+}
+
+void xts_aes192_setkey(struct aes_xts_ctx *ctx, const u8 *key) {
+    xts_setkey(ctx, key, AES_KEYSIZE_192);
+}
+
+void xts_aes256_setkey(struct aes_xts_ctx *ctx, const u8 *key) {
+    xts_setkey(ctx, key, AES_KEYSIZE_256);
+}
+
 void test_xts(void)
 {
-#define ALGNAME "XTS"
-#define KEY_BYTES XTS_KEY_SIZE
+#define ALGNAME "AES-128-XTS"
+#define KEY_BYTES AES_KEYSIZE_128 * 2
 #define IV_BYTES 16
 #define KEY struct aes_xts_ctx
-#define SETKEY xts_setkey
-#define SETKEY_SIMD xts_setkey
-#define ENCRYPT xts_encrypt_simd
-#define DECRYPT xts_decrypt_simd
+#define SETKEY_SIMD xts_aes128_setkey
+#define SIMD_IMPL_NAME "simd"
+#define ENCRYPT_SIMD xts_encrypt_simd
+#define DECRYPT_SIMD xts_decrypt_simd
+#include "cipher_benchmark_template.h"
+
+#define ALGNAME "AES-192-XTS"
+#define KEY_BYTES AES_KEYSIZE_192 * 2
+#define IV_BYTES 16
+#define KEY struct aes_xts_ctx
+#define SETKEY_SIMD xts_aes192_setkey
+#define SIMD_IMPL_NAME "simd"
+#define ENCRYPT_SIMD xts_encrypt_simd
+#define DECRYPT_SIMD xts_decrypt_simd
+#include "cipher_benchmark_template.h"
+
+#define ALGNAME "AES-256-XTS"
+#define KEY_BYTES AES_KEYSIZE_256 * 2
+#define IV_BYTES 16
+#define KEY struct aes_xts_ctx
+#define SETKEY_SIMD xts_aes256_setkey
 #define SIMD_IMPL_NAME "simd"
 #define ENCRYPT_SIMD xts_encrypt_simd
 #define DECRYPT_SIMD xts_decrypt_simd

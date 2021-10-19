@@ -32,22 +32,12 @@
  * but since rotations are "free" in ARM assembly only the first part is needed.
  */
 
-static void aes_setkey(struct aes_ctx *ctx, const u8 *key, int key_len)
+void aes_setkey(struct aes_ctx *ctx, const u8 *key, int key_len)
 {
 	int err;
 
 	err = aesti_set_key(&ctx->aes_ctx, key, key_len);
 	ASSERT(err == 0);
-}
-
-void aes128_setkey(struct aes_ctx *ctx, const u8 *key)
-{
-	aes_setkey(ctx, key, AES_KEYSIZE_128);
-}
-
-void aes256_setkey(struct aes_ctx *ctx, const u8 *key)
-{
-	aes_setkey(ctx, key, AES_KEYSIZE_256);
 }
 
 void aes_encrypt_generic(const struct aes_ctx *ctx, u8 *out, const u8 *in)
