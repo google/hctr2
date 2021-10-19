@@ -20,14 +20,19 @@ For more information, see the HCTR2 paper.
 
 ## File layout
 
- * `paper/`: LaTeX sources for our paper presenting HCTR2
- * `test_vectors/other/`: Test vectors we use to validate our implementations
+ * [`paper/`](paper/): LaTeX sources for our paper presenting HCTR2
+ * [`test_vectors/other/`](test_vectors/other/): 
+    Test vectors we use to validate our implementations
     of other primitives
- * `test_vectors/ours/`: Test vectors we generate, in JSON format
- * `python/`: Python implementation and test vector generation
- * `benchmark/`: C implementation and benchmarking code
- * `third_party/`: derived works covered by a different license than our main
-   MIT license
+ * [`test_vectors/ours/`](test_vectors/ours/):
+    Test vectors we generate, in JSON format
+ * [`python/`](python/):
+    Python implementation and test vector generation
+ * [`benchmark/`](benchmark/):
+    C implementation and benchmarking code
+ * [`third_party/`](third_party/):
+    derived works covered by a different license than our main
+    MIT license
 
 ## Notices
 
