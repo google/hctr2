@@ -17,11 +17,12 @@ For more information, see the HCTR2 paper.
 
 ## File layout
 
- * `benchmark/`: C implementation and benchmarking code
- * `python/`: Python implementation and test vector generation
+ * `paper/`: LaTeX sources for our paper presenting HCTR2
  * `test_vectors/other/`: Test vectors we use to validate our implementations
     of other primitives
  * `test_vectors/ours/`: Test vectors we generate, in JSON format
+ * `python/`: Python implementation and test vector generation
+ * `benchmark/`: C implementation and benchmarking code
  * `third_party/`: derived works covered by a different license than our main
    MIT license
 
