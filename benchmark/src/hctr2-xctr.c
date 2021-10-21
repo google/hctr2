@@ -29,6 +29,9 @@ asmlinkage void aes_xctr_enc_128_avx_by8(const u8 *in, const u8 *iv,
 asmlinkage void ce_aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[],
 				    int rounds, int bytes, const u8 ctr[]);
 #endif
+#if !defined(__x86_64__) && !defined(__aarch64__)
+    #error Unsupported architecture.
+#endif
 
 void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		     size_t nbytes, const u8 *iv)
@@ -54,6 +57,9 @@ void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	int rounds = 6 + ctx->aes_ctx.key_length / 4;
 	ce_aes_xctr_encrypt(dst, src, (u8 *)&ctx->aes_ctx.key_enc, rounds, nbytes,
 			    iv);
+#endif
+#if !defined(__x86_64__) && !defined(__aarch64__)
+    #error Unsupported architecture.
 #endif
 
 	if (nbytes % XCTR_BLOCK_SIZE != 0) {

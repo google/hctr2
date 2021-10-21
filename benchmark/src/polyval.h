@@ -39,6 +39,9 @@ asmlinkage void pmull_polyval_mul(u128 *op1, const u128 *op2);
 #define POLYVAL pmull_polyval
 #define MUL pmull_polyval_mul
 #endif
+#if !defined(__x86_64__) && !defined(__aarch64__)
+    #error Unsupported architecture.
+#endif
 
 struct polyval_state {
 	u128 state;
