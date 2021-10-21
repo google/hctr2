@@ -321,7 +321,7 @@ ENDPROC(pmull_polyval_mul)
  * x3 - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
  * x4 - location to XOR with evaluated polynomial
  *
- * void pmull_polyval(const u128 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
+ * void pmull_polyval(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
  */
 ENTRY(pmull_polyval)
 	adr					TMP, .Lgstar
