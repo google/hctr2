@@ -54,17 +54,23 @@ Lgstar:
  * Accepts operand lists of length b in rdi and rsi. Computes the product of
  * each rdi,rsi pair then XORs the products into A, B, C, D.
  *
+ * If first == 1 then XOR the value of SUM into the first block processed.
+ * This avoids an extra multication of SUM and h^N.
+ *
  * XORs product into C, D, EF
  * Preserves SUM
  * All other xmm registers clobbered
  */
-.macro schoolbook1 b
+.macro schoolbook1 b first
 	.set by, \b
-
+	.set first, \first
 	.set i, 0
 	.rept (by)
 		club i
 		movups (16*i)(OP1), %xmm0
+		.if(i == 0 && first == 1)
+			pxor SUM, %xmm0
+		.endif
 		vpclmulqdq $0x01, (16*i)(OP2), %xmm0, %xmm1
 		vpxor %xmm1, EF, EF
 		vpclmulqdq $0x00, (16*i)(OP2), %xmm0, %xmm2
@@ -135,27 +141,20 @@ Lgstar:
 	pxor D, D
 	pxor EF, EF
 	mov %rsi, OP2
-	# Multiply sum by h^N
-	movups (%rsi), %xmm0
-	movdqa SUM, %xmm1
-	schoolbook1_noload
-	schoolbook2
-	montgomery_reduction
-	movdqa PH, SUM
-	pxor C, C
-	pxor D, D
-	pxor EF, EF
+    schoolbook1 3 1
+	addq $(3*16), OP1
+	addq $(3*16), OP2
 	xor IDX, IDX
 .Loop:
-	cmpq $(NUM_PRECOMPUTE_KEYS), IDX
+	cmpq $(NUM_PRECOMPUTE_KEYS-3), IDX
 	jae .LoopExit
 	
-	movq $(NUM_PRECOMPUTE_KEYS), TMP
+	movq $(NUM_PRECOMPUTE_KEYS-3), TMP
 	subq IDX, TMP
 
 	cmp $3, TMP # TMP < 3 ?
 	jl .lt3
-	schoolbook1 3
+	schoolbook1 3 0
 	addq $3, IDX
 	addq $(3*16), OP1
 	addq $(3*16), OP2
@@ -163,13 +162,13 @@ Lgstar:
 .lt3:
 	cmp $2, TMP # TMP < 2 ?
 	jl .lt2
-	schoolbook1 2
+	schoolbook1 2 0
 	addq $2, IDX
 	addq $(2*16), OP1
 	addq $(2*16), OP2
 	jmp .out
 .lt2:
-	schoolbook1 1 # TMP < 1 ?
+	schoolbook1 1 0 # TMP < 1 ?
 	addq $1, IDX
 	addq $(1*16), OP1
 	addq $(1*16), OP2
@@ -178,7 +177,7 @@ Lgstar:
 .LoopExit:
 	schoolbook2
 	montgomery_reduction
-	pxor PH, SUM
+	movdqa PH, SUM
 .endm
 
 /*
@@ -218,7 +217,7 @@ Lgstar:
 
 	cmp $3, TMP # TMP < 3 ?
 	jl .lt3Partial
-	schoolbook1 3
+	schoolbook1 3 0
 	addq $3, IDX
 	addq $(3*16), OP1
 	addq $(3*16), OP2
@@ -226,13 +225,13 @@ Lgstar:
 .lt3Partial:
 	cmp $2, TMP # TMP < 2 ?
 	jl .lt2Partial
-	schoolbook1 2
+	schoolbook1 2 0
 	addq $2, IDX
 	addq $(2*16), OP1
 	addq $(2*16), OP2
 	jmp .outPartial
 .lt2Partial:
-	schoolbook1 1 # TMP < 1 ?
+	schoolbook1 1 0 # TMP < 1 ?
 	addq $1, IDX
 	addq $(1*16), OP1
 	addq $(1*16), OP2
@@ -243,7 +242,7 @@ Lgstar:
 	test EXTRA_BYTES, EXTRA_BYTES
 	je .no_extra_block2
 	movq %rcx, OP1
-	schoolbook1 1
+	schoolbook1 1 0
 .no_extra_block2:
 	schoolbook2
 	montgomery_reduction
@@ -263,7 +262,7 @@ ENTRY(clmul_hctr2_mul)
 	pxor D, D
 	pxor EF, EF
 	mov %rsi, OP2
-	schoolbook1 1
+	schoolbook1 1 0
 	schoolbook2
 	montgomery_reduction
 	movups PH, (%rdi)
