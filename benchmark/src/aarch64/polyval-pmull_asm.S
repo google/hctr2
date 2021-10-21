@@ -5,8 +5,7 @@
  * https://opensource.org/licenses/MIT.
  */
 #include "asm_common.h"
-
-#define NUM_PRECOMPUTE_KEYS 64
+#include "../polyval-asm.h"
 
 BLOCKS_LEFT	.req	x2 // Ensure caller saved, maybe switch
 OP1			.req	x9 // Ensure caller saved, maybe switch

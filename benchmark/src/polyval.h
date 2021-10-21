@@ -8,11 +8,11 @@
 
 #include "util.h"
 #include "gf128.h"
+#include "polyval-asm.h"
 
 #define POLYVAL_BLOCK_SIZE 16
 #define POLYVAL_DIGEST_SIZE 16
 #define POLYVAL_KEY_SIZE 16
-#define NUM_PRECOMPUTE_KEYS 64
 
 struct polyval_key {
 	/*

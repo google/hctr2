@@ -6,6 +6,7 @@
  */
 
 #include "../asm_common.h"
+#include "../polyval-asm.h"
 
 .align 16
 
@@ -25,8 +26,6 @@
 #define OP2 %r10
 #define IDX %r11
 #define TMP %rax
-
-#define NUM_PRECOMPUTE_KEYS 64
 
 Lgstar:
 	.quad 0xc200000000000000, 0xc200000000000000
