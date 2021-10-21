@@ -292,9 +292,9 @@ var_a4	.req v3
  *
  * Computes op1*op2*x^{-128} mod x^128 + x^127 + x^126 + x^121 + 1
  *
- * void pmull_hctr2_mul(u128* op1, const u128* op2);
+ * void pmull_polyval_mul(u128* op1, const u128* op2);
  */
-ENTRY(pmull_hctr2_mul)
+ENTRY(pmull_polyval_mul)
 	adr					TMP, .Lgstar
 	ld1					{GSTAR.2d}, [TMP]
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
@@ -307,10 +307,10 @@ ENTRY(pmull_hctr2_mul)
 	montgomery_reduction
 	st1					{PH.16b}, [x0]
 	ret
-ENDPROC(pmull_hctr2_mul)
+ENDPROC(pmull_polyval_mul)
 
 /*
- * Perform polynomial evaluation as specified by HCTR2. Multiplies the value stored
+ * Perform polynomial evaluation as specified by POLYVAL. Multiplies the value stored
  * at accumulator by h^n and XORs the evaluated polynomial into it.
  *
  * Computes h^k*accumulator + h^kM_0 + ... + h^1M_{k-1} (No constant term)
@@ -321,9 +321,9 @@ ENDPROC(pmull_hctr2_mul)
  * x3 - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
  * x4 - location to XOR with evaluated polynomial
  *
- * void pmull_hctr2_polyval(const u128 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
+ * void pmull_polyval(const u128 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
  */
-ENTRY(pmull_hctr2_polyval)
+ENTRY(pmull_polyval)
 	adr					TMP, .Lgstar
 	ld1					{GSTAR.2d}, [TMP]
 	ands				EXTRA_BYTES, x2, 0xf
@@ -346,4 +346,4 @@ ENTRY(pmull_hctr2_polyval)
 .SkipPartial:
 	st1					{SUM.16b}, [x4]
 	ret
-ENDPROC(pmull_hctr2_polyval)
+ENDPROC(pmull_polyval)

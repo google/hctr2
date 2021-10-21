@@ -24,7 +24,7 @@ src = [
     'src/cipherbench.c',
     'src/hctr2.c',
     'src/hctr2-xctr.c',
-    'src/hctr2-hash.c',
+    'src/polyval.c',
     'src/xts.c',
     'testvectors/hctr2_testvecs.c',
     '../third_party/linux-kernel/aes_ti.c',

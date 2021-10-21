@@ -8,7 +8,7 @@
 #include "aes.h"
 #include "aes_linux.h"
 #include "hctr2-xctr.h"
-#include "hctr2-hash.h"
+#include "polyval.h"
 #include "hctr2_testvecs.h"
 #include "testvec.h"
 #include "util.h"
@@ -19,9 +19,44 @@
 struct hctr2_ctx {
 	struct aes_ctx aes_ctx;
 	unsigned int default_tweak_len;
-	struct hctr2_hash_key hctr2_hash_key;
+	struct polyval_key polyval_key;
 	u8 L[BLOCKCIPHER_BLOCK_SIZE];
+	u128 tweaklen_part[2];
 };
+
+void hctr2_change_tweak_len_generic(struct hctr2_ctx *ctx, const size_t tweak_len)
+{
+	ctx->tweaklen_part[0].b = tweak_len * 8 * 2 + 3;
+	ctx->tweaklen_part[0].a = 0;
+	reverse_bytes((be128 *)&ctx->tweaklen_part[0]);
+	gf128mul_lle((be128 *)&ctx->tweaklen_part[0],
+		     (be128 *)&ctx->polyval_key.powers[NUM_PRECOMPUTE_KEYS - 1]);
+	ctx->tweaklen_part[1].b = tweak_len * 8 * 2 + 2;
+	ctx->tweaklen_part[1].a = 0;
+	reverse_bytes((be128 *)&ctx->tweaklen_part[1]);
+	gf128mul_lle((be128 *)&ctx->tweaklen_part[1],
+		     (be128 *)&ctx->polyval_key.powers[NUM_PRECOMPUTE_KEYS - 1]);
+}
+
+void hctr2_change_tweak_len_simd(struct hctr2_ctx *ctx, const size_t tweak_len)
+{
+	ctx->tweaklen_part[0].b = tweak_len * 8 * 2 + 3;
+	ctx->tweaklen_part[0].a = 0;
+	MUL(&ctx->tweaklen_part[0], &ctx->polyval_key.powers[NUM_PRECOMPUTE_KEYS - 1]);
+	ctx->tweaklen_part[1].b = tweak_len * 8 * 2 + 2;
+	ctx->tweaklen_part[1].a = 0;
+	MUL(&ctx->tweaklen_part[1], &ctx->polyval_key.powers[NUM_PRECOMPUTE_KEYS - 1]);
+}
+
+void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len, bool simd)
+{
+    if(simd) {
+        hctr2_change_tweak_len_simd(ctx, tweak_len);
+    }
+    else {
+        hctr2_change_tweak_len_generic(ctx, tweak_len);    
+    }
+}
 
 void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, size_t key_len, bool simd)
 {
@@ -36,28 +71,72 @@ void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, size_t key_len, bool sim
 	buf.b = cpu_to_le64(1);
 	aes_encrypt(&ctx->aes_ctx, (u8 *)&ctx->L, (u8 *)&buf, simd);
 
-	hctr2_hash_setup(&ctx->hctr2_hash_key, (u8 *)&h, ctx->default_tweak_len,
-			 simd);
+	polyval_setkey(&ctx->polyval_key, (u8 *)&h, simd);
+    hctr2_change_tweak_len(ctx, ctx->default_tweak_len, simd);
 }
 
-void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len,
-			    bool simd)
+void hctr2_hash_hash_tweak(const struct hctr2_ctx *ctx,
+			   struct polyval_state *state, const u8 *data,
+			   size_t nbytes, bool mdiv, bool simd)
 {
-	u8 h[BLOCKCIPHER_BLOCK_SIZE];
-	u128 buf;
-	buf.a = 0;
-	buf.b = 0;
-	aes_encrypt(&ctx->aes_ctx, (u8 *)&h, (u8 *)&buf, simd);
-	hctr2_hash_setup(&ctx->hctr2_hash_key, (u8 *)&h, tweak_len, simd);
+	u128 padded_final;
+	memcpy(&state->state, &ctx->tweaklen_part[mdiv ? 1 : 0],
+	       sizeof(state->state));
+	if (nbytes % POLYVAL_BLOCK_SIZE != 0) {
+		padded_final.a = 0;
+		padded_final.b = 0;
+		memcpy(&padded_final,
+		       data
+			       + POLYVAL_BLOCK_SIZE
+					 * (nbytes / POLYVAL_BLOCK_SIZE),
+		       nbytes % POLYVAL_BLOCK_SIZE);
+	}
+	if (simd) {
+		POLYVAL(data, &ctx->polyval_key, nbytes, &padded_final, &state->state);
+	} else {
+		polyval_generic(data, &ctx->polyval_key, nbytes, (u8 *)&padded_final,
+				   (be128 *)&state->state);
+	}
+}
+
+void hctr2_hash_hash_message(const struct hctr2_ctx *ctx,
+			     struct polyval_state *state, const u8 *data,
+			     size_t nbytes, bool simd)
+{
+	u128 padded_final;
+	if (nbytes % POLYVAL_BLOCK_SIZE != 0) {
+		padded_final.a = 0;
+		padded_final.b = 0;
+		memcpy(&padded_final,
+		       data
+			       + POLYVAL_BLOCK_SIZE
+					 * (nbytes / POLYVAL_BLOCK_SIZE),
+		       nbytes % POLYVAL_BLOCK_SIZE);
+		((u8 *)(&padded_final))[nbytes % POLYVAL_BLOCK_SIZE] = 0x01;
+	}
+	if (simd) {
+		POLYVAL(data, &ctx->polyval_key, nbytes, &padded_final, &state->state);
+	} else {
+		polyval_generic(data, &ctx->polyval_key, nbytes, (u8 *)&padded_final,
+				   (be128 *)&state->state);
+	}
+}
+
+void hctr2_hash_emit(const struct hctr2_ctx *ctx,
+		     struct polyval_state *state, u8 *out, bool simd) {
+    memcpy(out, &state->state, POLYVAL_BLOCK_SIZE);
+    if (!simd) {
+        reverse_bytes((be128 *)out);
+    }
 }
 
 void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 		 size_t nbytes, const u8 *tweak, size_t tweak_len, bool encrypt,
 		 bool simd)
 {
-	struct hctr2_hash_state polystate1;
-	struct hctr2_hash_state polystate2;
-	u8 digest[HCTR2_HASH_DIGEST_SIZE];
+	struct polyval_state polystate1;
+	struct polyval_state polystate2;
+	u8 digest[POLYVAL_DIGEST_SIZE];
 	u8 MM[BLOCKCIPHER_BLOCK_SIZE];
 	u8 UU[BLOCKCIPHER_BLOCK_SIZE];
 	u8 S[BLOCKCIPHER_BLOCK_SIZE];
@@ -77,13 +156,13 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	V = dst + BLOCKCIPHER_BLOCK_SIZE;
 
 
-	hctr2_hash_hash_tweak(&ctx->hctr2_hash_key, &polystate1, tweak,
-			      tweak_len, N_bytes % HCTR2_HASH_BLOCK_SIZE == 0,
+	hctr2_hash_hash_tweak(ctx, &polystate1, tweak,
+			      tweak_len, N_bytes % POLYVAL_BLOCK_SIZE == 0,
 			      simd);
 	memcpy(&polystate2, &polystate1, sizeof(polystate1));
-	hctr2_hash_hash_message(&ctx->hctr2_hash_key, &polystate1, N, N_bytes,
+	hctr2_hash_hash_message(ctx, &polystate1, N, N_bytes,
 				simd);
-	hctr2_hash_emit(&ctx->hctr2_hash_key, &polystate1, (u8 *)&digest, simd);
+	hctr2_hash_emit(ctx, &polystate1, (u8 *)&digest, simd);
 
 	xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
 
@@ -98,9 +177,9 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 
 	xctr_crypt(&ctx->aes_ctx, V, N, N_bytes, (u8 *)&S, simd);
 
-	hctr2_hash_hash_message(&ctx->hctr2_hash_key, &polystate2, V, N_bytes,
+	hctr2_hash_hash_message(ctx, &polystate2, V, N_bytes,
 				simd);
-	hctr2_hash_emit(&ctx->hctr2_hash_key, &polystate2, (u8 *)&digest, simd);
+	hctr2_hash_emit(ctx, &polystate2, (u8 *)&digest, simd);
 
 	xor(U, &UU, digest, BLOCKCIPHER_BLOCK_SIZE);
 }

@@ -270,9 +270,9 @@ Lgstar:
  *
  * Computes op1*op2*x^{-128} mod x^128 + x^127 + x^126 + x^121 + 1
  *
- * void clmul_hctr2_mul(u128* op1, const u128* op2);
+ * void clmul_polyval_mul(u128* op1, const u128* op2);
  */
-ENTRY(clmul_hctr2_mul)
+ENTRY(clmul_polyval_mul)
 	FRAME_BEGIN
 	pxor C, C
 	pxor D, D
@@ -284,10 +284,10 @@ ENTRY(clmul_hctr2_mul)
 	movups PH, (%rdi)
 	FRAME_END
 	ret
-ENDPROC(clmul_hctr2_mul)
+ENDPROC(clmul_polyval_mul)
 
 /* 
- * Perform polynomial evaluation as specified by HCTR2. Multiplies the value stored
+ * Perform polynomial evaluation as specified by POLYVAL. Multiplies the value stored
  * at accumulator by h^k and XORs the evaluated polynomial into it.
  *
  * Computes h^k*accumulator + h^kM_0 + ... + h^1M_{k-1} (No constant term)
@@ -298,9 +298,9 @@ ENDPROC(clmul_hctr2_mul)
  * rcx - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
  * r8 - location to XOR with evaluated polynomial
  * 
- * void clmul_hctr2_polyval(const u128 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
+ * void clmul_polyval(const u128 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
  */
-ENTRY(clmul_hctr2_polyval)
+ENTRY(clmul_polyval)
 	FRAME_BEGIN
 	movq $0x0f, EXTRA_BYTES
 	andq BLOCKS_LEFT, EXTRA_BYTES
@@ -324,4 +324,4 @@ ENTRY(clmul_hctr2_polyval)
 	movups SUM, (%r8)
 	FRAME_END
 	ret
-ENDPROC(clmul_hctr2_polyval)
+ENDPROC(clmul_polyval)
