@@ -81,13 +81,17 @@ var_a4	.req v3
 	.endif
 .endm
 
-.macro karatsuba1 b
+.macro karatsuba1 b first
 	.set by, \b
+    .set first, \first
 
 	.set i, 0
 	.rept (by)
 		setregs i
 		ld1				{var_a1.16b}, [OP1]
+		.if(i == 0 && first == 1)
+			eor			var_a1.16b, var_a1.16b, SUM.16b
+		.endif
 		ext				var_a2.16b, var_a1.16b, var_a1.16b, #8
         add				OP1, OP1, #16
 		.set i, (i +1)
@@ -177,46 +181,38 @@ var_a4	.req v3
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
 	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
 	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
-	ld1					{v0.16b}, [x1]
-	mov					v2.16b, SUM.16b
-	karatsuba1_noload
-	karatsuba2
-	montgomery_reduction
-	mov					SUM.16b, PH.16b
-	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
-	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
-	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
 	mov					OP1, x0
 	mov					OP2, x1
 	mov					IDX, XZR
+	karatsuba1 4 1
 .Loop:
-	cmp 				IDX, #NUM_PRECOMPUTE_KEYS
+	cmp 				IDX, #NUM_PRECOMPUTE_KEYS-4
 	bge 				.LoopExit
 
-	subs				TMP, IDX, #NUM_PRECOMPUTE_KEYS
+	subs				TMP, IDX, #NUM_PRECOMPUTE_KEYS-4
 
 	cmp					TMP, #-4
     bgt					.gt4
-	karatsuba1 4
+	karatsuba1 4 0
 	add					IDX, IDX, #4
     b					.out
 
 .gt4:
 	cmp					TMP, #-3
 	bgt					.gt3
-	karatsuba1 3
+	karatsuba1 3 0
 	add					IDX, IDX, #3
     b					.out
 
 .gt3:
 	cmp					TMP, #-2
 	bgt					.gt2
-	karatsuba1 2
+	karatsuba1 2 0
 	add					IDX, IDX, #2
     b					.out
 
 .gt2:
-	karatsuba1 1
+	karatsuba1 1 0
 	add					IDX, IDX, #1
 .out:
 	b .Loop
@@ -224,7 +220,7 @@ var_a4	.req v3
 	add					x0, x0, #(NUM_PRECOMPUTE_KEYS*16)
 	karatsuba2
 	montgomery_reduction
-	eor					SUM.16b, SUM.16b, PH.16b
+	mov					SUM.16b, PH.16b
 .endm
 
 .macro partial_stride
@@ -256,26 +252,26 @@ var_a4	.req v3
 
 	cmp					TMP, #-4
     bgt					.gt4Partial
-	karatsuba1 4
+	karatsuba1 4 0
 	add					IDX, IDX, #4
     b					.outPartial
 
 .gt4Partial:
 	cmp					TMP, #-3
 	bgt					.gt3Partial
-	karatsuba1 3
+	karatsuba1 3 0
 	add					IDX, IDX, #3
     b					.outPartial
 
 .gt3Partial:
 	cmp					TMP, #-2
 	bgt					.gt2Partial
-	karatsuba1 2
+	karatsuba1 2 0
 	add					IDX, IDX, #2
     b					.outPartial
 
 .gt2Partial:
-	karatsuba1 1
+	karatsuba1 1 0
 	add					IDX, IDX, #1
 .outPartial:
 	b .LoopPartial
@@ -284,7 +280,7 @@ var_a4	.req v3
 	cmp					EXTRA_BYTES, #0
 	beq					.no_extra_block
 	mov					OP1, x3
-	karatsuba1 1
+	karatsuba1 1 0
 .no_extra_block:
 	karatsuba2
 	montgomery_reduction
@@ -306,7 +302,7 @@ ENTRY(pmull_hctr2_mul)
 	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
 	mov					OP1, x0
 	mov					OP2, x1
-	karatsuba1 1
+	karatsuba1 1 0
 	karatsuba2
 	montgomery_reduction
 	st1					{PH.16b}, [x0]
