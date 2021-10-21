@@ -141,17 +141,25 @@ Lgstar:
 	pxor D, D
 	pxor EF, EF
 	mov %rsi, OP2
-    schoolbook1 3 1
-	addq $(3*16), OP1
-	addq $(3*16), OP2
+    schoolbook1 4 1
+	addq $(4*16), OP1
+	addq $(4*16), OP2
 	xor IDX, IDX
 .Loop:
-	cmpq $(NUM_PRECOMPUTE_KEYS-3), IDX
+	cmpq $(NUM_PRECOMPUTE_KEYS-4), IDX
 	jae .LoopExit
 	
-	movq $(NUM_PRECOMPUTE_KEYS-3), TMP
+	movq $(NUM_PRECOMPUTE_KEYS-4), TMP
 	subq IDX, TMP
 
+	cmp $4, TMP # TMP < 4 ?
+	jl .lt4
+	schoolbook1 4 0
+	addq $4, IDX
+	addq $(4*16), OP1
+	addq $(4*16), OP2
+	jmp .out
+.lt4:
 	cmp $3, TMP # TMP < 3 ?
 	jl .lt3
 	schoolbook1 3 0
@@ -215,6 +223,14 @@ Lgstar:
 	movq BLOCKS_LEFT, TMP
 	subq IDX, TMP # TMP = rdx - IDX
 
+	cmp $4, TMP # TMP < 4 ?
+	jl .lt4Partial
+	schoolbook1 4 0
+	addq $4, IDX
+	addq $(4*16), OP1
+	addq $(4*16), OP2
+	jmp .outPartial
+.lt4Partial:
 	cmp $3, TMP # TMP < 3 ?
 	jl .lt3Partial
 	schoolbook1 3 0
