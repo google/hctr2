@@ -16,7 +16,7 @@
 #define GSTAR %xmm4
 #define C %xmm12
 #define D %xmm13
-#define E %xmm14
+#define EF %xmm14
 #define SUM %xmm15
 
 #define BLOCKS_LEFT %rdx
@@ -52,98 +52,61 @@ Lgstar:
 
 /*
  * Accepts operand lists of length b in rdi and rsi. Computes the product of
- * each rdi,rsi pair then XORs the products into C, D, E.
+ * each rdi,rsi pair then XORs the products into A, B, C, D.
  *
- * XORs product into C, D, E
+ * XORs product into C, D, EF
  * Preserves SUM
  * All other xmm registers clobbered
  */
-.macro karatsuba1 b
+.macro schoolbook1 b
 	.set by, \b
 
 	.set i, 0
 	.rept (by)
 		club i
-		movups (16*i)(OP1), var_a1
-		pshufd $0b01001110, var_a1, var_a3
-		.set i, (i +1)
-	.endr
-	.set i, 0
-	.rept (by)
-		club i
-		movups (16*i)(OP2), var_a2
-		pshufd $0b01001110, var_a2, var_a4
-		.set i, (i +1)
-	.endr
-	.set i, 0
-	.rept (by)
-		club i
-		pxor var_a1, var_a3
-		pxor var_a2, var_a4
-		.set i, (i +1)
-	.endr
-	.set i, 0
-	.rept (by)
-		club i
-		pclmulqdq $0x00, var_a4, var_a3 # a3 = [A0 ^ A1] * [B0 ^ B1]
-		movdqa var_a1, var_a4
-		.set i, (i +1)
-	.endr
-	.set i, 0
-	.rept (by)
-		club i
-		pclmulqdq $0x00, var_a2, var_a1 # a1 = [A0] * [B0]
-		pclmulqdq $0x11, var_a4, var_a2 # a2 = [A1] * [B1]
-		.set i, (i +1)
-	.endr
-
-	.set i, 0
-	.rept (by)
-		club i
-		pxor var_a1, D
-		pxor var_a2, C
-		pxor var_a3, E
+		movups (16*i)(OP1), %xmm0
+		vpclmulqdq $0x01, (16*i)(OP2), %xmm0, %xmm1
+		vpxor %xmm1, EF, EF
+		vpclmulqdq $0x00, (16*i)(OP2), %xmm0, %xmm2
+		vpxor %xmm2, C, C
+		vpclmulqdq $0x11, (16*i)(OP2), %xmm0, %xmm3
+		vpxor %xmm3, D, D
+		vpclmulqdq $0x10, (16*i)(OP2), %xmm0, %xmm4
+		vpxor %xmm4, EF, EF
 		.set i, (i +1)
 	.endr
 .endm
 
 /*
- * Computes first karatsuba step of values loaded into xmm0 and xmm1. Used to
+ * Computes first schoolbook step of values loaded into xmm0 and xmm1. Used to
  * multiply intermediate register values rather than memory stored values.
  *
- * XORs product into C, D, E
+ * XORs product into C, D, EF
  * Preserves SUM
  * All other xmm registers clobbered
  */
-.macro karatsuba1_noload
-	pshufd $0b01001110, %xmm0, %xmm2
-	pshufd $0b01001110, %xmm1, %xmm3
-	pxor %xmm0, %xmm2
-	pxor %xmm1, %xmm3
-	pclmulqdq $0x00, %xmm3, %xmm2
-	movdqa %xmm0, %xmm3
-	pclmulqdq $0x00, %xmm1, %xmm0
-	pclmulqdq $0x11, %xmm3, %xmm1
-	pxor %xmm0, D
-	pxor %xmm1, C
-	pxor %xmm2, E
+.macro schoolbook1_noload
+	vpclmulqdq $0x01, %xmm0, %xmm1, %xmm2
+	vpxor %xmm2, EF, EF
+	vpclmulqdq $0x00, %xmm0, %xmm1, %xmm3
+	vpxor %xmm3, C, C
+	vpclmulqdq $0x11, %xmm0, %xmm1, %xmm4
+	vpxor %xmm4, D, D
+	vpclmulqdq $0x10, %xmm0, %xmm1, %xmm5
+	vpxor %xmm5, EF, EF
 .endm
 
 /*
- * Computes the 256-bit polynomial represented by C, D, E. Stores
+ * Computes the 256-bit polynomial represented by C, D, EF. Stores
  * the result in PL, PH.
  *
  * All other xmm registers are preserved.
  */
-.macro karatsuba2
-	movdqa C, PL
-	pxor D, PL
-	pxor E, PL # [C1 ^ D1 ^ E1 : C0 ^ D0 ^ E0]
-	movdqa PL, PH
-	pslldq $8, PL # [C0 ^ D0 ^ E0 : 0]
-	psrldq $8, PH # [0 : C1 ^ D1 ^ E1]
-	pxor D, PL # [C0 ^ D0 ^ E0 ^ D1 : D0]
-	pxor C, PH # c(x) = [C1 : C1 ^ D1 ^ E1 ^ C0] = [c(x) / x^64 : c(x) mod x^64]
+.macro schoolbook2
+	vpslldq $8, EF, PL
+	vpsrldq $8, EF, PH
+	pxor C, PL
+	pxor D, PH
 .endm
 
 /*
@@ -170,18 +133,18 @@ Lgstar:
 .macro full_stride
 	pxor C, C
 	pxor D, D
-	pxor E, E
+	pxor EF, EF
 	mov %rsi, OP2
 	# Multiply sum by h^N
 	movups (%rsi), %xmm0
 	movdqa SUM, %xmm1
-	karatsuba1_noload
-	karatsuba2
+	schoolbook1_noload
+	schoolbook2
 	montgomery_reduction
 	movdqa PH, SUM
 	pxor C, C
 	pxor D, D
-	pxor E, E
+	pxor EF, EF
 	xor IDX, IDX
 .Loop:
 	cmpq $(NUM_PRECOMPUTE_KEYS), IDX
@@ -192,7 +155,7 @@ Lgstar:
 
 	cmp $3, TMP # TMP < 3 ?
 	jl .lt3
-	karatsuba1 3
+	schoolbook1 3
 	addq $3, IDX
 	addq $(3*16), OP1
 	addq $(3*16), OP2
@@ -200,20 +163,20 @@ Lgstar:
 .lt3:
 	cmp $2, TMP # TMP < 2 ?
 	jl .lt2
-	karatsuba1 2
+	schoolbook1 2
 	addq $2, IDX
 	addq $(2*16), OP1
 	addq $(2*16), OP2
 	jmp .out
 .lt2:
-	karatsuba1 1 # TMP < 1 ?
+	schoolbook1 1 # TMP < 1 ?
 	addq $1, IDX
 	addq $(1*16), OP1
 	addq $(1*16), OP2
 .out:
 	jmp .Loop
 .LoopExit:
-	karatsuba2
+	schoolbook2
 	montgomery_reduction
 	pxor PH, SUM
 .endm
@@ -225,7 +188,7 @@ Lgstar:
 .macro partial_stride
 	pxor C, C
 	pxor D, D
-	pxor E, E
+	pxor EF, EF
 	mov BLOCKS_LEFT, TMP
 	test EXTRA_BYTES, EXTRA_BYTES
 	je .no_extra_block1
@@ -238,13 +201,13 @@ Lgstar:
 	# Multiply sum by h^N
 	movups (OP2), %xmm0
 	movdqa SUM, %xmm1
-	karatsuba1_noload
-	karatsuba2
+	schoolbook1_noload
+	schoolbook2
 	montgomery_reduction
 	movdqa PH, SUM
 	pxor C, C
 	pxor D, D
-	pxor E, E
+	pxor EF, EF
 	xor IDX, IDX
 .LoopPartial:
 	cmpq BLOCKS_LEFT, IDX # IDX < rdx
@@ -255,7 +218,7 @@ Lgstar:
 
 	cmp $3, TMP # TMP < 3 ?
 	jl .lt3Partial
-	karatsuba1 3
+	schoolbook1 3
 	addq $3, IDX
 	addq $(3*16), OP1
 	addq $(3*16), OP2
@@ -263,13 +226,13 @@ Lgstar:
 .lt3Partial:
 	cmp $2, TMP # TMP < 2 ?
 	jl .lt2Partial
-	karatsuba1 2
+	schoolbook1 2
 	addq $2, IDX
 	addq $(2*16), OP1
 	addq $(2*16), OP2
 	jmp .outPartial
 .lt2Partial:
-	karatsuba1 1 # TMP < 1 ?
+	schoolbook1 1 # TMP < 1 ?
 	addq $1, IDX
 	addq $(1*16), OP1
 	addq $(1*16), OP2
@@ -280,9 +243,9 @@ Lgstar:
 	test EXTRA_BYTES, EXTRA_BYTES
 	je .no_extra_block2
 	movq %rcx, OP1
-	karatsuba1 1
+	schoolbook1 1
 .no_extra_block2:
-	karatsuba2
+	schoolbook2
 	montgomery_reduction
 	pxor PH, SUM
 .endm
@@ -298,10 +261,10 @@ ENTRY(clmul_hctr2_mul)
 	FRAME_BEGIN
 	pxor C, C
 	pxor D, D
-	pxor E, E
+	pxor EF, EF
 	mov %rsi, OP2
-	karatsuba1 1
-	karatsuba2
+	schoolbook1 1
+	schoolbook2
 	montgomery_reduction
 	movups PH, (%rdi)
 	FRAME_END
