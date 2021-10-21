@@ -19,7 +19,7 @@ void reverse_bytes(be128 *a)
 	a->b = __builtin_bswap64(a->b);
 }
 
-void polyval_setkey_generic(struct polyval_key *key, const u8 *raw_key)
+static void polyval_setkey_generic(struct polyval_key *key, const u8 *raw_key)
 {
 	/* set h */
 	memcpy(&key->powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(u128));
@@ -37,7 +37,7 @@ void polyval_setkey_generic(struct polyval_key *key, const u8 *raw_key)
 	}
 }
 
-void polyval_setkey_simd(struct polyval_key *key, const u8 *raw_key)
+static void polyval_setkey_simd(struct polyval_key *key, const u8 *raw_key)
 {
 	/* set h */
 	memcpy(&key->powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(u128));

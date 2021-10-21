@@ -33,7 +33,7 @@ asmlinkage void ce_aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[],
     #error Unsupported architecture.
 #endif
 
-void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
+static void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		     size_t nbytes, const u8 *iv)
 {
 	u128 extra;
@@ -75,7 +75,7 @@ void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	}
 }
 
-void xctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
+static void xctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 			size_t nbytes, const u8 *iv)
 {
 	int i;
@@ -114,17 +114,17 @@ void xctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	}
 }
 
-void xctr_aes128_setkey(struct aes_ctx *ctx, const u8 *key)
+static void xctr_aes128_setkey(struct aes_ctx *ctx, const u8 *key)
 {
 	xctr_setkey(ctx, key, AES_KEYSIZE_128);
 }
 
-void xctr_aes192_setkey(struct aes_ctx *ctx, const u8 *key)
+static void xctr_aes192_setkey(struct aes_ctx *ctx, const u8 *key)
 {
 	xctr_setkey(ctx, key, AES_KEYSIZE_192);
 }
 
-void xctr_aes256_setkey(struct aes_ctx *ctx, const u8 *key)
+static void xctr_aes256_setkey(struct aes_ctx *ctx, const u8 *key)
 {
 	xctr_setkey(ctx, key, AES_KEYSIZE_256);
 }

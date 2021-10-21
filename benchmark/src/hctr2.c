@@ -24,7 +24,7 @@ struct hctr2_ctx {
 	u128 tweaklen_part[2];
 };
 
-void hctr2_change_tweak_len_generic(struct hctr2_ctx *ctx, const size_t tweak_len)
+static void hctr2_change_tweak_len_generic(struct hctr2_ctx *ctx, const size_t tweak_len)
 {
 	ctx->tweaklen_part[0].b = tweak_len * 8 * 2 + 3;
 	ctx->tweaklen_part[0].a = 0;
@@ -38,7 +38,7 @@ void hctr2_change_tweak_len_generic(struct hctr2_ctx *ctx, const size_t tweak_le
 		     (be128 *)&ctx->polyval_key.powers[NUM_PRECOMPUTE_KEYS - 1]);
 }
 
-void hctr2_change_tweak_len_simd(struct hctr2_ctx *ctx, const size_t tweak_len)
+static void hctr2_change_tweak_len_simd(struct hctr2_ctx *ctx, const size_t tweak_len)
 {
 	ctx->tweaklen_part[0].b = tweak_len * 8 * 2 + 3;
 	ctx->tweaklen_part[0].a = 0;
@@ -75,7 +75,7 @@ void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, size_t key_len, bool sim
     hctr2_change_tweak_len(ctx, ctx->default_tweak_len, simd);
 }
 
-void hctr2_hash_hash_tweak(const struct hctr2_ctx *ctx,
+static void hctr2_hash_hash_tweak(const struct hctr2_ctx *ctx,
 			   struct polyval_state *state, const u8 *data,
 			   size_t nbytes, bool mdiv, bool simd)
 {
@@ -99,7 +99,7 @@ void hctr2_hash_hash_tweak(const struct hctr2_ctx *ctx,
 	}
 }
 
-void hctr2_hash_hash_message(const struct hctr2_ctx *ctx,
+static void hctr2_hash_hash_message(const struct hctr2_ctx *ctx,
 			     struct polyval_state *state, const u8 *data,
 			     size_t nbytes, bool simd)
 {
@@ -122,7 +122,7 @@ void hctr2_hash_hash_message(const struct hctr2_ctx *ctx,
 	}
 }
 
-void hctr2_hash_emit(const struct hctr2_ctx *ctx,
+static void hctr2_hash_emit(const struct hctr2_ctx *ctx,
 		     struct polyval_state *state, u8 *out, bool simd) {
     memcpy(out, &state->state, POLYVAL_BLOCK_SIZE);
     if (!simd) {
@@ -184,58 +184,58 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	xor(U, &UU, digest, BLOCKCIPHER_BLOCK_SIZE);
 }
 
-void hctr2_setkey_aes128_generic(struct hctr2_ctx *ctx, const u8 *key)
+static void hctr2_setkey_aes128_generic(struct hctr2_ctx *ctx, const u8 *key)
 {
 	hctr2_setkey(ctx, key, AES_KEYSIZE_128, false);
 }
 
-void hctr2_setkey_aes128_simd(struct hctr2_ctx *ctx, const u8 *key)
+static void hctr2_setkey_aes128_simd(struct hctr2_ctx *ctx, const u8 *key)
 {
 	hctr2_setkey(ctx, key, AES_KEYSIZE_128, true);
 }
 
-void hctr2_setkey_aes192_generic(struct hctr2_ctx *ctx, const u8 *key)
+static void hctr2_setkey_aes192_generic(struct hctr2_ctx *ctx, const u8 *key)
 {
 	hctr2_setkey(ctx, key, AES_KEYSIZE_192, false);
 }
 
-void hctr2_setkey_aes192_simd(struct hctr2_ctx *ctx, const u8 *key)
+static void hctr2_setkey_aes192_simd(struct hctr2_ctx *ctx, const u8 *key)
 {
 	hctr2_setkey(ctx, key, AES_KEYSIZE_192, true);
 }
 
-void hctr2_setkey_aes256_generic(struct hctr2_ctx *ctx, const u8 *key)
+static void hctr2_setkey_aes256_generic(struct hctr2_ctx *ctx, const u8 *key)
 {
 	hctr2_setkey(ctx, key, AES_KEYSIZE_256, false);
 }
 
-void hctr2_setkey_aes256_simd(struct hctr2_ctx *ctx, const u8 *key)
+static void hctr2_setkey_aes256_simd(struct hctr2_ctx *ctx, const u8 *key)
 {
 	hctr2_setkey(ctx, key, AES_KEYSIZE_256, true);
 }
 
-void hctr2_encrypt_generic(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
+static void hctr2_encrypt_generic(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 			   size_t nbytes, const u8 *tweak)
 {
 	hctr2_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, true,
 		    false);
 }
 
-void hctr2_decrypt_generic(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
+static void hctr2_decrypt_generic(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 			   size_t nbytes, const u8 *tweak)
 {
 	hctr2_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, false,
 		    false);
 }
 
-void hctr2_encrypt_simd(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
+static void hctr2_encrypt_simd(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 			size_t nbytes, const u8 *tweak)
 {
 	hctr2_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, true,
 		    true);
 }
 
-void hctr2_decrypt_simd(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
+static void hctr2_decrypt_simd(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 			size_t nbytes, const u8 *tweak)
 {
 	hctr2_crypt(ctx, dst, src, nbytes, tweak, ctx->default_tweak_len, false,

@@ -45,7 +45,7 @@ asmlinkage void ce_aes_xts_decrypt(u8 out[], u8 const in[], u8 const rk1[],
 				   const u8 iv[], int first);
 #endif
 
-void xts_encrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst, const u8 *src,
+static void xts_encrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst, const u8 *src,
 		      size_t nbytes, u8 *iv)
 {
 #ifdef __x86_64__
@@ -62,7 +62,7 @@ void xts_encrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst, const u8 *src,
 #endif
 }
 
-void xts_decrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst, const u8 *src,
+static void xts_decrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst, const u8 *src,
 		      size_t nbytes, u8 *iv)
 {
 #ifdef __x86_64__
@@ -79,15 +79,15 @@ void xts_decrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst, const u8 *src,
 #endif
 }
 
-void xts_aes128_setkey(struct aes_xts_ctx *ctx, const u8 *key) {
+static void xts_aes128_setkey(struct aes_xts_ctx *ctx, const u8 *key) {
     xts_setkey(ctx, key, AES_KEYSIZE_128);
 }
 
-void xts_aes192_setkey(struct aes_xts_ctx *ctx, const u8 *key) {
+static void xts_aes192_setkey(struct aes_xts_ctx *ctx, const u8 *key) {
     xts_setkey(ctx, key, AES_KEYSIZE_192);
 }
 
-void xts_aes256_setkey(struct aes_xts_ctx *ctx, const u8 *key) {
+static void xts_aes256_setkey(struct aes_xts_ctx *ctx, const u8 *key) {
     xts_setkey(ctx, key, AES_KEYSIZE_256);
 }
 
