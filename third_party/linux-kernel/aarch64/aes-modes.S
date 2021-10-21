@@ -342,7 +342,7 @@ AES_FUNC_START(aes_xts_encrypt)
 	mov		v0.16b, v3.16b
 	sub		x0, x0, #16
 .Lxtsenccts:
-	adr_l		x8, .Lcts_permute_table
+	adr		x8, .Lcts_permute_table
 
 	add		x1, x1, w4, sxtw	/* rewind input pointer */
 	add		w4, w4, #16		/* # bytes in final block */
@@ -429,7 +429,7 @@ AES_FUNC_START(aes_xts_decrypt)
 	ret
 
 .Lxtsdeccts:
-	adr_l		x8, .Lcts_permute_table
+	adr		x8, .Lcts_permute_table
 
 	add		x1, x1, w4, sxtw	/* rewind input pointer */
 	add		w4, w4, #16		/* # bytes in final block */

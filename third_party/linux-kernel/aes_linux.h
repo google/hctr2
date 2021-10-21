@@ -35,6 +35,7 @@ static inline int aes_nrounds(const struct crypto_aes_ctx *ctx)
 	return 6 + ctx->key_length / 4;
 }
 
+#ifdef __x86_64__
 asmlinkage int aesni_set_key(struct crypto_aes_ctx *ctx, const u8 *in_key,
             unsigned int key_len);
 
@@ -43,6 +44,14 @@ asmlinkage void aesni_ecb_enc(const struct crypto_aes_ctx *ctx, u8 *dst, const u
 
 asmlinkage void aesni_ecb_dec(const struct crypto_aes_ctx *ctx, u8 *dst, const u8 *src,
             size_t len);
+#endif
+
+#ifdef __aarch64__
+asmlinkage void ce_aes_ecb_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
+			int blocks);
+asmlinkage void ce_aes_ecb_decrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
+			int blocks);
+#endif
 
 int aesti_expand_key(struct crypto_aes_ctx *ctx, const u8 *in_key,
 		     unsigned int key_len);
