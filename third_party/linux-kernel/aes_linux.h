@@ -51,8 +51,3 @@ int aesti_set_key(struct crypto_aes_ctx *ctx, const u8 *in_key,
 		  unsigned int key_len);
 void aesti_encrypt(const struct crypto_aes_ctx *ctx, u8 *out, const u8 *in);
 void aesti_decrypt(const struct crypto_aes_ctx *ctx, u8 *out, const u8 *in);
-
-#ifdef __arm__
-void __aes_arm_encrypt(const u32 *rk, int rounds, const u8 *in, u8 *out);
-void __aes_arm_decrypt(const u32 *rk, int rounds, const u8 *in, u8 *out);
-#endif

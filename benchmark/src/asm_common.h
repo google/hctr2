@@ -24,15 +24,6 @@
 #define ENDPROC(name)
 #endif
 
-#ifdef __arm__
-#  define __LINUX_ARM_ARCH__	7
-#endif
-
-#if defined(__arm__) || defined(__aarch64__)
-#  define MAX_L1_CACHE_SHIFT	7
-#  define adr_l	adr
-#endif
-
 #ifdef __x86_64__
 .macro FRAME_BEGIN
 	push %rbp
