@@ -4,12 +4,10 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-import itertools
-
 import Crypto.Util.strxor
 
-import aes
-import cipher
+import ciphers.aes
+import ciphers.cipher
 
 
 def strxor(a, b):
@@ -20,9 +18,9 @@ def strxor(a, b):
     return Crypto.Util.strxor.strxor(a, b)
 
 
-class XCTR(cipher.Bijection):
+class XCTR(ciphers.cipher.Bijection):
     def __init__(self):
-        self._block = aes.AES()
+        self._block = ciphers.aes.AES()
 
     def _setup_variant(self):
         self._block.variant = self.variant['blockcipher']

@@ -6,17 +6,17 @@
 
 from Crypto.Util.strxor import strxor
 
-import aes
-import cipher
-import polyval
-import xctr
+import ciphers.aes
+import ciphers.cipher
+import ciphers.polyval
+import ciphers.xctr
 
 
-class HCTR2(cipher.Bijection):
+class HCTR2(ciphers.cipher.Bijection):
     def __init__(self):
-        self._block = aes.AES()
-        self._polyval = polyval.Polyval()
-        self._xctr = xctr.XCTR()
+        self._block = ciphers.aes.AES()
+        self._polyval = ciphers.polyval.Polyval()
+        self._xctr = ciphers.xctr.XCTR()
 
     def _setup_variant(self):
         bc = self.variant['blockcipher']

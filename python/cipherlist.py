@@ -4,9 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-import hctr2
-import polyval
-import xctr
+from ciphers import hctr2, polyval, xctr
 
 ciphers = [
     polyval.Polyval(),

@@ -4,12 +4,12 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-import cipher
-import gf
-import test_polyval
+import ciphers.cipher
+import ciphers.gf
+import parsers.polyval
 
 
-class Hash(cipher.Cipher):
+class Hash(ciphers.cipher.Cipher):
     def make_testvector(self, input, description):
         return {
             'cipher': self.variant,
@@ -26,7 +26,7 @@ class Hash(cipher.Cipher):
 class Polyval(Hash):
     def __init__(self):
         super().__init__()
-        self.gf = gf.GF([128, 127, 126, 121, 0])
+        self.gf = ciphers.gf.GF([128, 127, 126, 121, 0])
         self.polyval_const = self.gf.from_int(
             sum(1 << x for x in [127, 124, 121, 114, 0]))
         self.choose_variant(lambda x: True)
@@ -60,7 +60,7 @@ class Polyval(Hash):
         return hash_result.to_bytes(byteorder='little')
 
     def other_testvectors(self, tvdir):
-        for tv in test_polyval.parse_tvs(tvdir):
+        for tv in parsers.polyval.parse_tvs(tvdir):
             yield {
                 'cipher': self.variant,
                 'description': "From RFC",

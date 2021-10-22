@@ -6,10 +6,10 @@
 
 import Crypto.Cipher.AES
 
-import cipher
+import ciphers.cipher
 
 
-class AES(cipher.Blockcipher):
+class AES(ciphers.cipher.Blockcipher):
     def variant_name(self):
         l = self.lengths()
         return "{}{}".format(self.name(), l['key'] * 8)
