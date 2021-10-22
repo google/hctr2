@@ -16,11 +16,10 @@ def generate_testvectors(cipher):
             yield cipher.make_testvector(tv, d)
 
 
-def write_tests(cipher, path):
-    d = path / cipher.name()
+def write_tests(tvstore, cipher):
     for v in cipher.variants():
         cipher.variant = v
-        p = d / "{}.json".format(cipher.variant_name())
+        p = tvstore.path(cipher)
         print(f"Writing: {p}")
         hexjson.write_using_hex(p, generate_testvectors(cipher))
 
@@ -31,8 +30,8 @@ def check_testvector(cipher, tv, verbose):
         print(f"OK: {tv['description']}")
 
 
-def check_tests(cipher, path, verbose):
-    for fn in (path / cipher.name()).iterdir():
-        print(f"======== {fn.name} ========")
-        for tv in hexjson.iter_unhex(fn):
-            check_testvector(cipher, tv, verbose)
+def check_tests(tvstore, cipher, verbose):
+    fn = tvstore.path(cipher)
+    print(f"======== {fn.name} ========")
+    for tv in hexjson.iter_unhex(fn):
+        check_testvector(cipher, tv, verbose)

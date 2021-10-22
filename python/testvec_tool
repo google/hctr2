@@ -12,18 +12,19 @@ import sys
 import cipherlist
 import hexjson
 import tvgen
+import tvstore
 
 _file = pathlib.Path(__file__).resolve()
 top = _file.parent.parent
 tvdir = top / "test_vectors"
-path = tvdir / "ours"
+tvstore = tvstore.TvStore(tvdir)
 
 verbose = False
 
 
 def write(ciphers):
     for cipher in ciphers:
-        tvgen.write_tests(cipher, path)
+        tvgen.write_tests(tvstore, cipher)
 
 
 def check(ciphers):
@@ -32,7 +33,9 @@ def check(ciphers):
         print(f"======== {test} ========")
         for r in cipher.other_testvectors(tvdir):
             tvgen.check_testvector(cipher, r, verbose)
-        tvgen.check_tests(cipher, path, verbose)
+        for v in cipher.variants():
+            cipher.variant = v
+            tvgen.check_tests(tvstore, cipher, verbose)
 
 
 def print_others(ciphers):
