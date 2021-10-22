@@ -6,16 +6,19 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+import pathlib
 import sys
 
 import cipherlist
 import hexjson
-import paths
 import tvgen
 
-verbose = False
-tvdir = paths.top / "test_vectors"
+_file = pathlib.Path(__file__).resolve()
+top = _file.parent.parent
+tvdir = top / "test_vectors"
 path = tvdir / "ours"
+
+verbose = False
 
 
 def write(ciphers):
