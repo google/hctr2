@@ -63,3 +63,14 @@ class XCTR(ciphers.cipher.Bijection):
         for l in [32, 255]:
             for m in "plaintext", "ciphertext":
                 yield {**v, m: l}
+
+    def testvec_fields(self):
+        return ['key', 'nonce', 'plaintext', 'ciphertext']
+
+    def convert_testvec(self, v):
+        return {
+            'key': v['input']['key'],
+            'nonce': v['input']['nonce'],
+            'plaintext': v['plaintext'],
+            'ciphertext': v['ciphertext'],
+        }

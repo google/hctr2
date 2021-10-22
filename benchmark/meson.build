@@ -14,7 +14,7 @@ configure_file(output : 'cbconfig.h', configuration : conf_data)
 include_dirs = [
     include_directories('.'),
     include_directories('src'),
-    include_directories('testvectors'),
+    include_directories('../test_vectors/converted/c'),
     include_directories('../third_party/linux-kernel')
 ]
 add_project_arguments('-O2', '-Wall', '-Wno-pointer-sign', '-fno-strict-aliasing', language : 'c')
@@ -27,9 +27,9 @@ src = [
     'src/hctr2-hash.c',
     'src/xts.c',
     'src/insn_timing.c',
-    'testvectors/hctr2_testvecs.c',
     '../third_party/linux-kernel/aes_ti.c',
     '../third_party/linux-kernel/gf128.c',
+    '../test_vectors/converted/c/hctr2_testvecs.c',
 ]
 
 if host_machine.cpu_family() == 'aarch64'

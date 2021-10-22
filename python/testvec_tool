@@ -13,6 +13,7 @@ import cipherlist
 import hexjson
 import tvgen
 import tvstore
+import writers.c
 
 _file = pathlib.Path(__file__).resolve()
 top = _file.parent.parent
@@ -45,6 +46,12 @@ def print_others(ciphers):
         hexjson.dump_using_hex(cipher.other_testvectors(tvdir))
 
 
+def convert_c(ciphers):
+    targetdir = tvdir / "converted" / "c"
+    for cipher in ciphers:
+        writers.c.convert(tvstore, targetdir, cipher)
+
+
 def main():
     if len(sys.argv) not in [2, 3]:
         raise Exception("Bad args: {} use write or check".format(sys.argv[1:]))
@@ -61,6 +68,8 @@ def main():
         check(ciphers)
     elif command == "print":
         print_others(ciphers)
+    elif command == "convert_c":
+        convert_c(ciphers)
     else:
         raise Exception("Bad args: {} use write or check".format(sys.argv[1:]))
 

@@ -70,3 +70,13 @@ class Polyval(Hash):
                 },
                 'hash': tv['POLYVAL result'],
             }
+
+    def testvec_fields(self):
+        return ['key', 'message', 'hash']
+
+    def convert_testvec(self, v):
+        return {
+            'key': v['input']['key'],
+            'message': v['input']['message'],
+            'hash': v['hash'],
+        }
