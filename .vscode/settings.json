@@ -1,0 +1,10 @@
+{
+    "[c]": {
+        "editor.tabSize": 8,
+        "editor.insertSpaces": false
+    },
+    "[cpp]": {
+        "editor.tabSize": 8,
+        "editor.insertSpaces": false
+    },
+}
