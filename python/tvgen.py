@@ -4,7 +4,6 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-import hexjson
 import inputgen
 import tvstore
 
@@ -20,9 +19,8 @@ def write_tests(args, cipher):
     tv_store = tvstore.TvStore(args.test_vectors)
     for v in cipher.variants():
         cipher.variant = v
-        p = tv_store.path(cipher)
-        print(f"Writing: {p}")
-        hexjson.write_using_hex(p, generate_testvectors(cipher))
+        print(f"======== {cipher.variant_name()} ========")
+        tv_store.write(cipher, generate_testvectors(cipher))
 
 
 def check_testvector(cipher, tv, verbose):
@@ -32,8 +30,7 @@ def check_testvector(cipher, tv, verbose):
 
 
 def check_tests(args, cipher):
+    print(f"======== {cipher.variant_name()} ========")
     tv_store = tvstore.TvStore(args.test_vectors)
-    fn = tv_store.path(cipher)
-    print(f"======== {fn.name} ========")
-    for tv in hexjson.iter_unhex(fn):
+    for tv in tv_store.iter_read(cipher):
         check_testvector(cipher, tv, args.verbose)

@@ -5,8 +5,6 @@
 # https://opensource.org/licenses/MIT.
 
 import contextlib
-
-import hexjson
 import tvstore
 
 
@@ -83,14 +81,13 @@ def convert(args, cipher):
         tvf.include(basename)
         for v in cipher.variants():
             cipher.variant = v
-            p = tv_store.path(cipher)
-            print(f"Converting: {p}")
             array_name = f'{cipher.variant_name().lower()}_tv'
+            print(f"Converting: {array_name}")
             tvf.structs(
                 struct_name,
                 array_name,
                 (cipher.convert_testvec(s)
-                    for s in hexjson.iter_unhex(p)))
+                    for s in tv_store.iter_read(cipher)))
             entries.append(array_name)
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:

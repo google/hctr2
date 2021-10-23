@@ -6,9 +6,17 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+import hexjson
+
 class TvStore:
     def __init__(self, tvdir):
         self._storedir = tvdir / "ours"
 
-    def path(self, cipher):
+    def _path(self, cipher):
         return self._storedir / cipher.name() / f"{cipher.variant_name()}.json"
+
+    def write(self, cipher, tvs):
+        hexjson.write_using_hex(self._path(cipher), tvs)
+
+    def iter_read(self, cipher):
+        yield from hexjson.iter_unhex(self._path(cipher))
