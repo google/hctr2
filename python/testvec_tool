@@ -6,8 +6,8 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+import argparse
 import pathlib
-import sys
 
 import cipherlist
 import hexjson
@@ -16,62 +16,61 @@ import tvstore
 import writers.c
 
 _file = pathlib.Path(__file__).resolve()
-top = _file.parent.parent
-tvdir = top / "test_vectors"
-tvstore = tvstore.TvStore(tvdir)
-
-verbose = False
 
 
-def write(ciphers):
-    for cipher in ciphers:
-        tvgen.write_tests(tvstore, cipher)
+def write(cipher):
+    tvgen.write_tests(tv_store, cipher)
 
 
-def check(ciphers):
-    for cipher in ciphers:
-        test = cipher.name().lower()
-        print(f"======== {test} ========")
-        for r in cipher.other_testvectors(tvdir):
-            tvgen.check_testvector(cipher, r, verbose)
-        for v in cipher.variants():
-            cipher.variant = v
-            tvgen.check_tests(tvstore, cipher, verbose)
+def check(cipher):
+    test = cipher.name().lower()
+    print(f"======== {test} ========")
+    for r in cipher.other_testvectors(tvdir):
+        tvgen.check_testvector(cipher, r, verbose)
+    for v in cipher.variants():
+        cipher.variant = v
+        tvgen.check_tests(tv_store, cipher, verbose)
 
 
-def print_others(ciphers):
-    for cipher in ciphers:
-        test = cipher.name().lower()
-        print(f"======== {test} ========")
-        hexjson.dump_using_hex(cipher.other_testvectors(tvdir))
+def print_others(cipher):
+    test = cipher.name().lower()
+    print(f"======== {test} ========")
+    hexjson.dump_using_hex(cipher.other_testvectors(tvdir))
 
 
-def convert_c(ciphers):
+def convert_c(cipher):
     targetdir = tvdir / "converted" / "c"
-    for cipher in ciphers:
-        writers.c.convert(tvstore, targetdir, cipher)
+    writers.c.convert(tv_store, targetdir, cipher)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--cipher', action='append')
+    subparsers = parser.add_subparsers(required=True, dest='subcommand')
+    subparsers.add_parser('write').set_defaults(func=write)
+    subparsers.add_parser('check').set_defaults(func=check)
+    subparsers.add_parser('print').set_defaults(func=print_others)
+    subparsers.add_parser('convert_c').set_defaults(func=convert_c)
+    return parser.parse_args()
 
 
 def main():
-    if len(sys.argv) not in [2, 3]:
-        raise Exception("Bad args: {} use write or check".format(sys.argv[1:]))
-    command = sys.argv[1]
-    ciphers = cipherlist.ciphers
-    if len(sys.argv) == 3:
-        ciphers = [c for c in cipherlist.ciphers if c.name() ==
-                   sys.argv[2]]
-        if not ciphers:
-            raise Exception(f"No cipher known called {sys.argv[2]}")
-    if command == "write":
-        write(ciphers)
-    elif command == "check":
-        check(ciphers)
-    elif command == "print":
-        print_others(ciphers)
-    elif command == "convert_c":
-        convert_c(ciphers)
+    args = parse_args()
+    top = _file.parent.parent
+    global tvdir
+    tvdir = top / "test_vectors"
+    global tv_store
+    tv_store = tvstore.TvStore(tvdir)
+    global verbose
+    verbose = False
+
+    if args.cipher is None:
+        ciphers = cipherlist.ciphers
     else:
-        raise Exception("Bad args: {} use write or check".format(sys.argv[1:]))
+        ciphers = [cipherlist.lookup_cipher(c) for c in args.cipher]
+    for cipher in ciphers:
+        args.func(cipher)
 
 
 if __name__ == "__main__":

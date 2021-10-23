@@ -11,3 +11,10 @@ ciphers = [
     xctr.XCTR(),
     hctr2.HCTR2()
 ]
+
+
+def lookup_cipher(name):
+    for cipher in ciphers:
+        if cipher.name().lower() == name.lower():
+            return cipher
+    raise Exception(f"No such cipher known: {name}")
