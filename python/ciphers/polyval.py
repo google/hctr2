@@ -59,7 +59,7 @@ class Polyval(Hash):
             hash_result *= hpoly
         return hash_result.to_bytes(byteorder='little')
 
-    def other_testvectors(self, tvdir):
+    def external_testvectors(self, tvdir):
         for tv in parsers.polyval.parse_tvs(tvdir):
             yield {
                 'cipher': self.variant,

@@ -40,7 +40,7 @@ class Cipher(object):
     def test_input_lengths(self):
         yield self.lengths()
 
-    def other_testvectors(self, tvdir):
+    def external_testvectors(self, tvdir):
         if False:
             yield None
 

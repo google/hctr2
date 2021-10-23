@@ -22,15 +22,15 @@ def write(args, cipher):
 
 
 def check(args, cipher):
-    for r in cipher.other_testvectors(args.test_vectors):
+    for r in cipher.external_testvectors(args.test_vectors):
         tvgen.check_testvector(cipher, r, args.verbose)
     for v in cipher.variants():
         cipher.variant = v
         tvgen.check_tests(args, cipher)
 
 
-def print_others(args, cipher):
-    hexjson.dump_using_hex(cipher.other_testvectors(args.test_vectors))
+def print_external(args, cipher):
+    hexjson.dump_using_hex(cipher.external_testvectors(args.test_vectors))
 
 
 def convert_c(args, cipher):
@@ -46,7 +46,7 @@ def parse_args():
     subparsers = parser.add_subparsers(required=True, dest='subcommand')
     subparsers.add_parser('write').set_defaults(func=write)
     subparsers.add_parser('check').set_defaults(func=check)
-    subparsers.add_parser('print').set_defaults(func=print_others)
+    subparsers.add_parser('print').set_defaults(func=print_external)
     subparsers.add_parser('convert_c').set_defaults(func=convert_c)
     return parser.parse_args()
 

@@ -5,7 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 def parse_tvs(tvdir):
-    p = tvdir / "other" / "polyval.txt"
+    p = tvdir / "external" / "polyval.txt"
     print(f"Loading test vectors from {p}")
     with p.open() as f:
         d = None
