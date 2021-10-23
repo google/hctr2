@@ -12,39 +12,35 @@ import pathlib
 import cipherlist
 import hexjson
 import tvgen
-import tvstore
 import writers.c
 
 _file = pathlib.Path(__file__).resolve()
 
 
-def write(cipher):
-    tvgen.write_tests(tv_store, cipher)
+def write(args, cipher):
+    tvgen.write_tests(args, cipher)
 
 
-def check(cipher):
-    test = cipher.name().lower()
-    print(f"======== {test} ========")
-    for r in cipher.other_testvectors(tvdir):
-        tvgen.check_testvector(cipher, r, verbose)
+def check(args, cipher):
+    for r in cipher.other_testvectors(args.test_vectors):
+        tvgen.check_testvector(cipher, r, args.verbose)
     for v in cipher.variants():
         cipher.variant = v
-        tvgen.check_tests(tv_store, cipher, verbose)
+        tvgen.check_tests(args, cipher)
 
 
-def print_others(cipher):
-    test = cipher.name().lower()
-    print(f"======== {test} ========")
-    hexjson.dump_using_hex(cipher.other_testvectors(tvdir))
+def print_others(args, cipher):
+    hexjson.dump_using_hex(cipher.other_testvectors(args.test_vectors))
 
 
-def convert_c(cipher):
-    targetdir = tvdir / "converted" / "c"
-    writers.c.convert(tv_store, targetdir, cipher)
+def convert_c(args, cipher):
+    writers.c.convert(args, cipher)
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--test-vectors', type=pathlib.Path,
+                        default=_file.parent.parent / "test_vectors")
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--cipher', action='append')
     subparsers = parser.add_subparsers(required=True, dest='subcommand')
@@ -57,20 +53,13 @@ def parse_args():
 
 def main():
     args = parse_args()
-    top = _file.parent.parent
-    global tvdir
-    tvdir = top / "test_vectors"
-    global tv_store
-    tv_store = tvstore.TvStore(tvdir)
-    global verbose
-    verbose = False
-
     if args.cipher is None:
         ciphers = cipherlist.ciphers
     else:
         ciphers = [cipherlist.lookup_cipher(c) for c in args.cipher]
     for cipher in ciphers:
-        args.func(cipher)
+        print(f"======== {cipher.name().lower()} ========")
+        args.func(args, cipher)
 
 
 if __name__ == "__main__":

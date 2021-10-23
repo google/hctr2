@@ -7,6 +7,7 @@
 import contextlib
 
 import hexjson
+import tvstore
 
 
 def group_string(s, l):
@@ -71,7 +72,9 @@ def make_tvfile(p):
         yield tvf
 
 
-def convert(tvstore, targetdir, cipher):
+def convert(args, cipher):
+    targetdir = args.test_vectors / "converted" / "c"
+    tv_store = tvstore.TvStore(args.test_vectors)
     struct_name = f'{cipher.name().lower()}_testvec'
     basename = f"{cipher.name().lower()}_testvecs"
     target = targetdir / f"{basename}.c"
@@ -80,7 +83,7 @@ def convert(tvstore, targetdir, cipher):
         tvf.include(basename)
         for v in cipher.variants():
             cipher.variant = v
-            p = tvstore.path(cipher)
+            p = tv_store.path(cipher)
             print(f"Converting: {p}")
             array_name = f'{cipher.variant_name().lower()}_tv'
             tvf.structs(

@@ -5,8 +5,8 @@
 # https://opensource.org/licenses/MIT.
 
 import hexjson
-
 import inputgen
+import tvstore
 
 
 def generate_testvectors(cipher):
@@ -16,10 +16,11 @@ def generate_testvectors(cipher):
             yield cipher.make_testvector(tv, d)
 
 
-def write_tests(tvstore, cipher):
+def write_tests(args, cipher):
+    tv_store = tvstore.TvStore(args.test_vectors)
     for v in cipher.variants():
         cipher.variant = v
-        p = tvstore.path(cipher)
+        p = tv_store.path(cipher)
         print(f"Writing: {p}")
         hexjson.write_using_hex(p, generate_testvectors(cipher))
 
@@ -30,8 +31,9 @@ def check_testvector(cipher, tv, verbose):
         print(f"OK: {tv['description']}")
 
 
-def check_tests(tvstore, cipher, verbose):
-    fn = tvstore.path(cipher)
+def check_tests(args, cipher):
+    tv_store = tvstore.TvStore(args.test_vectors)
+    fn = tv_store.path(cipher)
     print(f"======== {fn.name} ========")
     for tv in hexjson.iter_unhex(fn):
-        check_testvector(cipher, tv, verbose)
+        check_testvector(cipher, tv, args.verbose)
