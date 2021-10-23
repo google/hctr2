@@ -60,6 +60,26 @@ class TestvecFile:
     def include(self, include_file):
         self.write(f'#include "{include_file}.h"\n')
 
+    def write_linux_testvec_field(self, field_name, value):
+        """Write a general field to a Linux crypto test vector."""
+        if isinstance(value, bytes):
+            self.write(f'\t\t.{field_name}\t=')
+            self.data_field(' ', '\n\t\t\t  ', '', ' ""', value)
+            self.write(',\n')
+        else:
+            self.write(f"\t\t.{field_name}\t= {value},\n")
+
+    def write_linux_testvecs(self, struct, array_name, entries):
+        self.write(f"static const struct {struct} {array_name}[] = {{\n")
+        for vec in entries:
+            self.write('\t{\n')
+            for k, v in vec.items():
+                self.write_linux_testvec_field(k, v)
+            self.write('\t},\n')
+        self.write('\n};\n\n')
+        self.write(
+            f"const size_t {array_name}_count = ARRAY_SIZE({array_name});\n")
+
 
 @contextlib.contextmanager
 def make_tvfile(p):
@@ -69,14 +89,16 @@ def make_tvfile(p):
         tvf.intro()
         yield tvf
 
+
 def cipher_entries(args, cipher):
     tv_store = tvstore.TvStore(args.test_vectors)
     for v in cipher.variants():
         cipher.variant = v
-        yield f'{cipher.variant_name().lower()}_tv', tv_store.iter_read(cipher)
+        yield f'{cipher.variant_name().lower()}', tv_store.iter_read(cipher)
     if any(True for s in cipher.external_testvectors(args.test_vectors)):
-        yield (f'{cipher.name().lower()}_external_tv',
-            cipher.external_testvectors(args.test_vectors))
+        yield (f'{cipher.name().lower()}_external',
+               cipher.external_testvectors(args.test_vectors))
+
 
 def convert(args, cipher):
     targetdir = args.test_vectors / "converted" / "c"
@@ -87,9 +109,10 @@ def convert(args, cipher):
     with make_tvfile(target) as tvf:
         tvf.include(basename)
         for array_name, it in cipher_entries(args, cipher):
+            array_name = f'{array_name}_tv'
             print(f"Converting: {array_name}")
             tvf.structs(struct_name, array_name,
-                (cipher.convert_testvec(s) for s in it))
+                        (cipher.convert_testvec(s) for s in it))
             entries.append(array_name)
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:
@@ -100,6 +123,31 @@ def convert(args, cipher):
         for field in cipher.testvec_fields():
             tvf.write(f'\tstruct testvec_buffer {field};\n')
         tvf.write(f'}};\n')
+        for e in entries:
+            tvf.write('\n')
+            tvf.write(f'extern const struct {struct_name} {e}[];\n')
+            tvf.write(f'extern const size_t {e}_count;\n')
+
+
+def convert_linux(args, cipher):
+    targetdir = args.test_vectors / "converted" / "linux"
+    struct_name = cipher.linux_testvec_struct()
+    basename = f"{cipher.name().lower()}_testvecs"
+    target = targetdir / f"{basename}.c"
+    entries = []
+    with make_tvfile(target) as tvf:
+        tvf.include(basename)
+        tvf.write('\n')
+        for array_name, it in cipher_entries(args, cipher):
+            array_name = f'{array_name}_tv_template'
+            print(f"Converting: {array_name}")
+            tvf.write_linux_testvecs(struct_name, array_name,
+                                     (cipher.linux_convert_testvec(s) for s in it))
+            entries.append(array_name)
+    target = targetdir / f"{basename}.h"
+    with make_tvfile(target) as tvf:
+        tvf.write('#pragma once\n\n')
+        tvf.include('testvec')
         for e in entries:
             tvf.write('\n')
             tvf.write(f'extern const struct {struct_name} {e}[];\n')

@@ -74,3 +74,13 @@ class XCTR(ciphers.cipher.Bijection):
             'plaintext': v['plaintext'],
             'ciphertext': v['ciphertext'],
         }
+
+    def linux_convert_testvec(self, v):
+        return {
+            'key': v['input']['key'],
+            'iv': v['input']['nonce'],
+            'ptext': v['plaintext'],
+            'ctext': v['ciphertext'],
+            'klen': len(v['input']['key']),
+            'len': len(v['plaintext']),
+        }

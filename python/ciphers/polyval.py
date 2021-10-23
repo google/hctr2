@@ -22,6 +22,9 @@ class Hash(ciphers.cipher.Cipher):
         self.variant = tv['cipher']
         assert tv['hash'] == self.hash(**tv['input'])
 
+    def linux_testvec_struct(self):
+        return 'hash_testvec'
+
 
 class Polyval(Hash):
     def __init__(self):
@@ -79,4 +82,13 @@ class Polyval(Hash):
             'key': v['input']['key'],
             'message': v['input']['message'],
             'hash': v['hash'],
+        }
+
+    def linux_convert_testvec(self, v):
+        return {
+            'key': v['input']['key'],
+            'plaintext': v['input']['message'],
+            'digest': v['hash'],
+            'psize': len(v['input']['message']),
+            'ksize': len(v['input']['key']),
         }

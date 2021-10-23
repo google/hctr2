@@ -69,6 +69,9 @@ class Bijection(Cipher):
         assert tv["ciphertext"] == self.encrypt(tv["plaintext"], **tv["input"])
         assert tv["plaintext"] == self.decrypt(tv["ciphertext"], **tv["input"])
 
+    def linux_testvec_struct(self):
+        return 'cipher_testvec'
+
 
 class Blockcipher(Bijection):
     def test_input_lengths(self):

@@ -8,6 +8,7 @@
 
 import hexjson
 
+
 class TvStore:
     def __init__(self, tvdir):
         self._storedir = tvdir / "ours"

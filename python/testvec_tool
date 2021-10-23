@@ -37,6 +37,10 @@ def convert_c(args, cipher):
     writers.c.convert(args, cipher)
 
 
+def convert_linux(args, cipher):
+    writers.c.convert_linux(args, cipher)
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test-vectors', type=pathlib.Path,
@@ -48,6 +52,7 @@ def parse_args():
     subparsers.add_parser('check').set_defaults(func=check)
     subparsers.add_parser('print').set_defaults(func=print_external)
     subparsers.add_parser('convert_c').set_defaults(func=convert_c)
+    subparsers.add_parser('convert_linux').set_defaults(func=convert_linux)
     return parser.parse_args()
 
 
