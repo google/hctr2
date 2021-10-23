@@ -12,7 +12,7 @@ import pathlib
 import cipherlist
 import hexjson
 import tvgen
-import writers.c
+import writers.cstruct
 
 _file = pathlib.Path(__file__).resolve()
 
@@ -33,12 +33,12 @@ def print_external(args, cipher):
     hexjson.dump_using_hex(cipher.external_testvectors(args.test_vectors))
 
 
-def convert_c(args, cipher):
-    writers.c.convert(args, cipher)
+def convert_cstruct(args, cipher):
+    writers.cstruct.convert(args, cipher)
 
 
 def convert_linux(args, cipher):
-    writers.c.convert_linux(args, cipher)
+    writers.cstruct.convert_linux(args, cipher)
 
 
 def parse_args():
@@ -51,7 +51,7 @@ def parse_args():
     subparsers.add_parser('write').set_defaults(func=write)
     subparsers.add_parser('check').set_defaults(func=check)
     subparsers.add_parser('print').set_defaults(func=print_external)
-    subparsers.add_parser('convert_c').set_defaults(func=convert_c)
+    subparsers.add_parser('convert_cstruct').set_defaults(func=convert_cstruct)
     subparsers.add_parser('convert_linux').set_defaults(func=convert_linux)
     return parser.parse_args()
 
