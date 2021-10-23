@@ -69,36 +69,28 @@ def make_tvfile(p):
         tvf.intro()
         yield tvf
 
+def cipher_entries(args, cipher):
+    tv_store = tvstore.TvStore(args.test_vectors)
+    for v in cipher.variants():
+        cipher.variant = v
+        yield f'{cipher.variant_name().lower()}_tv', tv_store.iter_read(cipher)
+    if any(True for s in cipher.external_testvectors(args.test_vectors)):
+        yield (f'{cipher.name().lower()}_external_tv',
+            cipher.external_testvectors(args.test_vectors))
 
 def convert(args, cipher):
     targetdir = args.test_vectors / "converted" / "c"
-    tv_store = tvstore.TvStore(args.test_vectors)
     struct_name = f'{cipher.name().lower()}_testvec'
     basename = f"{cipher.name().lower()}_testvecs"
     target = targetdir / f"{basename}.c"
     entries = []
     with make_tvfile(target) as tvf:
         tvf.include(basename)
-        for v in cipher.variants():
-            cipher.variant = v
-            array_name = f'{cipher.variant_name().lower()}_tv'
+        for array_name, it in cipher_entries(args, cipher):
             print(f"Converting: {array_name}")
-            tvf.structs(
-                struct_name,
-                array_name,
-                (cipher.convert_testvec(s)
-                    for s in tv_store.iter_read(cipher)))
+            tvf.structs(struct_name, array_name,
+                (cipher.convert_testvec(s) for s in it))
             entries.append(array_name)
-        if any(True for s in cipher.external_testvectors(args.test_vectors)):
-            array_name = f'{cipher.name().lower()}_external_tv'
-            print(f"Converting: {array_name}")
-            tvf.structs(
-                struct_name,
-                array_name,
-                (cipher.convert_testvec(s)
-                    for s in cipher.external_testvectors(args.test_vectors)))
-            entries.append(array_name)
-
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:
         tvf.write('#pragma once\n\n')

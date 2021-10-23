@@ -6,7 +6,6 @@
 
 def parse_tvs(tvdir):
     p = tvdir / "external" / "polyval.txt"
-    print(f"Loading test vectors from {p}")
     with p.open() as f:
         d = None
         k = None
