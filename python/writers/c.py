@@ -89,14 +89,15 @@ def convert(args, cipher):
                 (cipher.convert_testvec(s)
                     for s in tv_store.iter_read(cipher)))
             entries.append(array_name)
-        array_name = f'{cipher.name().lower()}_other_tv'
-        print(f"Converting: {array_name}")
-        tvf.structs(
-            struct_name,
-            array_name,
-            (cipher.convert_testvec(s)
-                for s in cipher.other_testvectors(args.test_vectors)))
-        entries.append(array_name)
+        if any(True for s in cipher.other_testvectors(args.test_vectors)):
+            array_name = f'{cipher.name().lower()}_other_tv'
+            print(f"Converting: {array_name}")
+            tvf.structs(
+                struct_name,
+                array_name,
+                (cipher.convert_testvec(s)
+                    for s in cipher.other_testvectors(args.test_vectors)))
+            entries.append(array_name)
 
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:
