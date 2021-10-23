@@ -72,10 +72,11 @@ class TestvecFile:
     def write_linux_testvecs(self, struct, array_name, entries):
         self.write(f"static const struct {struct} {array_name}[] = {{\n")
         for vec in entries:
-            self.write('\t{\n')
-            for k, v in vec.items():
-                self.write_linux_testvec_field(k, v)
-            self.write('\t},\n')
+            if vec is not None:
+                self.write('\t{\n')
+                for k, v in vec.items():
+                    self.write_linux_testvec_field(k, v)
+                self.write('\t},\n')
         self.write('\n};\n\n')
         self.write(
             f"const size_t {array_name}_count = ARRAY_SIZE({array_name});\n")

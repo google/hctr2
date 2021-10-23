@@ -109,7 +109,11 @@ class HCTR2(ciphers.cipher.Bijection):
             'ciphertext': v['ciphertext'],
         }
 
+    _linux_tweak_len = 32
+
     def linux_convert_testvec(self, v):
+        if len(v['input']['tweak']) != self._linux_tweak_len:
+            return None
         return {
             'key': v['input']['key'],
             'iv': v['input']['tweak'],
