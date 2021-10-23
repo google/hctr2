@@ -102,7 +102,7 @@ def cipher_entries(args, cipher):
 
 
 def convert(args, cipher):
-    targetdir = args.test_vectors / "converted" / "c"
+    targetdir = args.test_vectors / "converted" / "cstruct"
     struct_name = f'{cipher.name().lower()}_testvec'
     basename = f"{cipher.name().lower()}_testvecs"
     target = targetdir / f"{basename}.c"
