@@ -33,62 +33,26 @@ GSTAR		.req	v24
 .Lgstar:
 	.quad		0xc200000000000000, 0xc200000000000000
 
-var_a1	.req v0
-var_a2	.req v1
-var_a3	.req v2
-var_a4	.req v3
-.macro setregs n
-	.unreq var_a1
-	.unreq var_a2
-	.unreq var_a3
-	.unreq var_a4
-	.if \n == 0
-		var_a1	.req v0
-		var_a2	.req v1
-		var_a3	.req v2
-		var_a4	.req v3
-	.endif
-	.if \n == 1
-		var_a1	.req v4
-		var_a2	.req v5
-		var_a3	.req v6
-		var_a4	.req v7
-	.endif
-	.if \n == 2
-		var_a1	.req v8
-		var_a2	.req v9
-		var_a3	.req v10
-		var_a4	.req v11
-	.endif
-	.if \n == 3
-		var_a1	.req v12
-		var_a2	.req v13
-		var_a3	.req v14
-		var_a4	.req v15
-	.endif
-.endm
-
 .macro karatsuba1_iteration i first
 	.set i, \i
     .set first, \first
-	setregs i
-	ld1				{var_a1.16b}, [OP1]
+	ld1				{v0.16b}, [OP1]
+	ld1				{v2.16b}, [OP2]
 	.if(i == 0 && first == 1)
-		eor			var_a1.16b, var_a1.16b, SUM.16b
+		eor			v0.16b, v0.16b, SUM.16b
 	.endif
-	ext				var_a2.16b, var_a1.16b, var_a1.16b, #8
+	ext				v1.16b, v0.16b, v0.16b, #8
     add				OP1, OP1, #16
-	ld1				{var_a3.16b}, [OP2]
-	eor				var_a2.16b, var_a2.16b, var_a1.16b
+	eor				v1.16b, v1.16b, v0.16b
     add				OP2, OP2, #16
-	ext				var_a4.16b, var_a3.16b, var_a3.16b, #8
-	eor				var_a4.16b, var_a4.16b, var_a3.16b
-	pmull			var_a4.1q, var_a2.1d, var_a4.1d
-	pmull2			var_a2.1q, var_a1.2d, var_a3.2d
-	pmull			var_a1.1q, var_a1.1d, var_a3.1d
-	eor				E.16b, E.16b, var_a4.16b
-	eor				C.16b, C.16b, var_a2.16b
-	eor				D.16b, D.16b, var_a1.16b
+	ext				v3.16b, v2.16b, v2.16b, #8
+	eor				v3.16b, v3.16b, v2.16b
+	pmull			v3.1q, v1.1d, v3.1d
+	pmull2			v1.1q, v0.2d, v2.2d
+	pmull			v0.1q, v0.1d, v2.1d
+	eor				E.16b, E.16b, v3.16b
+	eor				C.16b, C.16b, v1.16b
+	eor				D.16b, D.16b, v0.16b
 .endm
 
 .macro karatsuba1 b first
@@ -104,18 +68,18 @@ var_a4	.req v3
 
 /*
  * Karatsuba1 without loading
- * Expects op1 in x0 and op2 in x2
+ * Expects op1 in v0 and op2 in v1
  */
 .macro karatsuba1_noload
-		ext				v1.16b, v0.16b, v0.16b, #8
-		eor				v1.16b, v1.16b, v0.16b
-		ext				v3.16b, v2.16b, v2.16b, #8
-		eor				v3.16b, v3.16b, v2.16b
-		pmull			v3.1q, v1.1d, v3.1d
-		pmull2			v1.1q, v0.2d, v2.2d
-		pmull			v0.1q, v0.1d, v2.1d
+		ext				v2.16b, v0.16b, v0.16b, #8
+		eor				v2.16b, v2.16b, v0.16b
+		ext				v3.16b, v1.16b, v1.16b, #8
+		eor				v3.16b, v3.16b, v1.16b
+		pmull			v3.1q, v2.1d, v3.1d
+		pmull2			v2.1q, v0.2d, v1.2d
+		pmull			v0.1q, v0.1d, v1.1d
 		eor				E.16b, E.16b, v3.16b
-		eor				C.16b, C.16b, v1.16b
+		eor				C.16b, C.16b, v2.16b
 		eor				D.16b, D.16b, v0.16b
 .endm
 
@@ -197,7 +161,7 @@ var_a4	.req v3
     adds				OP2, x1, #(NUM_PRECOMPUTE_KEYS*16)
 	subs				OP2, OP2, TMP
 	ld1					{v0.16b}, [OP2]
-	mov					v2.16b, SUM.16b
+	mov					v1.16b, SUM.16b
 	karatsuba1_noload
 	karatsuba2
 	montgomery_reduction
