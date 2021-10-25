@@ -9,11 +9,27 @@
 
 BLOCKS_LEFT	.req	x2 // Ensure caller saved, maybe switch
 OP1			.req	x9 // Ensure caller saved, maybe switch
-OP2			.req	x10 // Ensure caller saved, maybe switch
+KEY_START			.req	x10 // Ensure caller saved, maybe switch
 EXTRA_BYTES	.req	x11 // Ensure caller saved, maybe switch
 IDX			.req	x12 // Ensure caller saved, maybe switch
 TMP			.req	x13 // Ensure caller saved, maybe switch
 
+M0			.req	v0
+M1			.req	v1
+M2			.req	v2
+M3			.req	v3
+M4			.req	v4
+M5			.req	v5
+M6			.req	v6
+M7			.req	v7
+KEY8		.req	v8
+KEY7		.req	v9
+KEY6		.req	v10
+KEY5		.req	v11
+KEY4		.req	v12
+KEY3		.req	v13
+KEY2		.req	v14
+KEY1		.req	v15
 PL			.req	v16
 PH			.req	v17
 T			.req	v18
@@ -33,54 +49,21 @@ GSTAR		.req	v24
 .Lgstar:
 	.quad		0xc200000000000000, 0xc200000000000000
 
-.macro karatsuba1_iteration i first
-	.set i, \i
-    .set first, \first
-	ld1				{v0.16b}, [OP1]
-	ld1				{v2.16b}, [OP2]
-	.if(i == 0 && first == 1)
-		eor			v0.16b, v0.16b, SUM.16b
-	.endif
-	ext				v1.16b, v0.16b, v0.16b, #8
-    add				OP1, OP1, #16
-	eor				v1.16b, v1.16b, v0.16b
-    add				OP2, OP2, #16
-	ext				v3.16b, v2.16b, v2.16b, #8
-	eor				v3.16b, v3.16b, v2.16b
-	pmull			v3.1q, v1.1d, v3.1d
-	pmull2			v1.1q, v0.2d, v2.2d
-	pmull			v0.1q, v0.1d, v2.1d
-	eor				E.16b, E.16b, v3.16b
-	eor				C.16b, C.16b, v1.16b
-	eor				D.16b, D.16b, v0.16b
-.endm
-
-.macro karatsuba1 b first
-	.set by, \b
-    .set first, \first
-
-	.set i, 0
-	.rept (by)
-		karatsuba1_iteration i first
-		.set i, (i +1)
-	.endr
-.endm
-
-/*
- * Karatsuba1 without loading
- * Expects op1 in v0 and op2 in v1
- */
-.macro karatsuba1_noload
-		ext				v2.16b, v0.16b, v0.16b, #8
-		eor				v2.16b, v2.16b, v0.16b
-		ext				v3.16b, v1.16b, v1.16b, #8
-		eor				v3.16b, v3.16b, v1.16b
-		pmull			v3.1q, v2.1d, v3.1d
-		pmull2			v2.1q, v0.2d, v1.2d
-		pmull			v0.1q, v0.1d, v1.1d
-		eor				E.16b, E.16b, v3.16b
-		eor				C.16b, C.16b, v2.16b
-		eor				D.16b, D.16b, v0.16b
+.macro karatsuba1 X Y
+	X .req \X
+	Y .req \Y
+	ext				v25.16b, X.16b, Y.16b, #8
+	eor				v25.16b, v25.16b, X.16b
+	ext				v26.16b, Y.16b, Y.16b, #8
+	eor				v26.16b, v26.16b, Y.16b
+	pmull			v26.1q, v25.1d, v26.1d
+	pmull2			v25.1q, X.2d, Y.2d
+	pmull			X.1q, X.1d, Y.1d
+	eor				E.16b, E.16b, v26.16b
+	eor				C.16b, C.16b, v25.16b
+	eor				D.16b, D.16b, X.16b
+	.unreq X
+	.unreq Y
 .endm
 
 // TODO: Reduce instructions?
@@ -108,43 +91,23 @@ GSTAR		.req	v24
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
 	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
 	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
-	mov					OP1, x0
-	mov					OP2, x1
-	mov					IDX, XZR
-	karatsuba1 4 1
-.Loop:
-	cmp 				IDX, #NUM_PRECOMPUTE_KEYS-4
-	bge 				.LoopExit
-
-	subs				TMP, IDX, #NUM_PRECOMPUTE_KEYS-4
-
-	cmp					TMP, #-4
-    bgt					.gt4
-	karatsuba1 4 0
-	add					IDX, IDX, #4
-    b					.out
-
-.gt4:
-	cmp					TMP, #-3
-	bgt					.gt3
-	karatsuba1 3 0
-	add					IDX, IDX, #3
-    b					.out
-
-.gt3:
-	cmp					TMP, #-2
-	bgt					.gt2
-	karatsuba1 2 0
-	add					IDX, IDX, #2
-    b					.out
-
-.gt2:
-	karatsuba1 1 0
-	add					IDX, IDX, #1
-.out:
-	b .Loop
-.LoopExit:
-	add					x0, x0, #(NUM_PRECOMPUTE_KEYS*16)
+	ld1					{M0.16b}, [x0], #16
+	ld1					{M1.16b}, [x0], #16
+	ld1					{M2.16b}, [x0], #16
+	ld1					{M3.16b}, [x0], #16
+	ld1					{M4.16b}, [x0], #16
+	ld1					{M5.16b}, [x0], #16
+	ld1					{M6.16b}, [x0], #16
+	ld1					{M7.16b}, [x0], #16
+	eor					M0.16b, M0.16b, SUM.16b
+	karatsuba1 M0 KEY8
+	karatsuba1 M1 KEY7
+	karatsuba1 M2 KEY6
+	karatsuba1 M3 KEY5
+	karatsuba1 M4 KEY4
+	karatsuba1 M5 KEY3
+	karatsuba1 M6 KEY2
+	karatsuba1 M7 KEY1
 	karatsuba2
 	montgomery_reduction
 	mov					SUM.16b, PH.16b
@@ -158,18 +121,17 @@ GSTAR		.req	v24
 	cmp					EXTRA_BYTES, #0
 	csinc				TMP, TMP, TMP, eq
 	lsl					TMP, TMP, #4
-    adds				OP2, x1, #(NUM_PRECOMPUTE_KEYS*16)
-	subs				OP2, OP2, TMP
-	ld1					{v0.16b}, [OP2]
+    // x1 currently points at the end of the key array
+	subs				KEY_START, x1, TMP
+	ld1					{v0.16b}, [KEY_START]
 	mov					v1.16b, SUM.16b
-	karatsuba1_noload
+	karatsuba1 v0 v1
 	karatsuba2
 	montgomery_reduction
 	mov					SUM.16b, PH.16b
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
 	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
 	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
-	mov					OP1, x0
 	mov					IDX, XZR
 .LoopPartial:
 	cmp 				IDX, BLOCKS_LEFT
@@ -179,26 +141,56 @@ GSTAR		.req	v24
 
 	cmp					TMP, #-4
     bgt					.gt4Partial
-	karatsuba1 4 0
+	ld1					{M0.16b}, [x0], #16
+	ld1					{M1.16b}, [x0], #16
+	ld1					{M2.16b}, [x0], #16
+	ld1					{M3.16b}, [x0], #16
+    // Clobber key registers
+	ld1					{KEY8.16b}, [KEY_START], #16
+	ld1					{KEY7.16b}, [KEY_START], #16
+	ld1					{KEY6.16b}, [KEY_START], #16
+	ld1					{KEY5.16b}, [KEY_START], #16
+	karatsuba1 M0 KEY8
+	karatsuba1 M1 KEY7
+	karatsuba1 M2 KEY6
+	karatsuba1 M3 KEY5
 	add					IDX, IDX, #4
-    b					.outPartial
+	b					.outPartial
 
 .gt4Partial:
 	cmp					TMP, #-3
 	bgt					.gt3Partial
-	karatsuba1 3 0
+	ld1					{M0.16b}, [x0], #16
+	ld1					{M1.16b}, [x0], #16
+	ld1					{M2.16b}, [x0], #16
+    // Clobber key registers
+	ld1					{KEY8.16b}, [KEY_START], #16
+	ld1					{KEY7.16b}, [KEY_START], #16
+	ld1					{KEY6.16b}, [KEY_START], #16
+	karatsuba1 M0 KEY8
+	karatsuba1 M1 KEY7
+	karatsuba1 M2 KEY6
 	add					IDX, IDX, #3
-    b					.outPartial
+	b					.outPartial
 
 .gt3Partial:
 	cmp					TMP, #-2
 	bgt					.gt2Partial
-	karatsuba1 2 0
+	ld1					{M0.16b}, [x0], #16
+	ld1					{M1.16b}, [x0], #16
+	// Clobber key registers
+	ld1					{KEY8.16b}, [KEY_START], #16
+	ld1					{KEY7.16b}, [KEY_START], #16
+	karatsuba1 M0 KEY8
+	karatsuba1 M1 KEY7
 	add					IDX, IDX, #2
     b					.outPartial
 
 .gt2Partial:
-	karatsuba1 1 0
+	ld1					{M0.16b}, [x0], #16
+	// Clobber key registers
+	ld1					{KEY8.16b}, [KEY_START], #16
+	karatsuba1 M0 KEY8
 	add					IDX, IDX, #1
 .outPartial:
 	b .LoopPartial
@@ -206,8 +198,8 @@ GSTAR		.req	v24
 	# Handle extra block
 	cmp					EXTRA_BYTES, #0
 	beq					.no_extra_block
-	mov					OP1, x3
-	karatsuba1 1 0
+	ld1					{M0.16b}, [x3]
+	karatsuba1 M0 KEY1
 .no_extra_block:
 	karatsuba2
 	montgomery_reduction
@@ -227,9 +219,9 @@ ENTRY(pmull_polyval_mul)
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
 	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
 	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
-	mov					OP1, x0
-	mov					OP2, x1
-	karatsuba1 1 0
+	ld1					{v0.16b}, [x0]
+	ld1					{v1.16b}, [x1]
+	karatsuba1 v0 v1
 	karatsuba2
 	montgomery_reduction
 	st1					{PH.16b}, [x0]
@@ -253,6 +245,15 @@ ENDPROC(pmull_polyval_mul)
 ENTRY(pmull_polyval)
 	adr					TMP, .Lgstar
 	ld1					{GSTAR.2d}, [TMP]
+	mov					KEY_START, x1
+	ld1					{KEY8.16b}, [x1], #16
+	ld1					{KEY7.16b}, [x1], #16
+	ld1					{KEY6.16b}, [x1], #16
+	ld1					{KEY5.16b}, [x1], #16
+	ld1					{KEY4.16b}, [x1], #16
+	ld1					{KEY3.16b}, [x1], #16
+	ld1					{KEY2.16b}, [x1], #16
+	ld1					{KEY1.16b}, [x1], #16
 	ands				EXTRA_BYTES, x2, 0xf
 	lsr					BLOCKS_LEFT, BLOCKS_LEFT, #4
 	ld1					{SUM.16b}, [x4]
