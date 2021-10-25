@@ -43,12 +43,11 @@ Lgstar:
  * Preserves SUM
  * All other xmm registers clobbered
  */
-.macro schoolbook1 b first
+.macro schoolbook1 b
 	.set by, \b
-	.set first, \first
 	.set i, 0
 	.rept (by)
-		schoolbook1_iteration i first
+		schoolbook1_iteration i 0
 		.set i, (i +1)
 	.endr
 .endm
@@ -136,37 +135,37 @@ Lgstar:
 	pxor D, D
 	pxor EF, EF
 
-	schoolbook1_iteration 7 1
+	schoolbook1_iteration 7 0
 	.if(reduce)
 		movdqa PL, T
 	.endif
 
-	schoolbook1_iteration 6 1
+	schoolbook1_iteration 6 0
 	.if(reduce)
 		pclmulqdq $0x00, GSTAR, T # T = [X0 * g*(x)]
 	.endif
 
-	schoolbook1_iteration 5 1
+	schoolbook1_iteration 5 0
 	.if(reduce)
 		pshufd $0b01001110, T, Z # Z = [T0 : T1]
 	.endif
 
-	schoolbook1_iteration 4 1
+	schoolbook1_iteration 4 0
 	.if(reduce)
 		pxor Z, PL # PL = [X1 ^ T0 : X0 ^ T1]
 	.endif
 
-	schoolbook1_iteration 3 1
+	schoolbook1_iteration 3 0
 	.if(reduce)
 		pxor PL, PH # PH = [X1 ^ T0 ^ X3 : X0 ^ T1 ^ X2]
 	.endif
 
-	schoolbook1_iteration 2 1
+	schoolbook1_iteration 2 0
 	.if(reduce)
 		pclmulqdq $0x11, GSTAR, PL # PL = [X1 ^ T0 * g*(x)]
 	.endif
 
-	schoolbook1_iteration 1 1
+	schoolbook1_iteration 1 0
 	.if(reduce)
 		pxor PL, PH
 		movdqa PH, SUM
@@ -216,7 +215,7 @@ Lgstar:
 
 	cmp $4, TMP # TMP < 4 ?
 	jl .lt4Partial
-	schoolbook1 4 0
+	schoolbook1 4
 	addq $4, IDX
 	addq $(4*16), OP1
 	addq $(4*16), OP2
@@ -224,7 +223,7 @@ Lgstar:
 .lt4Partial:
 	cmp $3, TMP # TMP < 3 ?
 	jl .lt3Partial
-	schoolbook1 3 0
+	schoolbook1 3
 	addq $3, IDX
 	addq $(3*16), OP1
 	addq $(3*16), OP2
@@ -232,13 +231,13 @@ Lgstar:
 .lt3Partial:
 	cmp $2, TMP # TMP < 2 ?
 	jl .lt2Partial
-	schoolbook1 2 0
+	schoolbook1 2
 	addq $2, IDX
 	addq $(2*16), OP1
 	addq $(2*16), OP2
 	jmp .outPartial
 .lt2Partial:
-	schoolbook1 1 0 # TMP < 1 ?
+	schoolbook1 1 # TMP < 1 ?
 	addq $1, IDX
 	addq $(1*16), OP1
 	addq $(1*16), OP2
@@ -249,7 +248,7 @@ Lgstar:
 	test EXTRA_BYTES, EXTRA_BYTES
 	je .no_extra_block2
 	movq %rcx, OP1
-	schoolbook1 1 0
+	schoolbook1 1
 .no_extra_block2:
 	schoolbook2
 	montgomery_reduction
@@ -270,7 +269,7 @@ ENTRY(clmul_polyval_mul)
 	pxor D, D
 	pxor EF, EF
 	mov %rsi, OP2
-	schoolbook1 1 0
+	schoolbook1 1
 	schoolbook2
 	montgomery_reduction
 	movups PH, (%rdi)
