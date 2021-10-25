@@ -87,10 +87,12 @@ GSTAR		.req	v24
 		eor				PH.16b, PH.16b, Z.16b
 .endm
 
-.macro full_stride
+.macro full_stride reduce
+	.set reduce, \reduce
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
 	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
 	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
+	
 	ld1					{M0.16b}, [x0], #16
 	ld1					{M1.16b}, [x0], #16
 	ld1					{M2.16b}, [x0], #16
@@ -99,18 +101,46 @@ GSTAR		.req	v24
 	ld1					{M5.16b}, [x0], #16
 	ld1					{M6.16b}, [x0], #16
 	ld1					{M7.16b}, [x0], #16
-	eor					M0.16b, M0.16b, SUM.16b
-	karatsuba1 M0 KEY8
-	karatsuba1 M1 KEY7
-	karatsuba1 M2 KEY6
-	karatsuba1 M3 KEY5
-	karatsuba1 M4 KEY4
-	karatsuba1 M5 KEY3
-	karatsuba1 M6 KEY2
+
 	karatsuba1 M7 KEY1
+	.if(reduce)
+		pmull			T.1q, GSTAR.1d, PL.1d
+	.endif
+
+	karatsuba1 M6 KEY2
+	.if(reduce)
+		ext				T.16b, T.16b, T.16b, #8
+	.endif
+
+	karatsuba1 M5 KEY3
+	.if(reduce)
+		eor				PL.16b, PL.16b, T.16b
+	.endif
+
+	karatsuba1 M4 KEY4
+	.if(reduce)
+		pmull2			Z.1q, GSTAR.2d, PL.2d
+	.endif
+
+	karatsuba1 M3 KEY5
+	.if(reduce)
+		eor				Z.16b, PL.16b, Z.16b
+	.endif
+
+	karatsuba1 M2 KEY6
+	.if(reduce)
+		eor				PH.16b, PH.16b, Z.16b
+	.endif
+
+	karatsuba1 M1 KEY7
+	.if(reduce)
+		mov				SUM.16b, PH.16b
+	.endif
+	eor				M0.16b, M0.16b, SUM.16b
+
+	karatsuba1 M0 KEY8
+
 	karatsuba2
-	montgomery_reduction
-	mov					SUM.16b, PH.16b
 .endm
 
 .macro partial_stride
@@ -257,12 +287,19 @@ ENTRY(pmull_polyval)
 	ands				EXTRA_BYTES, x2, 0xf
 	lsr					BLOCKS_LEFT, BLOCKS_LEFT, #4
 	ld1					{SUM.16b}, [x4]
-.StrideLoop:
 	cmp					BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	blt					.StrideLoopExit
-	full_stride
+	full_stride 0
+	subs				BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
+.StrideLoop:
+	cmp					BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
+	blt					.StrideLoopExitReduce
+	full_stride 1
 	subs				BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	b					.StrideLoop
+.StrideLoopExitReduce:
+	montgomery_reduction
+	mov					SUM.16b, PH.16b
 .StrideLoopExit:
 	cmp					BLOCKS_LEFT, 0
 	bne					.DoPartial
