@@ -20,7 +20,7 @@ T			.req	v18
 Z			.req	v19
 C			.req	v20
 D			.req	v21
-E			.req	v22
+EF			.req	v22
 SUM			.req	v23
 GSTAR		.req	v24
 
@@ -70,25 +70,25 @@ var_a4	.req v3
 
 .macro karatsuba1_iteration i first
 	.set i, \i
-    .set first, \first
+	.set first, \first
 	setregs i
 	ld1				{var_a1.16b}, [OP1]
+	ld1				{var_a2.16b}, [OP2]
+	add				OP1, OP1, #16
+	add				OP2, OP2, #16
 	.if(i == 0 && first == 1)
 		eor			var_a1.16b, var_a1.16b, SUM.16b
 	.endif
-	ext				var_a2.16b, var_a1.16b, var_a1.16b, #8
-    add				OP1, OP1, #16
-	ld1				{var_a3.16b}, [OP2]
-	eor				var_a2.16b, var_a2.16b, var_a1.16b
-    add				OP2, OP2, #16
-	ext				var_a4.16b, var_a3.16b, var_a3.16b, #8
-	eor				var_a4.16b, var_a4.16b, var_a3.16b
-	pmull			var_a4.1q, var_a2.1d, var_a4.1d
-	pmull2			var_a2.1q, var_a1.2d, var_a3.2d
-	pmull			var_a1.1q, var_a1.1d, var_a3.1d
-	eor				E.16b, E.16b, var_a4.16b
-	eor				C.16b, C.16b, var_a2.16b
-	eor				D.16b, D.16b, var_a1.16b
+	
+	pmull var_a3.1q, var_a1.1d, var_a2.1d
+	pmull2 var_a4.1q, var_a1.2d, var_a2.2d
+	eor				C.16b, C.16b, var_a3.16b
+	eor				D.16b, D.16b, var_a4.16b
+	ext				var_a1.16b, var_a1.16b, var_a1.16b, #8
+	pmull var_a3.1q, var_a1.1d, var_a2.1d
+	pmull2 var_a4.1q, var_a1.2d, var_a2.2d
+	eor				EF.16b, EF.16b, var_a3.16b
+	eor				EF.16b, EF.16b, var_a4.16b
 .endm
 
 .macro karatsuba1 b first
@@ -107,28 +107,25 @@ var_a4	.req v3
  * Expects op1 in x0 and op2 in x2
  */
 .macro karatsuba1_noload
-		ext				v1.16b, v0.16b, v0.16b, #8
-		eor				v1.16b, v1.16b, v0.16b
-		ext				v3.16b, v2.16b, v2.16b, #8
-		eor				v3.16b, v3.16b, v2.16b
-		pmull			v3.1q, v1.1d, v3.1d
-		pmull2			v1.1q, v0.2d, v2.2d
-		pmull			v0.1q, v0.1d, v2.1d
-		eor				E.16b, E.16b, v3.16b
-		eor				C.16b, C.16b, v1.16b
-		eor				D.16b, D.16b, v0.16b
+	pmull v1.1q, v0.1d, v2.1d
+	pmull2 v3.1q, v0.2d, v2.2d
+	eor				C.16b, C.16b, v1.16b
+	eor				D.16b, D.16b, v3.16b
+	ext				v0.16b, v0.16b, v0.16b, #8
+	pmull v1.1q, v0.1d, v2.1d
+	pmull2 v3.1q, v0.2d, v2.2d
+	eor				EF.16b, EF.16b, v1.16b
+	eor				EF.16b, EF.16b, v3.16b
 .endm
 
 // TODO: Reduce instructions?
 .macro karatsuba2
-		ext				v4.16b, D.16b, C.16b, #8 // [C0 : D1] Verify this instruction?
-		eor				E.16b, E.16b, v4.16b //[E1 ^ C0 : E0 ^ D1]
-		eor				v4.16b, C.16b, D.16b //[C1 ^ D1 : C0 ^ D0]
-		eor				v4.16b, E.16b, v4.16b //[C0 ^ C1 ^ D1 ^ E1 : D1 ^ C0 ^ D0 ^ E0]
-		ext				C.16b, C.16b, C.16b, #8 // [C0 : C1] Verify this instruction?
-		ext				D.16b, D.16b, D.16b, #8 // [D0 : D1] Verify this instruction?
-		ext				PH.16b, v4.16b, C.16b, #8 //[C1 : C1 ^ D1 ^ E1 ^ C0]
-		ext				PL.16b, D.16b, v4.16b, #8 //[D1 ^ C0 ^ D0 ^ E0 : D0]
+	mov PL.d[0], xzr
+	mov PH.d[1], xzr
+	mov PL.d[1], EF.d[0]
+	mov PH.d[0], EF.d[1]
+	eor PL.16b, PL.16b, C.16b
+	eor PH.16b, PH.16b, D.16b
 .endm
 
 .macro montgomery_reduction
@@ -143,7 +140,7 @@ var_a4	.req v3
 .macro full_stride
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
 	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
-	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
+	eor					EF.16b, EF.16b, EF.16b // Check if there's a faster zeroing method
 	mov					OP1, x0
 	mov					OP2, x1
 	mov					IDX, XZR
@@ -189,7 +186,7 @@ var_a4	.req v3
 .macro partial_stride
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
 	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
-	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
+	eor					EF.16b, EF.16b, EF.16b // Check if there's a faster zeroing method
 	mov					TMP, BLOCKS_LEFT
 	cmp					EXTRA_BYTES, #0
 	csinc				TMP, TMP, TMP, eq
@@ -204,7 +201,7 @@ var_a4	.req v3
 	mov					SUM.16b, PH.16b
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
 	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
-	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
+	eor					EF.16b, EF.16b, EF.16b // Check if there's a faster zeroing method
 	mov					OP1, x0
 	mov					IDX, XZR
 .LoopPartial:
@@ -262,7 +259,7 @@ ENTRY(pmull_polyval_mul)
 	ld1					{GSTAR.2d}, [TMP]
 	eor					C.16b, C.16b, C.16b // Check if there's a faster zeroing method
 	eor					D.16b, D.16b, D.16b // Check if there's a faster zeroing method
-	eor					E.16b, E.16b, E.16b // Check if there's a faster zeroing method
+	eor					EF.16b, EF.16b, EF.16b // Check if there's a faster zeroing method
 	mov					OP1, x0
 	mov					OP2, x1
 	karatsuba1 1 0
