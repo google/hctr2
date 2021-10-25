@@ -124,7 +124,7 @@ AES_FUNC_END(aes_ecb_decrypt)
 	
     /*
 	 * aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
-	 *		   int bytes, u8 const ctr[])
+	 *		   int bytes, u8 const ctr[], u8 finalbuf[])
 	 */
 
 AES_FUNC_START(aes_xctr_encrypt)
@@ -155,7 +155,7 @@ ST5(	mov		v4.16b, vctr.16b		)
 	ins		v0.d[0], x7
 	add		x7, x11, #1
 	add		x8, x11, #2
-    eor		x7, x7, x12
+	eor		x7, x7, x12
 	add		x9, x11, #3
 	mov		v1.d[0], x7
 	eor		x8, x8, x12
@@ -193,28 +193,31 @@ ST5(add		x11, x11, #5)
 	ands		x13, x4, #0xf
 	csel		x13, x13, x17, ne
 
-ST5(	cmp		w4, #64 - (MAX_STRIDE << 4)	)
+ST5(	cmp		w4, #64 - (MAX_STRIDE << 4))
 ST5(	csel		x14, x17, xzr, gt		)
+ST5(	csel		x10, x10, x9, gt		)
 	cmp		w4, #48 - (MAX_STRIDE << 4)
 	csel		x15, x17, xzr, gt
+ST5(	csel		x10, x10, x8, gt		)
 	cmp		w4, #32 - (MAX_STRIDE << 4)
 	csel		x16, x17, xzr, gt
+ST5(	csel		x10, x10, x7, gt		)
 	cmp		w4, #16 - (MAX_STRIDE << 4)
-	csel		x17, x17, xzr, gt
-	cmp		w4, #16 - (MAX_STRIDE << 4)
-	blt		.Lxctrout
+	ble		.Lxctrtail1x
+
+ST5(	mov		v4.d[0], x10			)
 
 	adr		x12, .Lcts_permute_table
 	add		x12, x12, x13
 
-ST5(	ld1		{v5.16b}, [x1], x17		)
-	ld1		{v6.16b}, [x1], x16
-	ld1		{v7.16b}, [x1], x15
+ST5(	ld1		{v5.16b}, [x1], x16		)
+	ld1		{v6.16b}, [x1], x15
+	ld1		{v7.16b}, [x1], x14
 
 ST4(	bl		aes_encrypt_block4x		)
 ST5(	bl		aes_encrypt_block5x		)
 
-	ld1		{v8.16b}, [x1], x14
+	ld1		{v8.16b}, [x1], x13
 	ld1		{v9.16b}, [x1]
 	ld1		{v10.16b}, [x12]
 
@@ -231,25 +234,36 @@ ST5(	eor		v7.16b, v7.16b, v2.16b		)
 ST5(	eor		v8.16b, v8.16b, v3.16b		)
 ST5(	eor		v9.16b, v9.16b, v4.16b		)
 
-		add		x16, x16, x17
-		add		x15, x15, x16
-ST5(		add		x14, x14, x15	)
+	add		x15, x15, x16
+ST5(	add		x14, x14, x15			)
+ST5(	add		x13, x13, x14			)
+ST4(	add		x13, x13, x15			)
 
-    add		x17, x17, x0
-    add		x16, x16, x0
-    add		x15, x15, x0
-ST5(    add		x14, x14, x0	)
+	add		x16, x16, x0
+	add		x15, x15, x0
+ST5(	add		x14, x14, x0			)
+	add		x13, x13, x0
 
-ST5(	st1		{v9.16b}, [x14])
-ST5(	st1		{v8.16b}, [x15])
-ST5(	st1		{v7.16b}, [x16])
-ST5(	st1		{v6.16b}, [x17])
+ST5(	st1		{v9.16b}, [x13])
+ST5(	st1		{v8.16b}, [x14])
+ST5(	st1		{v7.16b}, [x15])
+ST5(	st1		{v6.16b}, [x16])
 ST5(	st1		{v5.16b}, [x0])
 
 ST4(	st1		{v9.16b}, [x15])
 ST4(	st1		{v8.16b}, [x16])
 ST4(	st1		{v7.16b}, [x17])
 ST4(	st1		{v6.16b}, [x0])
+	b		.Lxctrout
+
+.Lxctrtail1x:
+	csel		x0, x0, x6, eq		// use finalbuf if less than a full block
+	csel		x1, x1, x6, eq		// use finalbuf if less than a full block
+	ld1		{v5.16b}, [x1]
+ST5(	mov		v3.16b, v0.16b			)
+	encrypt_block	v3, w3, x2, x8, w7
+	eor		v5.16b, v5.16b, v3.16b
+	st1		{v5.16b}, [x0]
 	b		.Lxctrout
 AES_FUNC_END(aes_xctr_encrypt)
 
