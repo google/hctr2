@@ -14,15 +14,15 @@ EXTRA_BYTES	.req	x11 // Ensure caller saved, maybe switch
 IDX			.req	x12 // Ensure caller saved, maybe switch
 TMP			.req	x13 // Ensure caller saved, maybe switch
 
-PL			.req	v0
-PH			.req	v1
-T			.req	v2
-Z			.req	v3
-C			.req	v27
-D			.req	v28
-E			.req	v29
-SUM			.req	v30
-GSTAR		.req	v31
+PL			.req	v16
+PH			.req	v17
+T			.req	v18
+Z			.req	v19
+C			.req	v20
+D			.req	v21
+E			.req	v22
+SUM			.req	v23
+GSTAR		.req	v24
 
 	.text
 	.align		4
@@ -66,18 +66,29 @@ var_a4	.req v3
 		var_a3	.req v14
 		var_a4	.req v15
 	.endif
-	.if \n == 4
-		var_a1	.req v16
-		var_a2	.req v17
-		var_a3	.req v18
-		var_a4	.req v19
+.endm
+
+.macro karatsuba1_iteration i first
+	.set i, \i
+    .set first, \first
+	setregs i
+	ld1				{var_a1.16b}, [OP1]
+	.if(i == 0 && first == 1)
+		eor			var_a1.16b, var_a1.16b, SUM.16b
 	.endif
-	.if \n == 5
-		var_a1	.req v20
-		var_a2	.req v21
-		var_a3	.req v22
-		var_a4	.req v23
-	.endif
+	ext				var_a2.16b, var_a1.16b, var_a1.16b, #8
+    add				OP1, OP1, #16
+	ld1				{var_a3.16b}, [OP2]
+	eor				var_a2.16b, var_a2.16b, var_a1.16b
+    add				OP2, OP2, #16
+	ext				var_a4.16b, var_a3.16b, var_a3.16b, #8
+	eor				var_a4.16b, var_a4.16b, var_a3.16b
+	pmull			var_a4.1q, var_a2.1d, var_a4.1d
+	pmull2			var_a2.1q, var_a1.2d, var_a3.2d
+	pmull			var_a1.1q, var_a1.1d, var_a3.1d
+	eor				E.16b, E.16b, var_a4.16b
+	eor				C.16b, C.16b, var_a2.16b
+	eor				D.16b, D.16b, var_a1.16b
 .endm
 
 .macro karatsuba1 b first
@@ -86,54 +97,7 @@ var_a4	.req v3
 
 	.set i, 0
 	.rept (by)
-		setregs i
-		ld1				{var_a1.16b}, [OP1]
-		.if(i == 0 && first == 1)
-			eor			var_a1.16b, var_a1.16b, SUM.16b
-		.endif
-		ext				var_a2.16b, var_a1.16b, var_a1.16b, #8
-        add				OP1, OP1, #16
-		.set i, (i +1)
-	.endr
-
-	.set i, 0
-	.rept (by)
-		setregs i
-		ld1				{var_a3.16b}, [OP2]
-		eor				var_a2.16b, var_a2.16b, var_a1.16b
-        add				OP2, OP2, #16
-		.set i, (i +1)
-	.endr
-	
-    .set i, 0
-	.rept (by)
-		setregs i
-		ext				var_a4.16b, var_a3.16b, var_a3.16b, #8
-		.set i, (i +1)
-	.endr
-
-    .set i, 0
-	.rept (by)
-		setregs i
-		eor				var_a4.16b, var_a4.16b, var_a3.16b
-		.set i, (i +1)
-	.endr
-
-    .set i, 0
-	.rept (by)
-		setregs i
-		pmull			var_a4.1q, var_a2.1d, var_a4.1d
-		pmull2			var_a2.1q, var_a1.2d, var_a3.2d
-		pmull			var_a1.1q, var_a1.1d, var_a3.1d
-		.set i, (i +1)
-	.endr
-	
-    .set i, 0
-	.rept (by)
-		setregs i
-		eor				E.16b, E.16b, var_a4.16b
-		eor				C.16b, C.16b, var_a2.16b
-		eor				D.16b, D.16b, var_a1.16b
+		karatsuba1_iteration i first
 		.set i, (i +1)
 	.endr
 .endm
