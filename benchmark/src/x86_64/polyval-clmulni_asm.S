@@ -10,11 +10,11 @@
 
 .align 16
 
-#define PL %xmm0
-#define PH %xmm1
-#define T %xmm2
-#define Z %xmm3
-#define GSTAR %xmm4
+#define GSTAR %xmm7
+#define PL %xmm8
+#define PH %xmm9
+#define T %xmm10
+#define Z %xmm11
 #define C %xmm12
 #define D %xmm13
 #define EF %xmm14
@@ -29,23 +29,6 @@
 
 Lgstar:
 	.quad 0xc200000000000000, 0xc200000000000000
-
-/* generate a unique variable for xmm register */
-.macro club_internal name, n
-	\name = %xmm\n
-.endm
-
-/* club the numeric 'id' to the symbol 'name' */
-
-.macro club id
-.altmacro
-	club_internal var_a1 %(\id*4)
-	club_internal var_a2 %(\id*4+1)
-	club_internal var_a3 %(\id*4+2)
-	club_internal var_a4 %(\id*4+3)
-.noaltmacro
-.endm
-
 
 .text
 
@@ -65,21 +48,26 @@ Lgstar:
 	.set first, \first
 	.set i, 0
 	.rept (by)
-		club i
-		movups (16*i)(OP1), %xmm0
-		.if(i == 0 && first == 1)
-			pxor SUM, %xmm0
-		.endif
-		vpclmulqdq $0x01, (16*i)(OP2), %xmm0, %xmm1
-		vpxor %xmm1, EF, EF
-		vpclmulqdq $0x00, (16*i)(OP2), %xmm0, %xmm2
-		vpxor %xmm2, C, C
-		vpclmulqdq $0x11, (16*i)(OP2), %xmm0, %xmm3
-		vpxor %xmm3, D, D
-		vpclmulqdq $0x10, (16*i)(OP2), %xmm0, %xmm4
-		vpxor %xmm4, EF, EF
+		schoolbook1_iteration i first
 		.set i, (i +1)
 	.endr
+.endm
+
+.macro schoolbook1_iteration i first
+	.set first, \first
+	.set i, \i
+	movups (16*i)(OP1), %xmm0
+	.if(i == 0 && first == 1)
+		pxor SUM, %xmm0
+	.endif
+	vpclmulqdq $0x01, (16*i)(OP2), %xmm0, %xmm1
+	vpxor %xmm1, EF, EF
+	vpclmulqdq $0x00, (16*i)(OP2), %xmm0, %xmm2
+	vpxor %xmm2, C, C
+	vpclmulqdq $0x11, (16*i)(OP2), %xmm0, %xmm3
+	vpxor %xmm3, D, D
+	vpclmulqdq $0x10, (16*i)(OP2), %xmm0, %xmm4
+	vpxor %xmm4, EF, EF
 .endm
 
 /*
@@ -121,7 +109,6 @@ Lgstar:
  * All other xmm registers are preserved.
  */
 .macro montgomery_reduction
-	vmovdqa Lgstar(%rip), GSTAR
 	movdqa PL, T
 	pclmulqdq $0x00, GSTAR, T # T = [X0 * g*(x)]
 	pshufd $0b01001110, T, Z # Z = [T0 : T1]
@@ -132,59 +119,64 @@ Lgstar:
 .endm
 
 /*
- * Compute poly on window size of NUM_PRECOMPUTE_KEYS blocks
- * Poly = M_0h^N + ... + M_{n-1}h^1 (no constant term)
+ * Compute schoolbook multiplication for 8 blocks
+ * (M_0h + REDUCE(PL, PH))h^8 + ... + M_{7}h^1 (no constant term)
+ *
+ * Sets PL, PH
+ * Clobbers C, D, E
+ *
+ * If reduce is set, computes the montgomery reduction of the
+ * previous full_stride call and XORs the reduced polynomial with
+ * M_0 before multiplying by h^8.
  */
-.macro full_stride
+.macro full_stride reduce
+	.set reduce, \reduce
+	mov %rsi, OP2
 	pxor C, C
 	pxor D, D
 	pxor EF, EF
-	mov %rsi, OP2
-    schoolbook1 4 1
-	addq $(4*16), OP1
-	addq $(4*16), OP2
-	xor IDX, IDX
-.Loop:
-	cmpq $(NUM_PRECOMPUTE_KEYS-4), IDX
-	jae .LoopExit
-	
-	movq $(NUM_PRECOMPUTE_KEYS-4), TMP
-	subq IDX, TMP
 
-	cmp $4, TMP # TMP < 4 ?
-	jl .lt4
-	schoolbook1 4 0
-	addq $4, IDX
-	addq $(4*16), OP1
-	addq $(4*16), OP2
-	jmp .out
-.lt4:
-	cmp $3, TMP # TMP < 3 ?
-	jl .lt3
-	schoolbook1 3 0
-	addq $3, IDX
-	addq $(3*16), OP1
-	addq $(3*16), OP2
-	jmp .out
-.lt3:
-	cmp $2, TMP # TMP < 2 ?
-	jl .lt2
-	schoolbook1 2 0
-	addq $2, IDX
-	addq $(2*16), OP1
-	addq $(2*16), OP2
-	jmp .out
-.lt2:
-	schoolbook1 1 0 # TMP < 1 ?
-	addq $1, IDX
-	addq $(1*16), OP1
-	addq $(1*16), OP2
-.out:
-	jmp .Loop
-.LoopExit:
+	schoolbook1_iteration 7 1
+	.if(reduce)
+		movdqa PL, T
+	.endif
+
+	schoolbook1_iteration 6 1
+	.if(reduce)
+		pclmulqdq $0x00, GSTAR, T # T = [X0 * g*(x)]
+	.endif
+
+	schoolbook1_iteration 5 1
+	.if(reduce)
+		pshufd $0b01001110, T, Z # Z = [T0 : T1]
+	.endif
+
+	schoolbook1_iteration 4 1
+	.if(reduce)
+		pxor Z, PL # PL = [X1 ^ T0 : X0 ^ T1]
+	.endif
+
+	schoolbook1_iteration 3 1
+	.if(reduce)
+		pxor PL, PH # PH = [X1 ^ T0 ^ X3 : X0 ^ T1 ^ X2]
+	.endif
+
+	schoolbook1_iteration 2 1
+	.if(reduce)
+		pclmulqdq $0x11, GSTAR, PL # PL = [X1 ^ T0 * g*(x)]
+	.endif
+
+	schoolbook1_iteration 1 1
+	.if(reduce)
+		pxor PL, PH
+		movdqa PH, SUM
+	.endif
+
+	schoolbook1_iteration 0 1
+
+	addq $(8*16), OP1
+	addq $(8*16), OP2
 	schoolbook2
-	montgomery_reduction
-	movdqa PH, SUM
 .endm
 
 /*
@@ -273,6 +265,7 @@ Lgstar:
  */
 ENTRY(clmul_polyval_mul)
 	FRAME_BEGIN
+	vmovdqa Lgstar(%rip), GSTAR
 	pxor C, C
 	pxor D, D
 	pxor EF, EF
@@ -301,16 +294,24 @@ ENDPROC(clmul_polyval_mul)
  */
 ENTRY(clmul_polyval)
 	FRAME_BEGIN
+	vmovdqa Lgstar(%rip), GSTAR
 	movq $0x0f, EXTRA_BYTES
 	andq BLOCKS_LEFT, EXTRA_BYTES
 	shr $4, BLOCKS_LEFT
 	movups (%r8), SUM
-.StrideLoop:
 	cmpq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
 	jb .StrideLoopExit
-	full_stride
+	full_stride 0
+	subq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
+.StrideLoop:
+	cmpq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
+	jb .StrideLoopExitReduce
+	full_stride 1
 	subq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
 	jmp .StrideLoop
+.StrideLoopExitReduce:
+	montgomery_reduction
+	movdqa PH, SUM
 .StrideLoopExit:
 	test BLOCKS_LEFT, BLOCKS_LEFT
 	jne .DoPartial

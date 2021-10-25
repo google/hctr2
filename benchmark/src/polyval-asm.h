@@ -10,4 +10,4 @@
  * This header is included in both C and assembly code.
  */
 
-#define NUM_PRECOMPUTE_KEYS 16
+#define NUM_PRECOMPUTE_KEYS 8
