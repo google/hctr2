@@ -1,4 +1,4 @@
-# Adiantum benchmark suite
+# HCTR2 benchmark suite
 
 This is the software we used to generate the benchmarks in our paper.
 
