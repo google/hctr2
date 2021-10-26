@@ -14,7 +14,7 @@ configure_file(output : 'cbconfig.h', configuration : conf_data)
 include_dirs = [
     include_directories('.'),
     include_directories('src'),
-    include_directories('../test_vectors/converted/c'),
+    include_directories('../test_vectors/converted/cstruct'),
     include_directories('../third_party/linux-kernel')
 ]
 add_project_arguments('-O2', '-Wall', '-Wno-pointer-sign', '-fno-strict-aliasing', language : 'c')
@@ -24,23 +24,22 @@ src = [
     'src/cipherbench.c',
     'src/hctr2.c',
     'src/hctr2-xctr.c',
-    'src/hctr2-hash.c',
+    'src/polyval.c',
     'src/xts.c',
-    'src/insn_timing.c',
     '../third_party/linux-kernel/aes_ti.c',
     '../third_party/linux-kernel/gf128.c',
-    '../test_vectors/converted/c/hctr2_testvecs.c',
+    '../test_vectors/converted/cstruct/hctr2_testvecs.c',
 ]
 
 if host_machine.cpu_family() == 'aarch64'
     src += [
-        'src/aarch64/hctr2-polyval-pmull_asm.S',
+        'src/aarch64/polyval-pmull_asm.S',
         '../third_party/linux-kernel/aarch64/aes-ce.S',
     ]
 endif
 if host_machine.cpu_family() == 'x86_64'
     src += [
-	    'src/x86_64/hctr2-polyval-clmulni_asm.S',
+	    'src/x86_64/polyval-clmulni_asm.S',
         '../third_party/linux-kernel/x86_64/aes_xctr.S',
         '../third_party/linux-kernel/x86_64/aesni-intel_asm.S',
     ]

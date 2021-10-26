@@ -233,21 +233,6 @@ typedef struct {
 	u64 lo, hi;
 } ble128;
 
-static inline void ble128_xor(ble128 *dst, const ble128 *src)
-{
-	dst->lo ^= src->lo;
-	dst->hi ^= src->hi;
-}
-
-static inline void __gf128mul_x_ble(ble128 *x)
-{
-	u64 lo = x->lo;
-	u64 hi = x->hi;
-
-	x->lo = (lo << 1) ^ ((hi & (1ULL << 63)) ? 0x87 : 0);
-	x->hi = (hi << 1) | (lo >> 63);
-}
-
 typedef union {
 	struct {
 		__le64 b;
@@ -282,28 +267,6 @@ static inline void be128_xor(be128 *r, const be128 *p, const be128 *q)
 {
 	r->a = p->a ^ q->a;
 	r->b = p->b ^ q->b;
-}
-
-/* Addition in Z/(2^{128}Z) */
-static inline void le128_add(le128 *r, const le128 *v1, const le128 *v2)
-{
-	u64 x = le64_to_cpu(v1->b);
-	u64 y = le64_to_cpu(v2->b);
-
-	r->b = cpu_to_le64(x + y);
-	r->a = cpu_to_le64(le64_to_cpu(v1->a) + le64_to_cpu(v2->a)
-			   + (x + y < x));
-}
-
-/* Subtraction in Z/(2^{128}Z) */
-static inline void le128_sub(le128 *r, const le128 *v1, const le128 *v2)
-{
-	u64 x = le64_to_cpu(v1->b);
-	u64 y = le64_to_cpu(v2->b);
-
-	r->b = cpu_to_le64(x - y);
-	r->a = cpu_to_le64(le64_to_cpu(v1->a) - le64_to_cpu(v2->a)
-			   - (x - y > x));
 }
 
 static inline void xor(void *a, const void *b, const void *c, size_t len)

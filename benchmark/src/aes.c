@@ -21,33 +21,14 @@
  * For the portable implementation, we use aes_ti.c from Linux.  This is a
  * staightforward AES implementation that uses the 256-byte S-box and 256-byte
  * inverse S-box.  Each is prefetched before use.
- *
- * For 32-bit ARM: for AES-XTS we use the NEON bit-sliced implementation from
- * Linux; this is fastest and also constant-time.  For single blocks, we use the
- * ARM scalar AES cipher from Linux, which uses a 1024-byte table for
- * encryption, and a 1024-byte and a 256-byte table for decryption.  Even after
- * prefetching these tables, this implementation is much faster than aes_ti.c.
- * The 1024-byte tables combine the SubBytes (or InvSubBytes) and MixColumns (or
- * InvMixColumns) steps.  Normally 4096-byte tables would be needed for this,
- * but since rotations are "free" in ARM assembly only the first part is needed.
  */
 
-static void aes_setkey(struct aes_ctx *ctx, const u8 *key, int key_len)
+void aes_setkey(struct aes_ctx *ctx, const u8 *key, int key_len)
 {
 	int err;
 
 	err = aesti_set_key(&ctx->aes_ctx, key, key_len);
 	ASSERT(err == 0);
-}
-
-void aes128_setkey(struct aes_ctx *ctx, const u8 *key)
-{
-	aes_setkey(ctx, key, AES_KEYSIZE_128);
-}
-
-void aes256_setkey(struct aes_ctx *ctx, const u8 *key)
-{
-	aes_setkey(ctx, key, AES_KEYSIZE_256);
 }
 
 void aes_encrypt_generic(const struct aes_ctx *ctx, u8 *out, const u8 *in)
@@ -69,6 +50,9 @@ void aes_encrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
 	int rounds = 6 + ctx->aes_ctx.key_length / 4;
 	ce_aes_ecb_encrypt(out, in, (u8 *)ctx->aes_ctx.key_enc, rounds, 1);
 #endif
+#if !defined(__x86_64__) && !defined(__aarch64__)
+    #error Unsupported architecture.
+#endif
 }
 
 void aes_decrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
@@ -79,6 +63,9 @@ void aes_decrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
 #ifdef __aarch64__
 	int rounds = 6 + ctx->aes_ctx.key_length / 4;
 	ce_aes_ecb_decrypt(out, in, (u8 *)ctx->aes_ctx.key_dec, rounds, 1);
+#endif
+#if !defined(__x86_64__) && !defined(__aarch64__)
+    #error Unsupported architecture.
 #endif
 }
 
