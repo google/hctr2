@@ -125,8 +125,7 @@ Lgstar:
  * Clobbers C, D, E
  *
  * If reduce is set, computes the montgomery reduction of the
- * previous full_stride call and XORs the reduced polynomial with
- * M_0 before multiplying by h^8.
+ * previous full_stride call.
  */
 .macro full_stride reduce
 	.set reduce, \reduce
@@ -259,6 +258,8 @@ Lgstar:
  * Perform montgomery multiplication in GF128 and store result in op1.
  *
  * Computes op1*op2*x^{-128} mod x^128 + x^127 + x^126 + x^121 + 1
+ * If op1, op2 are in montgomery form,  this computes the montgomery
+ * form of op1*op2.
  *
  * void clmul_polyval_mul(u128* op1, const u128* op2);
  */

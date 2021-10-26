@@ -49,6 +49,13 @@ GSTAR	.req	v24
 .Lgstar:
 	.quad	0xc200000000000000, 0xc200000000000000
 
+/*
+ * Computes the first step of Karatsuba multiplication of
+ * registers X, Y.
+ *
+ * Updates C, D, E
+ * Clobbers v25, v26, X, Y
+ */
 .macro karatsuba1 X Y
 	X .req \X
 	Y .req \Y
@@ -66,18 +73,32 @@ GSTAR	.req	v24
 	.unreq Y
 .endm
 
-// TODO: Reduce instructions?
+/*
+ * Computes the 256-bit polynomial represented by C, D, E.
+ * Stores this polynomial in PH, PL.
+ *
+ * Sets PH, PL
+ * Clobbers C, D, E, v4
+ */
 .macro karatsuba2
-	ext	v4.16b, D.16b, C.16b, #8 // [C0 : D1] Verify this instruction?
+	ext	v4.16b, D.16b, C.16b, #8
 	eor	E.16b, E.16b, v4.16b //[E1 ^ C0 : E0 ^ D1]
 	eor	v4.16b, C.16b, D.16b //[C1 ^ D1 : C0 ^ D0]
 	eor	v4.16b, E.16b, v4.16b //[C0 ^ C1 ^ D1 ^ E1 : D1 ^ C0 ^ D0 ^ E0]
-	ext	C.16b, C.16b, C.16b, #8 // [C0 : C1] Verify this instruction?
-	ext	D.16b, D.16b, D.16b, #8 // [D0 : D1] Verify this instruction?
+	ext	C.16b, C.16b, C.16b, #8 // [C0 : C1]
+	ext	D.16b, D.16b, D.16b, #8 // [D0 : D1]
 	ext	PH.16b, v4.16b, C.16b, #8 //[C1 : C1 ^ D1 ^ E1 ^ C0]
 	ext	PL.16b, D.16b, v4.16b, #8 //[D1 ^ C0 ^ D0 ^ E0 : D0]
 .endm
 
+/*
+ * Perform montgomery reduction of the polynomial
+ * represented by PH, PL. Stores the reduced polynomial
+ * in PH.
+ *
+ * Sets PH
+ * Clobbers T, Z, PL
+ */
 .macro montgomery_reduction
 	pmull	T.1q, GSTAR.1d, PL.1d
 	ext	T.16b, T.16b, T.16b, #8
@@ -87,11 +108,19 @@ GSTAR	.req	v24
 	eor	PH.16b, PH.16b, Z.16b
 .endm
 
+/*
+ * Compute Polyval on 8 blocks.
+ *
+ * If reduce is set, performs interleaved montgomery reduction
+ * on the last full_stride iteration's PL, PH.
+ *
+ * Sets PL, PH.
+ */
 .macro full_stride reduce
 	.set reduce, \reduce
-	eor		C.16b, C.16b, C.16b // Check if there's a faster zeroing method
-	eor		D.16b, D.16b, D.16b // Check if there's a faster zeroing method
-	eor		E.16b, E.16b, E.16b // Check if there's a faster zeroing method
+	eor		C.16b, C.16b, C.16b
+	eor		D.16b, D.16b, D.16b
+	eor		E.16b, E.16b, E.16b
 	
 	ld1		{M0.16b}, [x0], #16
 	ld1		{M1.16b}, [x0], #16
@@ -143,10 +172,14 @@ GSTAR	.req	v24
 	karatsuba2
 .endm
 
+/*
+ * Handle any leftover blocks after
+ * full_stride loop.
+ */
 .macro partial_stride
-	eor		C.16b, C.16b, C.16b // Check if there's a faster zeroing method
-	eor		D.16b, D.16b, D.16b // Check if there's a faster zeroing method
-	eor		E.16b, E.16b, E.16b // Check if there's a faster zeroing method
+	eor		C.16b, C.16b, C.16b
+	eor		D.16b, D.16b, D.16b
+	eor		E.16b, E.16b, E.16b
 	mov		TMP, BLOCKS_LEFT
 	cmp		EXTRA_BYTES, #0
 	csinc	TMP, TMP, TMP, eq
@@ -159,9 +192,9 @@ GSTAR	.req	v24
 	karatsuba2
 	montgomery_reduction
 	mov		SUM.16b, PH.16b
-	eor		C.16b, C.16b, C.16b // Check if there's a faster zeroing method
-	eor		D.16b, D.16b, D.16b // Check if there's a faster zeroing method
-	eor		E.16b, E.16b, E.16b // Check if there's a faster zeroing method
+	eor		C.16b, C.16b, C.16b
+	eor		D.16b, D.16b, D.16b
+	eor		E.16b, E.16b, E.16b
 	mov		IDX, XZR
 .LoopPartial:
 	cmp	IDX, BLOCKS_LEFT
@@ -240,15 +273,17 @@ GSTAR	.req	v24
  * Perform montgomery multiplication in GF128 and store result in op1.
  *
  * Computes op1*op2*x^{-128} mod x^128 + x^127 + x^126 + x^121 + 1
+ * If op1, op2 are in montgomery form,  this computes the montgomery
+ * form of op1*op2.
  *
  * void pmull_polyval_mul(u128* op1, const u128* op2);
  */
 ENTRY(pmull_polyval_mul)
 	adr		TMP, .Lgstar
 	ld1		{GSTAR.2d}, [TMP]
-	eor		C.16b, C.16b, C.16b // Check if there's a faster zeroing method
-	eor		D.16b, D.16b, D.16b // Check if there's a faster zeroing method
-	eor		E.16b, E.16b, E.16b // Check if there's a faster zeroing method
+	eor		C.16b, C.16b, C.16b
+	eor		D.16b, D.16b, D.16b
+	eor		E.16b, E.16b, E.16b
 	ld1		{v0.16b}, [x0]
 	ld1		{v1.16b}, [x1]
 	karatsuba1 v0 v1
