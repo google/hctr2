@@ -91,25 +91,25 @@ def make_tvfile(p):
         yield tvf
 
 
-def cipher_entries(args, cipher):
-    tv_store = tvstore.TvStore(args.test_vectors)
+def cipher_entries(tvdir, cipher):
+    if any(True for s in cipher.external_testvectors(tvdir)):
+        yield (f'{cipher.name().lower()}_external',
+               cipher.external_testvectors(tvdir))
+    tv_store = tvstore.TvStore(tvdir)
     for v in cipher.variants():
         cipher.variant = v
         yield f'{cipher.variant_name().lower()}', tv_store.iter_read(cipher)
-    if any(True for s in cipher.external_testvectors(args.test_vectors)):
-        yield (f'{cipher.name().lower()}_external',
-               cipher.external_testvectors(args.test_vectors))
 
 
-def convert(args, cipher):
-    targetdir = args.test_vectors / "converted" / "cstruct"
+def convert(tvdir, cipher):
+    targetdir = tvdir / "converted" / "cstruct"
     struct_name = f'{cipher.name().lower()}_testvec'
     basename = f"{cipher.name().lower()}_testvecs"
     target = targetdir / f"{basename}.c"
     entries = []
     with make_tvfile(target) as tvf:
         tvf.include(basename)
-        for array_name, it in cipher_entries(args, cipher):
+        for array_name, it in cipher_entries(tvdir, cipher):
             array_name = f'{array_name}_tv'
             print(f"Converting: {array_name}")
             tvf.structs(struct_name, array_name,
@@ -130,8 +130,8 @@ def convert(args, cipher):
             tvf.write(f'extern const size_t {e}_count;\n')
 
 
-def convert_linux(args, cipher):
-    targetdir = args.test_vectors / "converted" / "linux"
+def convert_linux(tvdir, cipher):
+    targetdir = tvdir / "converted" / "linux"
     struct_name = cipher.linux_testvec_struct()
     basename = f"{cipher.name().lower()}_testvecs"
     target = targetdir / f"{basename}.c"
@@ -139,7 +139,7 @@ def convert_linux(args, cipher):
     with make_tvfile(target) as tvf:
         tvf.include(basename)
         tvf.write('\n')
-        for array_name, it in cipher_entries(args, cipher):
+        for array_name, it in cipher_entries(tvdir, cipher):
             array_name = f'{array_name}_tv_template'
             print(f"Converting: {array_name}")
             tvf.write_linux_testvecs(struct_name, array_name,

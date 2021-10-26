@@ -34,11 +34,11 @@ def print_external(args, cipher):
 
 
 def convert_cstruct(args, cipher):
-    writers.cstruct.convert(args, cipher)
+    writers.cstruct.convert(args.test_vectors, cipher)
 
 
 def convert_linux(args, cipher):
-    writers.cstruct.convert_linux(args, cipher)
+    writers.cstruct.convert_linux(args.test_vectors, cipher)
 
 
 def parse_args():
