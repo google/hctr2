@@ -8,6 +8,28 @@
 #include "gf128.h"
 #include "polyval.h"
 
+#ifdef __x86_64__
+asmlinkage void clmul_polyval(const u8 *in,
+				    const struct polyval_key *keys,
+				    uint64_t nbytes, const u128 *final,
+				    u128 *accumulator);
+asmlinkage void clmul_polyval_mul(u128 *op1, const u128 *op2);
+#define POLYVAL clmul_polyval
+#define MUL clmul_polyval_mul
+#endif
+#ifdef __aarch64__
+asmlinkage void pmull_polyval(const u8 *in,
+				    const struct polyval_key *keys,
+				    uint64_t nbytes, const u128 *final,
+				    u128 *accumulator);
+asmlinkage void pmull_polyval_mul(u128 *op1, const u128 *op2);
+#define POLYVAL pmull_polyval
+#define MUL pmull_polyval_mul
+#endif
+#if !defined(__x86_64__) && !defined(__aarch64__)
+    #error Unsupported architecture.
+#endif
+
 /*
  * Used to convert "GHASH-like" multiplication into "POLYVAL-like".
  * See https://datatracker.ietf.org/doc/html/rfc8452 for more detail.
