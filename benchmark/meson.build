@@ -7,7 +7,6 @@
 project('cipherbench', 'c')
 
 conf_data = configuration_data()
-conf_data.set10('KERNELISH', get_option('kernelish'))
 conf_data.set10('SYMBOLS_HAVE_UNDERSCORE_PREFIX',
     meson.get_compiler('c').symbols_have_underscore_prefix())
 configure_file(output : 'cbconfig.h', configuration : conf_data)

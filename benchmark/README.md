@@ -73,4 +73,4 @@ Ensure you get host builds working first.
 * `src/x86_64/`: x86_64 assembly
 * `testvectors/`: Test vectors for HCTR2 as C header files
 * `../third_party/`: dependencies under the GPLv2 license, not MIT.
-* `meson_options.txt`, `meson.build`: Meson build control files.
+* `meson.build`: Meson build control files
