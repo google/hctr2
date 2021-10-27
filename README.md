@@ -16,7 +16,7 @@ HCTR2 is a tweakable super-pseudorandom permutation: any change to the
 plaintext will result in an unrecognizably different ciphertext
 and vice versa.
 
-For more information, see the HCTR2 paper.
+For more information, see the [HCTR2 paper](https://ia.cr/2021/1441).
 
 ## File layout
 
