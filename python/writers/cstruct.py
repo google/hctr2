@@ -5,7 +5,6 @@
 # https://opensource.org/licenses/MIT.
 
 import contextlib
-import itertools
 
 import tvstore
 
@@ -93,12 +92,10 @@ def make_tvfile(p):
         yield tvf
 
 
-def cipher_entries(tvdir, cipher):
+def testvectors(tvdir, cipher):
+    yield from cipher.external_testvectors(tvdir)
     tv_store = tvstore.TvStore(tvdir)
-    for v in cipher.variants():
-        cipher.variant = v
-        yield f'{cipher.variant_name().lower()}', itertools.chain(
-                cipher.external_testvectors(tvdir), tv_store.iter_read(cipher))
+    yield from tv_store.iter_read(cipher)
 
 
 def convert(tvdir, cipher):
@@ -109,11 +106,12 @@ def convert(tvdir, cipher):
     entries = []
     with make_tvfile(target) as tvf:
         tvf.include(basename)
-        for array_name, it in cipher_entries(tvdir, cipher):
-            array_name = f'{array_name}_tv'
+        for v in cipher.variants():
+            cipher.variant = v
+            array_name = f'{cipher.variant_name().lower()}_tv'
             print(f"Converting: {array_name}")
             tvf.structs(struct_name, array_name,
-                        (cipher.convert_testvec(s) for s in it))
+                        (cipher.convert_testvec(s) for s in testvectors(tvdir, cipher)))
             entries.append(array_name)
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:
@@ -139,11 +137,12 @@ def convert_linux(tvdir, cipher):
     with make_tvfile(target) as tvf:
         tvf.include(basename)
         tvf.write('\n')
-        for array_name, it in cipher_entries(tvdir, cipher):
-            array_name = f'{array_name}_tv_template'
+        for v in cipher.variants():
+            cipher.variant = v
+            array_name = f'{cipher.variant_name().lower()}_tv_template'
             print(f"Converting: {array_name}")
             tvf.write_linux_testvecs(struct_name, array_name,
-                                     (cipher.linux_convert_testvec(s) for s in it))
+                                     (cipher.linux_convert_testvec(s) for s in testvectors(tvdir, cipher)))
             entries.append(array_name)
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:
