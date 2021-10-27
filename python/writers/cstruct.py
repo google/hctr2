@@ -4,6 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
+import collections
 import contextlib
 
 import tvstore
@@ -134,7 +135,8 @@ def convert(tvdir, cipher):
 
 
 def linux_testvectors(tvdir, cipher):
-    length_set = set()
+    length_count = collections.defaultdict(lambda: 0)
+    max_count = 2
     for s in testvectors(tvdir, cipher):
         converted = cipher.linux_convert_testvec(s)
         if converted is None:
@@ -142,8 +144,8 @@ def linux_testvectors(tvdir, cipher):
         lengths = sorted([(k, v)
                           for k, v in converted.items() if isinstance(v, int)])
         lengths = tuple(lengths)
-        if lengths not in length_set:
-            length_set.add(lengths)
+        if length_count[lengths] < max_count:
+            length_count[lengths] += 1
             yield converted
 
 
