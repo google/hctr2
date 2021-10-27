@@ -7,7 +7,6 @@
 project('cipherbench', 'c')
 
 conf_data = configuration_data()
-conf_data.set10('KERNELISH', get_option('kernelish'))
 conf_data.set10('SYMBOLS_HAVE_UNDERSCORE_PREFIX',
     meson.get_compiler('c').symbols_have_underscore_prefix())
 configure_file(output : 'cbconfig.h', configuration : conf_data)
@@ -47,13 +46,12 @@ endif
 cipherbench = executable('cipherbench', src,
     include_directories : include_dirs)
 benchmark('benchmark', cipherbench)
-ciphers = ['HCTR2', 'HCTR2-Polyhash', 'HCTR2-CTR']
 check4096 = custom_target('check4096',
-    command: [cipherbench, '--bufsize=4096'] + ciphers,
+    command: [cipherbench, '--bufsize=4096'],
     output: 'check4096', capture: 'true')
 output4096 = custom_target('output4096',
-    command: [cipherbench, '--bufsize=4096', '--ntries=25'] + ciphers,
+    command: [cipherbench, '--bufsize=4096', '--ntries=25'],
     output: 'output4096', capture: 'true')
 output512 = custom_target('output512',
-    command: [cipherbench, '--bufsize=512', '--ntries=25'] + ciphers,
+    command: [cipherbench, '--bufsize=512', '--ntries=25'],
     output: 'output512', capture: 'true')

@@ -201,7 +201,7 @@ __noreturn void assertion_failed(const char *expr, const char *file, int line)
 }
 
 struct cipherbench_params g_params = {
-	.bufsize = 16,
+	.bufsize = 4096,
 	.ntries = 5,
 };
 
