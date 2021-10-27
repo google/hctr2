@@ -98,6 +98,11 @@ def testvectors(tvdir, cipher):
     yield from tv_store.iter_read(cipher)
 
 
+def cstruct_testvectors(tvdir, cipher):
+    for s in testvectors(tvdir, cipher):
+        yield cipher.convert_testvec(s)
+
+
 def convert(tvdir, cipher):
     targetdir = tvdir / "converted" / "cstruct"
     struct_name = f'{cipher.name().lower()}_testvec'
@@ -111,7 +116,7 @@ def convert(tvdir, cipher):
             array_name = f'{cipher.variant_name().lower()}_tv'
             print(f"Converting: {array_name}")
             tvf.structs(struct_name, array_name,
-                        (cipher.convert_testvec(s) for s in testvectors(tvdir, cipher)))
+                        cstruct_testvectors(tvdir, cipher))
             entries.append(array_name)
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:
@@ -128,6 +133,20 @@ def convert(tvdir, cipher):
             tvf.write(f'extern const size_t {e}_count;\n')
 
 
+def linux_testvectors(tvdir, cipher):
+    length_set = set()
+    for s in testvectors(tvdir, cipher):
+        converted = cipher.linux_convert_testvec(s)
+        if converted is None:
+            continue
+        lengths = sorted([(k, v)
+                          for k, v in converted.items() if isinstance(v, int)])
+        lengths = tuple(lengths)
+        if lengths not in length_set:
+            length_set.add(lengths)
+            yield converted
+
+
 def convert_linux(tvdir, cipher):
     targetdir = tvdir / "converted" / "linux"
     struct_name = cipher.linux_testvec_struct()
@@ -142,7 +161,7 @@ def convert_linux(tvdir, cipher):
             array_name = f'{cipher.variant_name().lower()}_tv_template'
             print(f"Converting: {array_name}")
             tvf.write_linux_testvecs(struct_name, array_name,
-                                     (cipher.linux_convert_testvec(s) for s in testvectors(tvdir, cipher)))
+                                     linux_testvectors(tvdir, cipher))
             entries.append(array_name)
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:
