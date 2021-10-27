@@ -49,8 +49,13 @@ struct polyval_state {
 
 void reverse_bytes(be128 *a);
 
+void polyval_init(struct polyval_state *state);
+
 void polyval_setkey(struct polyval_key *key, const u8 *raw_key,
 		      bool simd);
 
-void polyval_generic(const u8 *in, const struct polyval_key *key,
-			uint64_t nbytes, const u8 *final, be128 *accumulator);
+void polyval_update(struct polyval_state *state, const struct polyval_key *key, 
+        const u8 *in, size_t nbytes, const u8 final_block[POLYVAL_BLOCK_SIZE], 
+        bool simd);
+
+void polyval_emit(struct polyval_state *state, u8 out[POLYVAL_DIGEST_SIZE], bool simd);
