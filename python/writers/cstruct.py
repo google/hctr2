@@ -5,6 +5,8 @@
 # https://opensource.org/licenses/MIT.
 
 import contextlib
+import itertools
+
 import tvstore
 
 
@@ -92,13 +94,11 @@ def make_tvfile(p):
 
 
 def cipher_entries(tvdir, cipher):
-    if any(True for s in cipher.external_testvectors(tvdir)):
-        yield (f'{cipher.name().lower()}_external',
-               cipher.external_testvectors(tvdir))
     tv_store = tvstore.TvStore(tvdir)
     for v in cipher.variants():
         cipher.variant = v
-        yield f'{cipher.variant_name().lower()}', tv_store.iter_read(cipher)
+        yield f'{cipher.variant_name().lower()}', itertools.chain(
+                cipher.external_testvectors(tvdir), tv_store.iter_read(cipher))
 
 
 def convert(tvdir, cipher):

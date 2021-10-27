@@ -22,15 +22,17 @@ def write(args, cipher):
 
 
 def check(args, cipher):
-    for r in cipher.external_testvectors(args.test_vectors):
-        tvgen.check_testvector(cipher, r, args.verbose)
     for v in cipher.variants():
         cipher.variant = v
+        for r in cipher.external_testvectors(args.test_vectors):
+            tvgen.check_testvector(cipher, r, args.verbose)
         tvgen.check_tests(args, cipher)
 
 
 def print_external(args, cipher):
-    hexjson.dump_using_hex(cipher.external_testvectors(args.test_vectors))
+    for v in cipher.variants():
+        cipher.variant = v
+        hexjson.dump_using_hex(cipher.external_testvectors(args.test_vectors))
 
 
 def convert_cstruct(args, cipher):
