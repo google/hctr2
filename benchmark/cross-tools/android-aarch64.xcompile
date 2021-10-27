@@ -13,6 +13,4 @@ cpu='aarch64'
 endian='little'
 
 [properties]
-c_args = ['-fPIE']
-c_link_args = ['-pie']
 needs_exe_wrapper = true
