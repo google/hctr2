@@ -32,27 +32,27 @@ struct hctr2_ctx {
  */
 void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len, bool simd)
 {
-	u128 tmp;
+	le128 tmp;
 	polyval_init(&ctx->initial_states[0]);
-	tmp.b = tweak_len * 8 * 2 + 3;
-	tmp.a = 0;
+	tmp.b = cpu_to_le64(tweak_len * 8 * 2 + 3);
+	tmp.a = cpu_to_le64(0);
 	polyval_update(&ctx->initial_states[0], &ctx->polyval_key, (u8*)&tmp, 16, NULL, simd);
 	
 	polyval_init(&ctx->initial_states[1]);
-	tmp.b = tweak_len * 8 * 2 + 2;
-	tmp.a = 0;
+	tmp.b = cpu_to_le64(tweak_len * 8 * 2 + 2);
+	tmp.a = cpu_to_le64(0);
 	polyval_update(&ctx->initial_states[1], &ctx->polyval_key, (u8*)&tmp, 16, NULL, simd);
 }
 
 void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, size_t key_len, bool simd)
 {
 	u8 h[BLOCKCIPHER_BLOCK_SIZE];
-	u128 buf;
+	le128 buf;
 	aesti_expand_key(&ctx->aes_ctx.aes_ctx, key, key_len);
 	ctx->default_tweak_len = HCTR2_DEFAULT_TWEAK_LEN;
 
-	buf.a = 0;
-	buf.b = 0;
+	buf.a = cpu_to_le64(0);
+	buf.b = cpu_to_le64(0);
 	aes_encrypt(&ctx->aes_ctx, (u8 *)&h, (u8 *)&buf, simd);
 	buf.b = cpu_to_le64(1);
 	aes_encrypt(&ctx->aes_ctx, (u8 *)&ctx->L, (u8 *)&buf, simd);
@@ -65,15 +65,11 @@ static void hctr2_hash_tweak(const struct hctr2_ctx *ctx,
 			   struct polyval_state *state, const u8 *data,
 			   size_t nbytes, bool simd)
 {
-	u128 padded_final;
-	if (nbytes % POLYVAL_BLOCK_SIZE != 0) {
-		padded_final.a = 0;
-		padded_final.b = 0;
-		memcpy(&padded_final,
-		       data
-			       + POLYVAL_BLOCK_SIZE
-					 * (nbytes / POLYVAL_BLOCK_SIZE),
-		       nbytes % POLYVAL_BLOCK_SIZE);
+	u8 padded_final[POLYVAL_BLOCK_SIZE];
+	size_t remainder = nbytes % POLYVAL_BLOCK_SIZE;
+	if (remainder) {
+		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
+		memcpy(padded_final, data + nbytes - remainder, remainder);
 	}
     polyval_update(state, &ctx->polyval_key, data, nbytes, &padded_final, simd);
 }
@@ -82,16 +78,12 @@ static void hctr2_hash_message(const struct hctr2_ctx *ctx,
 			     struct polyval_state *state, const u8 *data,
 			     size_t nbytes, bool simd)
 {
-	u128 padded_final;
-	if (nbytes % POLYVAL_BLOCK_SIZE != 0) {
-		padded_final.a = 0;
-		padded_final.b = 0;
-		memcpy(&padded_final,
-		       data
-			       + POLYVAL_BLOCK_SIZE
-					 * (nbytes / POLYVAL_BLOCK_SIZE),
-		       nbytes % POLYVAL_BLOCK_SIZE);
-		((u8 *)(&padded_final))[nbytes % POLYVAL_BLOCK_SIZE] = 0x01;
+	u8 padded_final[POLYVAL_BLOCK_SIZE];
+	size_t remainder = nbytes % POLYVAL_BLOCK_SIZE;
+	if (remainder) {
+		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
+		memcpy(padded_final, data + nbytes - remainder, remainder);
+		padded_final[remainder] = 0x01;
 	}
     polyval_update(state, &ctx->polyval_key, data, nbytes, &padded_final, simd);
 }
@@ -124,14 +116,13 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
     // Pick the appropriate precomputed first block based on whether 
     // the message divides the block size.
 	bool mdiv = N_bytes % POLYVAL_BLOCK_SIZE == 0;
-	memcpy(&polystate1, &ctx->initial_states[mdiv ? 1 : 0],
-	       sizeof(struct polyval_state));
+	polystate1 = ctx->initial_states[mdiv ? 1 : 0];
 
-    // Since the tweak is the same for both hashes, save the state
-    // for later to avoid re-computing the same partial hash.
+	// Since the tweak is the same for both hashes, save the state
+	// for later to avoid re-computing the same partial hash.
 	hctr2_hash_tweak(ctx, &polystate1, tweak,
 			      tweak_len, simd);
-	memcpy(&polystate2, &polystate1, sizeof(polystate1));
+	polystate2 = polystate1;
 	hctr2_hash_message(ctx, &polystate1, N, N_bytes,
 				simd);
 	polyval_emit(&polystate1, (u8 *)&digest, simd);
@@ -150,8 +141,7 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	xctr_crypt(&ctx->aes_ctx, V, N, N_bytes, (u8 *)&S, simd);
 
 	// Use the saved partial hash state.
-    hctr2_hash_message(ctx, &polystate2, V, N_bytes,
-				simd);
+	hctr2_hash_message(ctx, &polystate2, V, N_bytes, simd);
 	polyval_emit(&polystate2, (u8 *)&digest, simd);
 
 	xor(U, &UU, digest, BLOCKCIPHER_BLOCK_SIZE);
