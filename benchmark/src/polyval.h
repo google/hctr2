@@ -35,7 +35,7 @@ union polyval_key {
 	 */
 	ble128 simd_powers[NUM_PRECOMPUTE_KEYS];
 	/*
-	 * Array of polynomials stored in little-little endian.
+	 * Polynomial stored in little-little endian.
 	 *
 	 * The polynomial x^128 is represented in memory as
 	 * [0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
@@ -44,10 +44,10 @@ union polyval_key {
 	 * [0x80 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
 	 *  0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 ]
 	 *
-	 * The array contains the polynomials h^n .. h^1
-	 * in decreasing order of degree.
+	 * We don't need any higher powers of h since
+	 * the generic implementation is not parallelized.
 	 */
-	be128 generic_powers[NUM_PRECOMPUTE_KEYS];
+	be128 generic_h;
 };
 
 union polyval_state {

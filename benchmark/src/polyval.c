@@ -43,21 +43,12 @@ void reverse_bytes(be128 *a)
 
 static void polyval_setkey_generic(union polyval_key *key, const u8 *raw_key)
 {
-	be128 *powers = key->generic_powers;
+	be128 *h = &key->generic_h;
 
-	/* set h */
-	memcpy(&powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(be128));
+	memcpy(h, raw_key, sizeof(be128));
 
-	reverse_bytes(&powers[NUM_PRECOMPUTE_KEYS - 1]);
-	gf128mul_x_lle(&powers[NUM_PRECOMPUTE_KEYS - 1],
-		       &powers[NUM_PRECOMPUTE_KEYS - 1]);
-
-	/* Precompute key generic_powers */
-	for (int i = NUM_PRECOMPUTE_KEYS - 2; i >= 0; i--) {
-		memcpy(&powers[i], &powers[NUM_PRECOMPUTE_KEYS - 1],
-		       sizeof(be128));
-		gf128mul_lle(&(powers[i]), &(powers[(i + 1)]));
-	}
+	reverse_bytes(h);
+	gf128mul_x_lle(h, h);
 }
 
 static void polyval_setkey_simd(union polyval_key *key, const u8 *raw_key)
@@ -87,48 +78,25 @@ void polyval_setkey(union polyval_key *key, const u8 *raw_key, bool simd)
 void polyval_generic(const u8 *in, const union polyval_key *key,
 		     uint64_t nbytes, const u8 *final, be128 *accumulator)
 {
-	const be128 *powers = key->generic_powers;
+	const be128 *h = &key->generic_h;
+	size_t nblocks = nbytes / POLYVAL_BLOCK_SIZE;
+	size_t partial = nbytes % POLYVAL_BLOCK_SIZE;
 	be128 tmp;
-	int index = 0;
-	int final_shift;
-	size_t nblocks;
-	nblocks = nbytes / POLYVAL_BLOCK_SIZE;
 
-	while (nblocks >= NUM_PRECOMPUTE_KEYS) {
-		gf128mul_lle(accumulator, &powers[0]);
-		for (int i = 0; i < NUM_PRECOMPUTE_KEYS; i++) {
-			memcpy(&tmp, &in[(i + index) * POLYVAL_BLOCK_SIZE],
-			       sizeof(be128));
-			reverse_bytes(&tmp);
-			gf128mul_lle(&tmp, &powers[i]);
-			be128_xor(accumulator, accumulator, &tmp);
-		}
-		index += NUM_PRECOMPUTE_KEYS;
-		nblocks -= NUM_PRECOMPUTE_KEYS;
+	while (nblocks > 0) {
+		memcpy(&tmp, in, sizeof(be128));
+		reverse_bytes(&tmp);
+		be128_xor(accumulator, accumulator, &tmp);
+		gf128mul_lle(accumulator, h);
+		in += 16;
+		nblocks--;
 	}
-	final_shift = nbytes % POLYVAL_BLOCK_SIZE == 0 ? 0 : 1;
-	if (nblocks > 0 || final_shift == 1) {
-		/* 0 <= NUM_PRECOMPUTE_KEYS - nblocks - final_shift <
-		 * NUM_PRECOMPUTE_KEYS */
-		gf128mul_lle(
-			accumulator,
-			&powers[NUM_PRECOMPUTE_KEYS - nblocks - final_shift]);
-		for (int i = 0; i < nblocks; i++) {
-			memcpy(&tmp, &in[(i + index) * POLYVAL_BLOCK_SIZE],
-			       sizeof(be128));
-			reverse_bytes(&tmp);
-			gf128mul_lle(&tmp, &powers[NUM_PRECOMPUTE_KEYS - nblocks
-						   - final_shift + i]);
-			be128_xor(accumulator, accumulator, &tmp);
-		}
-		index += nblocks;
-		nblocks -= nblocks;
-		if (final_shift == 1) {
-			memcpy(&tmp, final, sizeof(be128));
-			reverse_bytes(&tmp);
-			gf128mul_lle(&tmp, &powers[NUM_PRECOMPUTE_KEYS - 1]);
-			be128_xor(accumulator, accumulator, &tmp);
-		}
+
+	if (partial) {
+		memcpy(&tmp, final, sizeof(be128));
+		reverse_bytes(&tmp);
+		be128_xor(accumulator, accumulator, &tmp);
+		gf128mul_lle(accumulator, h);
 	}
 }
 
