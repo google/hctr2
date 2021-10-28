@@ -159,8 +159,8 @@ void polyval_emit(struct polyval_state *state, u8 out[POLYVAL_DIGEST_SIZE],
 	}
 }
 
-static void _polyval_generic(const struct polyval_key *key, const void *src,
-			     unsigned int srclen, u8 *digest)
+static void _polyval(const struct polyval_key *key, const void *src,
+		     unsigned int srclen, u8 *digest, bool simd)
 {
 	struct polyval_state polystate;
 	polyval_init(&polystate);
@@ -172,25 +172,20 @@ static void _polyval_generic(const struct polyval_key *key, const void *src,
 		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
 		memcpy(&padded_final, src + srclen - remainder, remainder);
 	}
-	polyval_update(&polystate, key, src, srclen, padded_final, false);
-	polyval_emit(&polystate, digest, false);
+	polyval_update(&polystate, key, src, srclen, padded_final, simd);
+	polyval_emit(&polystate, digest, simd);
+}
+
+static void _polyval_generic(const struct polyval_key *key, const void *src,
+			     unsigned int srclen, u8 *digest)
+{
+	_polyval(key, src, srclen, digest, false);
 }
 
 static void _polyval_simd(const struct polyval_key *key, const void *src,
 			  unsigned int srclen, u8 *digest)
 {
-	struct polyval_state polystate;
-	polyval_init(&polystate);
-
-	// Pad partial blocks since polyval can only handle 16-byte multiples.
-	u8 padded_final[POLYVAL_BLOCK_SIZE];
-	size_t remainder = srclen % POLYVAL_BLOCK_SIZE;
-	if (remainder) {
-		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
-		memcpy(&padded_final, src + srclen - remainder, remainder);
-	}
-	polyval_update(&polystate, key, src, srclen, padded_final, true);
-	polyval_emit(&polystate, digest, true);
+	_polyval(key, src, srclen, digest, true);
 }
 
 void test_polyval(void)
