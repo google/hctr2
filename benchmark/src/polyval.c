@@ -151,12 +151,9 @@ void polyval_update(struct polyval_state *state, const struct polyval_key *key,
 void polyval_emit(struct polyval_state *state, u8 out[POLYVAL_DIGEST_SIZE],
 		  bool simd)
 {
-	if (simd) {
-		memcpy(out, &state->state, POLYVAL_DIGEST_SIZE);
-	} else {
+	if (!simd)
 		reverse_bytes((be128 *)&state->state);
-		memcpy(out, &state->state, POLYVAL_DIGEST_SIZE);
-	}
+	memcpy(out, &state->state, POLYVAL_DIGEST_SIZE);
 }
 
 static void _polyval(const struct polyval_key *key, const void *src,
