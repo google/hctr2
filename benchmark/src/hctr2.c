@@ -35,6 +35,7 @@ void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len,
 			    bool simd)
 {
 	le128 tmp;
+
 	polyval_init(&ctx->initial_states[0]);
 	tmp.b = cpu_to_le64(tweak_len * 8 * 2 + 3);
 	tmp.a = cpu_to_le64(0);
@@ -51,18 +52,18 @@ void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len,
 void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, size_t key_len,
 		  bool simd)
 {
-	u8 h[BLOCKCIPHER_BLOCK_SIZE];
-	le128 buf;
+	u8 hbar[BLOCKCIPHER_BLOCK_SIZE];
+
 	aesti_expand_key(&ctx->aes_ctx.aes_ctx, key, key_len);
 	ctx->default_tweak_len = HCTR2_DEFAULT_TWEAK_LEN;
 
-	buf.a = cpu_to_le64(0);
-	buf.b = cpu_to_le64(0);
-	aes_encrypt(&ctx->aes_ctx, (u8 *)&h, (u8 *)&buf, simd);
-	buf.b = cpu_to_le64(1);
-	aes_encrypt(&ctx->aes_ctx, (u8 *)&ctx->L, (u8 *)&buf, simd);
+	memset(hbar, 0, BLOCKCIPHER_BLOCK_SIZE);
+	aes_encrypt(&ctx->aes_ctx, hbar, hbar, simd);
+	memset(ctx->L, 0, BLOCKCIPHER_BLOCK_SIZE);
+	ctx->L[0] = 0x01;
+	aes_encrypt(&ctx->aes_ctx, ctx->L, ctx->L, simd);
 
-	polyval_setkey(&ctx->polyval_key, (u8 *)&h, simd);
+	polyval_setkey(&ctx->polyval_key, hbar, simd);
 	hctr2_change_tweak_len(ctx, ctx->default_tweak_len, simd);
 }
 
@@ -72,6 +73,7 @@ static void hctr2_hash_tweak(const struct hctr2_ctx *ctx,
 {
 	u8 padded_final[POLYVAL_BLOCK_SIZE];
 	size_t remainder = nbytes % POLYVAL_BLOCK_SIZE;
+
 	if (remainder) {
 		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
 		memcpy(padded_final, data + nbytes - remainder, remainder);
@@ -86,6 +88,7 @@ static void hctr2_hash_message(const struct hctr2_ctx *ctx,
 {
 	u8 padded_final[POLYVAL_BLOCK_SIZE];
 	size_t remainder = nbytes % POLYVAL_BLOCK_SIZE;
+
 	if (remainder) {
 		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
 		memcpy(padded_final, data + nbytes - remainder, remainder);
@@ -111,6 +114,9 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	u8 *V;
 	size_t M_bytes;
 	size_t N_bytes;
+	bool mdiv;
+	int length_modifier;
+	le128 tmp;
 
 	ASSERT(nbytes >= BLOCKCIPHER_BLOCK_SIZE);
 	M_bytes = BLOCKCIPHER_BLOCK_SIZE;
@@ -120,7 +126,7 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	U = dst;
 	V = dst + BLOCKCIPHER_BLOCK_SIZE;
 
-	bool mdiv = N_bytes % POLYVAL_BLOCK_SIZE == 0;
+	mdiv = N_bytes % POLYVAL_BLOCK_SIZE == 0;
 	// Reuse the precomputed first block if tweak_len is the same
 	// as the context's default_tweak_len.
 	if (tweak_len == ctx->default_tweak_len) {
@@ -130,8 +136,7 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	} else {
 		// Recompute the initial state if we're using a different
 		// tweak_len.
-		int length_modifier = mdiv ? 2 : 3;
-		le128 tmp;
+		length_modifier = mdiv ? 2 : 3;
 		polyval_init(&polystate1);
 		tmp.b = cpu_to_le64(tweak_len * 8 * 2 + length_modifier);
 		tmp.a = cpu_to_le64(0);
@@ -139,9 +144,9 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 			       NULL, simd);
 	}
 
+	hctr2_hash_tweak(ctx, &polystate1, tweak, tweak_len, simd);
 	// Since the tweak is the same for both hashes, save the state
 	// for later to avoid re-computing the same partial hash.
-	hctr2_hash_tweak(ctx, &polystate1, tweak, tweak_len, simd);
 	polystate2 = polystate1;
 	hctr2_hash_message(ctx, &polystate1, N, N_bytes, simd);
 	polyval_emit(&polystate1, (u8 *)&digest, simd);
