@@ -27,7 +27,10 @@ struct polyval_state {
 
 void reverse_bytes(be128 *a);
 
-void polyval_init(struct polyval_state *state);
+static inline void polyval_init(struct polyval_state *state)
+{
+	memset(state, 0, sizeof(*state));
+}
 
 void polyval_setkey(struct polyval_key *key, const u8 *raw_key, bool simd);
 

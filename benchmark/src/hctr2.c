@@ -76,7 +76,7 @@ static void hctr2_hash_tweak(const struct hctr2_ctx *ctx,
 		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
 		memcpy(padded_final, data + nbytes - remainder, remainder);
 	}
-	polyval_update(state, &ctx->polyval_key, data, nbytes, &padded_final,
+	polyval_update(state, &ctx->polyval_key, data, nbytes, padded_final,
 		       simd);
 }
 
@@ -91,7 +91,7 @@ static void hctr2_hash_message(const struct hctr2_ctx *ctx,
 		memcpy(padded_final, data + nbytes - remainder, remainder);
 		padded_final[remainder] = 0x01;
 	}
-	polyval_update(state, &ctx->polyval_key, data, nbytes, &padded_final,
+	polyval_update(state, &ctx->polyval_key, data, nbytes, padded_final,
 		       simd);
 }
 
