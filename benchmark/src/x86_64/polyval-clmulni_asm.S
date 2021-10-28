@@ -290,9 +290,9 @@ ENDPROC(clmul_polyval_mul)
  * rcx - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
  * r8 - location to XOR with evaluated polynomial
  * 
- * void clmul_polyval(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u128* final, u128* accumulator);
+ * void clmul_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u8* final, u128* accumulator);
  */
-ENTRY(clmul_polyval)
+ENTRY(clmul_polyval_update)
 	FRAME_BEGIN
 	vmovdqa Lgstar(%rip), GSTAR
 	movq $0x0f, EXTRA_BYTES
@@ -324,4 +324,4 @@ ENTRY(clmul_polyval)
 	movups SUM, (%r8)
 	FRAME_END
 	ret
-ENDPROC(clmul_polyval)
+ENDPROC(clmul_polyval_update)
