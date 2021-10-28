@@ -149,24 +149,24 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	// for later to avoid re-computing the same partial hash.
 	polystate2 = polystate1;
 	hctr2_hash_message(ctx, &polystate1, N, N_bytes, simd);
-	polyval_emit(&polystate1, (u8 *)&digest, simd);
+	polyval_emit(&polystate1, digest, simd);
 
 	xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
 
 	if (encrypt) {
-		aes_encrypt(&ctx->aes_ctx, (u8 *)&UU, MM, simd);
+		aes_encrypt(&ctx->aes_ctx, UU, MM, simd);
 	} else {
-		aes_decrypt(&ctx->aes_ctx, (u8 *)&UU, MM, simd);
+		aes_decrypt(&ctx->aes_ctx, UU, MM, simd);
 	}
 
 	xor(&S, &MM, &UU, BLOCKCIPHER_BLOCK_SIZE);
 	xor(&S, &ctx->L, &S, BLOCKCIPHER_BLOCK_SIZE);
 
-	xctr_crypt(&ctx->aes_ctx, V, N, N_bytes, (u8 *)&S, simd);
+	xctr_crypt(&ctx->aes_ctx, V, N, N_bytes, S, simd);
 
 	// Use the saved partial hash state.
 	hctr2_hash_message(ctx, &polystate2, V, N_bytes, simd);
-	polyval_emit(&polystate2, (u8 *)&digest, simd);
+	polyval_emit(&polystate2, digest, simd);
 
 	xor(U, &UU, digest, BLOCKCIPHER_BLOCK_SIZE);
 }
@@ -243,11 +243,11 @@ static void test_hctr2_testvec(const struct hctr2_testvec *v, size_t key_len,
 
 	hctr2_setkey(&ctx, v->key.data, key_len, simd);
 	hctr2_change_tweak_len(&ctx, v->tweak.len, simd);
-	hctr2_crypt(&ctx, (u8 *)&ctext, v->plaintext.data, v->plaintext.len,
+	hctr2_crypt(&ctx, ctext, v->plaintext.data, v->plaintext.len,
 		    v->tweak.data, v->tweak.len, true, simd);
 	ASSERT(!memcmp(ctext, v->ciphertext.data, len));
-	hctr2_crypt(&ctx, (u8 *)&ptext, (u8 *)&ctext, v->plaintext.len,
-		    v->tweak.data, v->tweak.len, false, simd);
+	hctr2_crypt(&ctx, ptext, ctext, v->plaintext.len, v->tweak.data,
+		    v->tweak.len, false, simd);
 	ASSERT(!memcmp(ptext, v->plaintext.data, len));
 }
 
