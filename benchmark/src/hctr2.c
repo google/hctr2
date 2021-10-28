@@ -120,10 +120,24 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 	U = dst;
 	V = dst + BLOCKCIPHER_BLOCK_SIZE;
 
-	// Pick the appropriate precomputed first block based on whether
-	// the message divides the block size.
 	bool mdiv = N_bytes % POLYVAL_BLOCK_SIZE == 0;
-	polystate1 = ctx->initial_states[mdiv ? 1 : 0];
+	// Reuse the precomputed first block if tweak_len is the same
+	// as the context's default_tweak_len.
+	if (tweak_len == ctx->default_tweak_len) {
+		// Pick the appropriate precomputed first block based on whether
+		// the message divides the block size.
+		polystate1 = ctx->initial_states[mdiv ? 1 : 0];
+	} else {
+		// Recompute the initial state if we're using a different
+		// tweak_len.
+		int length_modifier = mdiv ? 2 : 3;
+		le128 tmp;
+		polyval_init(&polystate1);
+		tmp.b = cpu_to_le64(tweak_len * 8 * 2 + length_modifier);
+		tmp.a = cpu_to_le64(0);
+		polyval_update(&polystate1, &ctx->polyval_key, (u8 *)&tmp, 16,
+			       NULL, simd);
+	}
 
 	// Since the tweak is the same for both hashes, save the state
 	// for later to avoid re-computing the same partial hash.
