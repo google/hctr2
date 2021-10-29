@@ -19,8 +19,7 @@ asmlinkage void clmul_polyval_mul(ble128 *op1, const ble128 *op2);
 #ifdef __aarch64__
 asmlinkage void pmull_polyval_update(const u8 *in,
 				     const struct polyval_key *keys,
-				     uint64_t nbytes, const u8 *final,
-				     ble128 *accumulator);
+				     uint64_t nbytes, ble128 *accumulator);
 asmlinkage void pmull_polyval_mul(ble128 *op1, const ble128 *op2);
 #define POLYVAL pmull_polyval_update
 #define MUL pmull_polyval_mul

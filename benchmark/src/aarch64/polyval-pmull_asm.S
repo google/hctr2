@@ -180,12 +180,8 @@ GSTAR	.req	v24
 	eor		C.16b, C.16b, C.16b
 	eor		D.16b, D.16b, D.16b
 	eor		E.16b, E.16b, E.16b
-	mov		TMP, BLOCKS_LEFT
-	cmp		EXTRA_BYTES, #0
-	csinc	TMP, TMP, TMP, eq
-	lsl		TMP, TMP, #4
     // x1 currently points at the end of the key array
-	subs	KEY_START, x1, TMP
+	subs	KEY_START, x1, BLOCKS_LEFT, lsl #4
 	ld1		{v0.16b}, [KEY_START]
 	mov		v1.16b, SUM.16b
 	karatsuba1 v0 v1
@@ -258,12 +254,6 @@ GSTAR	.req	v24
 .outPartial:
 	b .LoopPartial
 .LoopExitPartial:
-	# Handle extra block
-	cmp		EXTRA_BYTES, #0
-	beq		.no_extra_block
-	ld1		{M0.16b}, [x3]
-	karatsuba1 M0 KEY1
-.no_extra_block:
 	karatsuba2
 	montgomery_reduction
 	eor		SUM.16b, SUM.16b, PH.16b
@@ -302,10 +292,9 @@ ENDPROC(pmull_polyval_mul)
  * x0 (OP1) - pointer to message blocks
  * x1 - pointer to precomputed key struct
  * x2 - number of bytes to hash
- * x3 - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
- * x4 - location to XOR with evaluated polynomial
+ * x3 - location to XOR with evaluated polynomial
  *
- * void pmull_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u8* final, ble128* accumulator);
+ * void pmull_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, ble128* accumulator);
  */
 ENTRY(pmull_polyval_update)
 	adr		TMP, .Lgstar
@@ -319,9 +308,8 @@ ENTRY(pmull_polyval_update)
 	ld1		{KEY3.16b}, [x1], #16
 	ld1		{KEY2.16b}, [x1], #16
 	ld1		{KEY1.16b}, [x1], #16
-	ands	EXTRA_BYTES, x2, 0xf
 	lsr		BLOCKS_LEFT, BLOCKS_LEFT, #4
-	ld1		{SUM.16b}, [x4]
+	ld1		{SUM.16b}, [x3]
 	cmp		BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	blt		.StrideLoopExit
 	full_stride 0
@@ -337,13 +325,9 @@ ENTRY(pmull_polyval_update)
 	mov		SUM.16b, PH.16b
 .StrideLoopExit:
 	cmp		BLOCKS_LEFT, 0
-	bne		.DoPartial
-	cmp		EXTRA_BYTES, 0
-	bne		.DoPartial
-	b		.SkipPartial
-.DoPartial:
+	beq		.SkipPartial
 	partial_stride
 .SkipPartial:
-	st1		{SUM.16b}, [x4]
+	st1		{SUM.16b}, [x3]
 	ret
 ENDPROC(pmull_polyval_update)
