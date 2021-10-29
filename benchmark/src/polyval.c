@@ -11,8 +11,7 @@
 #ifdef __x86_64__
 asmlinkage void clmul_polyval_update(const u8 *in,
 				     const struct polyval_key *keys,
-				     uint64_t nbytes, const u8 *final,
-				     ble128 *accumulator);
+				     uint64_t nbytes, ble128 *accumulator);
 asmlinkage void clmul_polyval_mul(ble128 *op1, const ble128 *op2);
 #define POLYVAL clmul_polyval_update
 #define MUL clmul_polyval_mul
@@ -76,11 +75,10 @@ void polyval_setkey(struct polyval_key *key, const u8 *raw_key, bool simd)
 }
 
 void polyval_generic(const u8 *in, const struct polyval_key *key,
-		     uint64_t nbytes, const u8 *final, be128 *accumulator)
+		     uint64_t nbytes, be128 *accumulator)
 {
 	const be128 *h = &key->key.generic_h;
 	size_t nblocks = nbytes / POLYVAL_BLOCK_SIZE;
-	size_t partial = nbytes % POLYVAL_BLOCK_SIZE;
 	be128 tmp;
 
 	while (nblocks > 0) {
@@ -91,13 +89,6 @@ void polyval_generic(const u8 *in, const struct polyval_key *key,
 		in += 16;
 		nblocks--;
 	}
-
-	if (partial) {
-		memcpy(&tmp, final, sizeof(be128));
-		reverse_bytes(&tmp);
-		be128_xor(accumulator, accumulator, &tmp);
-		gf128mul_lle(accumulator, h);
-	}
 }
 
 /*
@@ -106,14 +97,12 @@ void polyval_generic(const u8 *in, const struct polyval_key *key,
  * their own padding method without paying any additional performance cost.
  */
 void polyval_update(struct polyval_state *state, const struct polyval_key *key,
-		    const u8 *in, size_t nbytes,
-		    const u8 final_block[POLYVAL_BLOCK_SIZE], bool simd)
+		    const u8 *in, size_t nbytes, bool simd)
 {
 	if (simd) {
-		POLYVAL(in, key, nbytes, final_block, &state->state.simd_state);
+		POLYVAL(in, key, nbytes, &state->state.simd_state);
 	} else {
-		polyval_generic(in, key, nbytes, final_block,
-				&state->state.generic_state);
+		polyval_generic(in, key, nbytes, &state->state.generic_state);
 	}
 }
 
@@ -133,15 +122,7 @@ static void _polyval(const struct polyval_key *key, const void *src,
 {
 	struct polyval_state polystate;
 	polyval_init(&polystate);
-
-	// Pad partial blocks since polyval can only handle 16-byte multiples.
-	u8 padded_final[POLYVAL_BLOCK_SIZE];
-	size_t remainder = srclen % POLYVAL_BLOCK_SIZE;
-	if (remainder) {
-		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
-		memcpy(&padded_final, src + srclen - remainder, remainder);
-	}
-	polyval_update(&polystate, key, src, srclen, padded_final, simd);
+	polyval_update(&polystate, key, src, srclen, simd);
 	polyval_emit(&polystate, digest, simd);
 }
 

@@ -70,8 +70,7 @@ static inline void polyval_init(struct polyval_state *state)
 void polyval_setkey(struct polyval_key *key, const u8 *raw_key, bool simd);
 
 void polyval_update(struct polyval_state *state, const struct polyval_key *key,
-		    const u8 *in, size_t nbytes,
-		    const u8 final_block[POLYVAL_BLOCK_SIZE], bool simd);
+		    const u8 *in, size_t nbytes, bool simd);
 
 void polyval_emit(struct polyval_state *state, u8 out[POLYVAL_DIGEST_SIZE],
 		  bool simd);

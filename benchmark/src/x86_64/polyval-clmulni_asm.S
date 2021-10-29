@@ -22,7 +22,6 @@
 
 #define BLOCKS_LEFT %rdx
 #define OP1 %rdi
-#define EXTRA_BYTES %r9
 #define OP2 %r10
 #define IDX %r11
 #define TMP %rax
@@ -186,10 +185,6 @@ Lgstar:
 	pxor D, D
 	pxor EF, EF
 	mov BLOCKS_LEFT, TMP
-	test EXTRA_BYTES, EXTRA_BYTES
-	je .no_extra_block1
-	inc TMP
-.no_extra_block1:
 	shlq $4, TMP
 	mov %rsi, OP2
 	addq $(16*NUM_PRECOMPUTE_KEYS), OP2
@@ -243,12 +238,6 @@ Lgstar:
 .outPartial:
 	jmp .LoopPartial
 .LoopExitPartial:
-	# Handle extra block
-	test EXTRA_BYTES, EXTRA_BYTES
-	je .no_extra_block2
-	movq %rcx, OP1
-	schoolbook1 1
-.no_extra_block2:
 	schoolbook2
 	montgomery_reduction
 	pxor PH, SUM
@@ -295,10 +284,8 @@ ENDPROC(clmul_polyval_mul)
 ENTRY(clmul_polyval_update)
 	FRAME_BEGIN
 	vmovdqa Lgstar(%rip), GSTAR
-	movq $0x0f, EXTRA_BYTES
-	andq BLOCKS_LEFT, EXTRA_BYTES
 	shr $4, BLOCKS_LEFT
-	movups (%r8), SUM
+	movups (%rcx), SUM
 	cmpq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
 	jb .StrideLoopExit
 	full_stride 0
@@ -314,14 +301,10 @@ ENTRY(clmul_polyval_update)
 	movdqa PH, SUM
 .StrideLoopExit:
 	test BLOCKS_LEFT, BLOCKS_LEFT
-	jne .DoPartial
-	test EXTRA_BYTES, EXTRA_BYTES
-	jne .DoPartial
-	jmp .SkipPartial
-.DoPartial:
+	je .SkipPartial
 	partial_stride
 .SkipPartial:
-	movups SUM, (%r8)
+	movups SUM, (%rcx)
 	FRAME_END
 	ret
 ENDPROC(clmul_polyval_update)
