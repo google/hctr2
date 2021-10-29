@@ -122,14 +122,8 @@ GSTAR	.req	v24
 	eor		D.16b, D.16b, D.16b
 	eor		E.16b, E.16b, E.16b
 	
-	ld1		{M0.16b}, [x0], #16
-	ld1		{M1.16b}, [x0], #16
-	ld1		{M2.16b}, [x0], #16
-	ld1		{M3.16b}, [x0], #16
-	ld1		{M4.16b}, [x0], #16
-	ld1		{M5.16b}, [x0], #16
-	ld1		{M6.16b}, [x0], #16
-	ld1		{M7.16b}, [x0], #16
+	ld1		{M0.16b, M1.16b, M2.16b, M3.16b}, [x0], #64
+	ld1		{M4.16b, M5.16b, M6.16b, M7.16b}, [x0], #64
 
 	karatsuba1 M7 KEY1
 	.if(reduce)
@@ -200,15 +194,9 @@ GSTAR	.req	v24
 
 	cmp		TMP, #-4
     bgt		.gt4Partial
-	ld1		{M0.16b}, [x0], #16
-	ld1		{M1.16b}, [x0], #16
-	ld1		{M2.16b}, [x0], #16
-	ld1		{M3.16b}, [x0], #16
+	ld1		{M0.16b, M1.16b,  M2.16b, M3.16b}, [x0], #64
     // Clobber key registers
-	ld1		{KEY8.16b}, [KEY_START], #16
-	ld1		{KEY7.16b}, [KEY_START], #16
-	ld1		{KEY6.16b}, [KEY_START], #16
-	ld1		{KEY5.16b}, [KEY_START], #16
+	ld1		{KEY8.16b, KEY7.16b, KEY6.16b,  KEY5.16b}, [KEY_START], #64
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
 	karatsuba1 M2 KEY6
@@ -219,13 +207,9 @@ GSTAR	.req	v24
 .gt4Partial:
 	cmp		TMP, #-3
 	bgt		.gt3Partial
-	ld1		{M0.16b}, [x0], #16
-	ld1		{M1.16b}, [x0], #16
-	ld1		{M2.16b}, [x0], #16
+	ld1		{M0.16b, M1.16b, M2.16b}, [x0], #48
     // Clobber key registers
-	ld1		{KEY8.16b}, [KEY_START], #16
-	ld1		{KEY7.16b}, [KEY_START], #16
-	ld1		{KEY6.16b}, [KEY_START], #16
+	ld1		{KEY8.16b, KEY7.16b, KEY6.16b}, [KEY_START], #48
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
 	karatsuba1 M2 KEY6
@@ -235,11 +219,9 @@ GSTAR	.req	v24
 .gt3Partial:
 	cmp		TMP, #-2
 	bgt		.gt2Partial
-	ld1		{M0.16b}, [x0], #16
-	ld1		{M1.16b}, [x0], #16
+	ld1		{M0.16b, M1.16b}, [x0], #32
 	// Clobber key registers
-	ld1		{KEY8.16b}, [KEY_START], #16
-	ld1		{KEY7.16b}, [KEY_START], #16
+	ld1		{KEY8.16b, KEY7.16b}, [KEY_START], #32
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
 	add		IDX, IDX, #2
@@ -300,14 +282,8 @@ ENTRY(pmull_polyval_update)
 	adr		TMP, .Lgstar
 	ld1		{GSTAR.2d}, [TMP]
 	mov		KEY_START, x1
-	ld1		{KEY8.16b}, [x1], #16
-	ld1		{KEY7.16b}, [x1], #16
-	ld1		{KEY6.16b}, [x1], #16
-	ld1		{KEY5.16b}, [x1], #16
-	ld1		{KEY4.16b}, [x1], #16
-	ld1		{KEY3.16b}, [x1], #16
-	ld1		{KEY2.16b}, [x1], #16
-	ld1		{KEY1.16b}, [x1], #16
+	ld1		{KEY8.16b, KEY7.16b, KEY6.16b, KEY5.16b}, [x1], #64
+	ld1		{KEY4.16b, KEY3.16b, KEY2.16b, KEY1.16b}, [x1], #64
 	lsr		BLOCKS_LEFT, BLOCKS_LEFT, #4
 	ld1		{SUM.16b}, [x3]
 	cmp		BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
