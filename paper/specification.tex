@@ -73,8 +73,14 @@ which we name \emph{XCTR mode}:
 \end{displaymath}
 Generating the first \(m\) bits \(\XCTR_k(S)[0; m]\) takes \(\ceil{m/n}\) block cipher calls. 
 
-\subsection{HCTR2 encryption}
-HCTR2 is defined in \autoref{pseudocode}.
-\autoref{decryptionpseudocode} gives the decryption algorithm.
+\subsection{HCTR2}
+HCTR2 encryption, defined in \autoref{pseudocode},
+takes a tweak and a plaintext,
+and returns a ciphertext of the same length as the plaintext.
+HCTR2 decryption (\autoref{decryptionpseudocode})
+recovers the plaintext given the same tweak and the ciphertext, ie
+for \(k \in \mathcal{K}\), \(T \in \mathcal{T}\)
+and \(P \in \mathcal{M}\),
+\(\textsc{Decrypt}(k, T, \textsc{Encrypt}(k, T, P)) = P\).
 \subfile{algorithm.tex}
 \end{document}
