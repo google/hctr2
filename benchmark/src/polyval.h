@@ -15,58 +15,63 @@
 #define POLYVAL_KEY_SIZE 16
 
 /*
- * Polynomials are represented differently depending on whether
+ * GF(2^128) elements are represented differently depending on whether
  * we're using the accelerated POLYVAL implementation or the generic
  * GHASH-like implementation.
  */
-union polyval_key {
-	/*
-	 * Array of montgomery-form polynomials stored in big-little endian.
-	 *
-	 * The polynomial x^128 is represented in memory as
-	 * [0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
-	 *  0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x80 ]
-	 * The polynomial 1 is represented in memory as
-	 * [0x01 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
-	 *  0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 ]
-	 *
-	 * The array contains the polynomials h^n .. h^1
-	 * in decreasing order of degree.
-	 */
-	ble128 simd_powers[NUM_PRECOMPUTE_KEYS];
-	/*
-	 * Polynomial stored in little-little endian.
-	 *
-	 * The polynomial x^128 is represented in memory as
-	 * [0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
-	 *  0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x01 ]
-	 * The polynomial 1 is represented in memory as
-	 * [0x80 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
-	 *  0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 ]
-	 *
-	 * We don't need any higher powers of h since
-	 * the generic implementation is not parallelized.
-	 */
-	be128 generic_h;
+struct polyval_key {
+	union key {
+		/*
+		 * Array of montgomery-form GF(2^128) field elements
+		 * stored in big-little endian.
+		 *
+		 * The GF(2^128) element x^128 is represented in memory as
+		 * [0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
+		 *  0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x80 ]
+		 * The GF(2^128) element 1 is represented in memory as
+		 * [0x01 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
+		 *  0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 ]
+		 *
+		 * The array contains the GF(2^128) elements h^n .. h^1
+		 * in decreasing order of degree.
+		 */
+		ble128 simd_powers[NUM_PRECOMPUTE_KEYS];
+		/*
+		 * GF(2^128) element h stored in little-little endian.
+		 *
+		 * The GF(2^128) element x^128 is represented in memory as
+		 * [0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
+		 *  0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x01 ]
+		 * The GF(2^128) element 1 is represented in memory as
+		 * [0x80 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 |
+		 *  0x00 0x00 0x00 0x00 | 0x00 0x00 0x00 0x00 ]
+		 *
+		 * We don't need any higher powers of h since
+		 * the generic implementation is not parallelized.
+		 */
+		be128 generic_h;
+	} key;
 };
 
-union polyval_state {
-	ble128 simd_state;
-	be128 generic_state;
+struct polyval_state {
+	union state {
+		ble128 simd_state;
+		be128 generic_state;
+	} state;
 };
 
 void reverse_bytes(be128 *a);
 
-static inline void polyval_init(union polyval_state *state)
+static inline void polyval_init(struct polyval_state *state)
 {
 	memset(state, 0, sizeof(*state));
 }
 
-void polyval_setkey(union polyval_key *key, const u8 *raw_key, bool simd);
+void polyval_setkey(struct polyval_key *key, const u8 *raw_key, bool simd);
 
-void polyval_update(union polyval_state *state, const union polyval_key *key,
+void polyval_update(struct polyval_state *state, const struct polyval_key *key,
 		    const u8 *in, size_t nbytes,
 		    const u8 final_block[POLYVAL_BLOCK_SIZE], bool simd);
 
-void polyval_emit(union polyval_state *state, u8 out[POLYVAL_DIGEST_SIZE],
+void polyval_emit(struct polyval_state *state, u8 out[POLYVAL_DIGEST_SIZE],
 		  bool simd);

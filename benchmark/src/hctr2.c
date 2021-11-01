@@ -19,9 +19,9 @@
 struct hctr2_ctx {
 	struct aes_ctx aes_ctx;
 	unsigned int default_tweak_len;
-	union polyval_key polyval_key;
+	struct polyval_key polyval_key;
 	u8 L[BLOCKCIPHER_BLOCK_SIZE];
-	union polyval_state initial_states[2];
+	struct polyval_state initial_states[2];
 };
 
 /*
@@ -68,7 +68,7 @@ void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, size_t key_len,
 }
 
 static void hctr2_hash_tweak(const struct hctr2_ctx *ctx,
-			     union polyval_state *state, const u8 *data,
+			     struct polyval_state *state, const u8 *data,
 			     size_t nbytes, bool simd)
 {
 	u8 padded_final[POLYVAL_BLOCK_SIZE];
@@ -83,7 +83,7 @@ static void hctr2_hash_tweak(const struct hctr2_ctx *ctx,
 }
 
 static void hctr2_hash_message(const struct hctr2_ctx *ctx,
-			       union polyval_state *state, const u8 *data,
+			       struct polyval_state *state, const u8 *data,
 			       size_t nbytes, bool simd)
 {
 	u8 padded_final[POLYVAL_BLOCK_SIZE];
@@ -102,8 +102,8 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 		 size_t nbytes, const u8 *tweak, size_t tweak_len, bool encrypt,
 		 bool simd)
 {
-	union polyval_state polystate1;
-	union polyval_state polystate2;
+	struct polyval_state polystate1;
+	struct polyval_state polystate2;
 	u8 digest[POLYVAL_DIGEST_SIZE];
 	u8 MM[BLOCKCIPHER_BLOCK_SIZE];
 	u8 UU[BLOCKCIPHER_BLOCK_SIZE];
