@@ -17,7 +17,10 @@ the plaintext, once the nonce and authentication tag are included. However,
 there are situations such as disk sector encryption
 where the ciphertext must be the same size as the
 plaintext, and what is required is a tweakable
-super-pseudorandom permutation\cite{cmc} (SPRP). 
+\emph{super-pseudorandom permutation} (SPRP):
+a family of permutations indexed by tweak and input length,
+which appear to be random permutations to an adversary without the key
+who can make encryption and decryption queries\cite{cmc}.
 \cite{adiantum} includes a detailed history of length-preserving encryption.
 Where AES and multiplication in \(\GF(2^{128})\) are hardware-accelerated,
 HCTR\cite{hctr} is among the most efficient 
