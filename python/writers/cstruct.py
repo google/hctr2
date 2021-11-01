@@ -137,16 +137,18 @@ def convert(tvdir, cipher):
 def linux_testvectors(tvdir, cipher):
     length_count = collections.defaultdict(lambda: 0)
     max_count = 2
-    for s in testvectors(tvdir, cipher):
-        converted = cipher.linux_convert_testvec(s)
-        if converted is None:
-            continue
-        lengths = sorted([(k, v)
-                          for k, v in converted.items() if isinstance(v, int)])
-        lengths = tuple(lengths)
-        if length_count[lengths] < max_count:
-            length_count[lengths] += 1
-            yield converted
+    for v in cipher.variants():
+        cipher.variant = v
+        for s in testvectors(tvdir, cipher):
+            converted = cipher.linux_convert_testvec(s)
+            if converted is None:
+                continue
+            lengths = sorted([(k, v)
+                              for k, v in converted.items() if isinstance(v, int)])
+            lengths = tuple(lengths)
+            if length_count[lengths] < max_count:
+                length_count[lengths] += 1
+                yield converted
 
 
 def convert_linux(tvdir, cipher):
@@ -155,9 +157,7 @@ def convert_linux(tvdir, cipher):
     basename = f"{cipher.name().lower()}_testvecs"
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:
-        for v in cipher.variants():
-            cipher.variant = v
-            array_name = f'{cipher.variant_name().lower()}_tv_template'
-            print(f"Converting: {array_name}")
-            tvf.write_linux_testvecs(struct_name, array_name,
-                                     linux_testvectors(tvdir, cipher))
+        array_name = f'{cipher.name().lower()}_tv_template'
+        print(f"Converting: {array_name}")
+        tvf.write_linux_testvecs(struct_name, array_name,
+                                 linux_testvectors(tvdir, cipher))
