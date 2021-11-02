@@ -122,3 +122,6 @@ class HCTR2(ciphers.cipher.Bijection):
             'klen': len(v['input']['key']),
             'len': len(v['plaintext']),
         }
+
+    def linux_name(self):
+        return f"{self.name()}_{self._block.name()}"
