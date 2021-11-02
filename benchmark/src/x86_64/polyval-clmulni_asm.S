@@ -261,7 +261,7 @@ Lgstar:
  * If op1, op2 are in montgomery form,  this computes the montgomery
  * form of op1*op2.
  *
- * void clmul_polyval_mul(u128* op1, const u128* op2);
+ * void clmul_polyval_mul(ble128* op1, const ble128* op2);
  */
 ENTRY(clmul_polyval_mul)
 	FRAME_BEGIN
@@ -290,7 +290,7 @@ ENDPROC(clmul_polyval_mul)
  * rcx - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
  * r8 - location to XOR with evaluated polynomial
  * 
- * void clmul_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u8* final, u128* accumulator);
+ * void clmul_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u8* final, ble128* accumulator);
  */
 ENTRY(clmul_polyval_update)
 	FRAME_BEGIN

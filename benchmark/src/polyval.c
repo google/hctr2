@@ -12,8 +12,8 @@
 asmlinkage void clmul_polyval_update(const u8 *in,
 				     const struct polyval_key *keys,
 				     uint64_t nbytes, const u8 *final,
-				     u128 *accumulator);
-asmlinkage void clmul_polyval_mul(u128 *op1, const u128 *op2);
+				     ble128 *accumulator);
+asmlinkage void clmul_polyval_mul(ble128 *op1, const ble128 *op2);
 #define POLYVAL clmul_polyval_update
 #define MUL clmul_polyval_mul
 #endif
@@ -21,8 +21,8 @@ asmlinkage void clmul_polyval_mul(u128 *op1, const u128 *op2);
 asmlinkage void pmull_polyval_update(const u8 *in,
 				     const struct polyval_key *keys,
 				     uint64_t nbytes, const u8 *final,
-				     u128 *accumulator);
-asmlinkage void pmull_polyval_mul(u128 *op1, const u128 *op2);
+				     ble128 *accumulator);
+asmlinkage void pmull_polyval_mul(ble128 *op1, const ble128 *op2);
 #define POLYVAL pmull_polyval_update
 #define MUL pmull_polyval_mul
 #endif
@@ -43,32 +43,26 @@ void reverse_bytes(be128 *a)
 
 static void polyval_setkey_generic(struct polyval_key *key, const u8 *raw_key)
 {
-	/* set h */
-	memcpy(&key->powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(u128));
+	be128 *h = &key->key.generic_h;
 
-	reverse_bytes((be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
-	gf128mul_x_lle((be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1],
-		       (be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
+	memcpy(h, raw_key, sizeof(be128));
 
-	/* Precompute key powers */
-	for (int i = NUM_PRECOMPUTE_KEYS - 2; i >= 0; i--) {
-		memcpy(&key->powers[i], &key->powers[NUM_PRECOMPUTE_KEYS - 1],
-		       sizeof(u128));
-		gf128mul_lle((be128 *)&(key->powers[i]),
-			     (be128 *)&(key->powers[(i + 1)]));
-	}
+	reverse_bytes(h);
+	gf128mul_x_lle(h, h);
 }
 
 static void polyval_setkey_simd(struct polyval_key *key, const u8 *raw_key)
 {
+	ble128 *powers = key->key.simd_powers;
+
 	/* set h */
-	memcpy(&key->powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(u128));
+	memcpy(&powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(ble128));
 
 	/* Precompute key powers */
 	for (int i = NUM_PRECOMPUTE_KEYS - 2; i >= 0; i--) {
-		memcpy(&key->powers[i], &key->powers[NUM_PRECOMPUTE_KEYS - 1],
-		       sizeof(u128));
-		MUL(&(key->powers[i]), &(key->powers[(i + 1)]));
+		memcpy(&powers[i], &powers[NUM_PRECOMPUTE_KEYS - 1],
+		       sizeof(ble128));
+		MUL(&(powers[i]), &(powers[(i + 1)]));
 	}
 }
 
@@ -84,50 +78,25 @@ void polyval_setkey(struct polyval_key *key, const u8 *raw_key, bool simd)
 void polyval_generic(const u8 *in, const struct polyval_key *key,
 		     uint64_t nbytes, const u8 *final, be128 *accumulator)
 {
+	const be128 *h = &key->key.generic_h;
+	size_t nblocks = nbytes / POLYVAL_BLOCK_SIZE;
+	size_t partial = nbytes % POLYVAL_BLOCK_SIZE;
 	be128 tmp;
-	int index = 0;
-	int final_shift;
-	size_t nblocks;
-	nblocks = nbytes / POLYVAL_BLOCK_SIZE;
-	while (nblocks >= NUM_PRECOMPUTE_KEYS) {
-		gf128mul_lle(accumulator, (be128 *)&key->powers[0]);
-		for (int i = 0; i < NUM_PRECOMPUTE_KEYS; i++) {
-			memcpy(&tmp, &in[(i + index) * POLYVAL_BLOCK_SIZE],
-			       sizeof(u128));
-			reverse_bytes(&tmp);
-			gf128mul_lle(&tmp, (be128 *)&key->powers[i]);
-			be128_xor(accumulator, accumulator, (be128 *)&tmp);
-		}
-		index += NUM_PRECOMPUTE_KEYS;
-		nblocks -= NUM_PRECOMPUTE_KEYS;
+
+	while (nblocks > 0) {
+		memcpy(&tmp, in, sizeof(be128));
+		reverse_bytes(&tmp);
+		be128_xor(accumulator, accumulator, &tmp);
+		gf128mul_lle(accumulator, h);
+		in += 16;
+		nblocks--;
 	}
-	final_shift = nbytes % POLYVAL_BLOCK_SIZE == 0 ? 0 : 1;
-	if (nblocks > 0 || final_shift == 1) {
-		/* 0 <= NUM_PRECOMPUTE_KEYS - nblocks - final_shift <
-		 * NUM_PRECOMPUTE_KEYS */
-		gf128mul_lle(accumulator,
-			     (be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - nblocks
-						   - final_shift]);
-		for (int i = 0; i < nblocks; i++) {
-			memcpy(&tmp, &in[(i + index) * POLYVAL_BLOCK_SIZE],
-			       sizeof(u128));
-			reverse_bytes(&tmp);
-			gf128mul_lle((be128 *)&tmp,
-				     (be128 *)&key->powers[NUM_PRECOMPUTE_KEYS
-							   - nblocks
-							   - final_shift + i]);
-			be128_xor(accumulator, accumulator, (be128 *)&tmp);
-		}
-		index += nblocks;
-		nblocks -= nblocks;
-		if (final_shift == 1) {
-			memcpy(&tmp, final, sizeof(u128));
-			reverse_bytes(&tmp);
-			gf128mul_lle(
-				(be128 *)&tmp,
-				(be128 *)&key->powers[NUM_PRECOMPUTE_KEYS - 1]);
-			be128_xor(accumulator, accumulator, (be128 *)&tmp);
-		}
+
+	if (partial) {
+		memcpy(&tmp, final, sizeof(be128));
+		reverse_bytes(&tmp);
+		be128_xor(accumulator, accumulator, &tmp);
+		gf128mul_lle(accumulator, h);
 	}
 }
 
@@ -141,19 +110,22 @@ void polyval_update(struct polyval_state *state, const struct polyval_key *key,
 		    const u8 final_block[POLYVAL_BLOCK_SIZE], bool simd)
 {
 	if (simd) {
-		POLYVAL(in, key, nbytes, final_block, &state->state);
+		POLYVAL(in, key, nbytes, final_block, &state->state.simd_state);
 	} else {
 		polyval_generic(in, key, nbytes, final_block,
-				(be128 *)&state->state);
+				&state->state.generic_state);
 	}
 }
 
 void polyval_emit(struct polyval_state *state, u8 out[POLYVAL_DIGEST_SIZE],
 		  bool simd)
 {
-	if (!simd)
-		reverse_bytes((be128 *)&state->state);
-	memcpy(out, &state->state, POLYVAL_DIGEST_SIZE);
+	if (!simd) {
+		reverse_bytes(&state->state.generic_state);
+		memcpy(out, &state->state.generic_state, POLYVAL_DIGEST_SIZE);
+	} else {
+		memcpy(out, &state->state.simd_state, POLYVAL_DIGEST_SIZE);
+	}
 }
 
 static void _polyval(const struct polyval_key *key, const void *src,

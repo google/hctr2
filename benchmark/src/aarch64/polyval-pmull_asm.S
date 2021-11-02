@@ -276,7 +276,7 @@ GSTAR	.req	v24
  * If op1, op2 are in montgomery form,  this computes the montgomery
  * form of op1*op2.
  *
- * void pmull_polyval_mul(u128* op1, const u128* op2);
+ * void pmull_polyval_mul(ble128* op1, const ble128* op2);
  */
 ENTRY(pmull_polyval_mul)
 	adr		TMP, .Lgstar
@@ -305,7 +305,7 @@ ENDPROC(pmull_polyval_mul)
  * x3 - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
  * x4 - location to XOR with evaluated polynomial
  *
- * void pmull_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u8* final, u128* accumulator);
+ * void pmull_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u8* final, ble128* accumulator);
  */
 ENTRY(pmull_polyval_update)
 	adr		TMP, .Lgstar

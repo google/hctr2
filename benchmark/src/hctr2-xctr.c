@@ -36,7 +36,7 @@ asmlinkage void ce_aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[],
 static void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		     size_t nbytes, const u8 *iv)
 {
-	u128 extra;
+	le128 extra;
 	size_t offset;
 #ifdef __x86_64__
     switch(ctx->aes_ctx.key_length) {
@@ -88,7 +88,7 @@ static void xctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src
 	int i;
 	int nblocks;
 	size_t offset;
-	u128 ctr;
+	le128 ctr;
 
 	nblocks = nbytes / XCTR_BLOCK_SIZE;
 	for (i = 0; i < nblocks; i++) {
