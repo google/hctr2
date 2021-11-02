@@ -157,7 +157,7 @@ def convert_linux(tvdir, cipher):
     basename = f"{cipher.name().lower()}_testvecs"
     target = targetdir / f"{basename}.h"
     with make_tvfile(target) as tvf:
-        array_name = f'{cipher.name().lower()}_tv_template'
+        array_name = f'{cipher.linux_name().lower()}_tv_template'
         print(f"Converting: {array_name}")
         tvf.write_linux_testvecs(struct_name, array_name,
                                  linux_testvectors(tvdir, cipher))

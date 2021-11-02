@@ -45,6 +45,9 @@ class Cipher(object):
         if False:
             yield None
 
+    def linux_name(self):
+        return self.name()
+
 
 class Bijection(Cipher):
     def make_testvector(self, input, description):
