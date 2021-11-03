@@ -27,31 +27,32 @@ asmlinkage void aes_xctr_enc_128_avx_by8(const u8 *in, const u8 *iv,
 #endif
 #ifdef __aarch64__
 asmlinkage void ce_aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[],
-				    int rounds, int bytes, const u8 ctr[], u8 *finalbuf);
+				    int rounds, int bytes, const u8 ctr[],
+				    u8 *finalbuf);
 #endif
 #if !defined(__x86_64__) && !defined(__aarch64__)
-    #error Unsupported architecture.
+#error Unsupported architecture.
 #endif
 
 static void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
-		     size_t nbytes, const u8 *iv)
+			    size_t nbytes, const u8 *iv)
 {
 	le128 extra;
 	size_t offset;
 #ifdef __x86_64__
-    switch(ctx->aes_ctx.key_length) {
-        case AES_KEYSIZE_256:
-	        aes_xctr_enc_256_avx_by8(src, iv, ctx, dst, nbytes);
-            break;
-        case AES_KEYSIZE_192:
-	        aes_xctr_enc_192_avx_by8(src, iv, ctx, dst, nbytes);
-            break;
-        case AES_KEYSIZE_128:
-	        aes_xctr_enc_128_avx_by8(src, iv, ctx, dst, nbytes);
-            break;
-        default:
-            ASSERT("Invalid AES key size.");
-    }
+	switch (ctx->aes_ctx.key_length) {
+	case AES_KEYSIZE_256:
+		aes_xctr_enc_256_avx_by8(src, iv, ctx, dst, nbytes);
+		break;
+	case AES_KEYSIZE_192:
+		aes_xctr_enc_192_avx_by8(src, iv, ctx, dst, nbytes);
+		break;
+	case AES_KEYSIZE_128:
+		aes_xctr_enc_128_avx_by8(src, iv, ctx, dst, nbytes);
+		break;
+	default:
+		ASSERT("Invalid AES key size.");
+	}
 	if (nbytes % XCTR_BLOCK_SIZE != 0) {
 		offset = (nbytes / XCTR_BLOCK_SIZE) * XCTR_BLOCK_SIZE;
 		extra.a = 0;
@@ -67,23 +68,23 @@ static void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 #ifdef __aarch64__
 #define MAX_STRIDE 5
 	int rounds = 6 + ctx->aes_ctx.key_length / 4;
-    int tail = nbytes % (MAX_STRIDE * XCTR_BLOCK_SIZE);
-    if(tail > 0 && tail < XCTR_BLOCK_SIZE) {
-        memcpy(&extra, src + nbytes - tail, tail);
-    }
-	ce_aes_xctr_encrypt(dst, src, (u8 *)&ctx->aes_ctx.key_enc, rounds, nbytes,
-			    iv, &extra);
-    if(tail > 0 && tail < XCTR_BLOCK_SIZE) {
-        memcpy(dst + nbytes - tail, &extra, tail);
-    }
+	int tail = nbytes % (MAX_STRIDE * XCTR_BLOCK_SIZE);
+	if (tail > 0 && tail < XCTR_BLOCK_SIZE) {
+		memcpy(&extra, src + nbytes - tail, tail);
+	}
+	ce_aes_xctr_encrypt(dst, src, (u8 *)&ctx->aes_ctx.key_enc, rounds,
+			    nbytes, iv, &extra);
+	if (tail > 0 && tail < XCTR_BLOCK_SIZE) {
+		memcpy(dst + nbytes - tail, &extra, tail);
+	}
 #endif
 #if !defined(__x86_64__) && !defined(__aarch64__)
-    #error Unsupported architecture.
+#error Unsupported architecture.
 #endif
 }
 
-static void xctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
-			size_t nbytes, const u8 *iv)
+static void xctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst,
+			       const u8 *src, size_t nbytes, const u8 *iv)
 {
 	int i;
 	int nblocks;
