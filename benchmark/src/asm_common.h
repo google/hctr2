@@ -9,6 +9,8 @@
 
 #include "cbconfig.h"
 
+// clang-format off
+
 #if SYMBOLS_HAVE_UNDERSCORE_PREFIX
 #define CDECL_NAME(name) _##name
 #else
