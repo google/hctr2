@@ -273,10 +273,10 @@ ENDPROC(pmull_polyval_mul)
  *
  * x0 (OP1) - pointer to message blocks
  * x1 - pointer to precomputed key struct
- * x2 - number of bytes to hash
+ * x2 - number of blocks to hash
  * x3 - location to XOR with evaluated polynomial
  *
- * void pmull_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, ble128* accumulator);
+ * void pmull_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nblocks, ble128* accumulator);
  */
 ENTRY(pmull_polyval_update)
 	adr		TMP, .Lgstar
@@ -284,7 +284,6 @@ ENTRY(pmull_polyval_update)
 	mov		KEY_START, x1
 	ld1		{KEY8.16b, KEY7.16b, KEY6.16b, KEY5.16b}, [x1], #64
 	ld1		{KEY4.16b, KEY3.16b, KEY2.16b, KEY1.16b}, [x1], #64
-	lsr		BLOCKS_LEFT, BLOCKS_LEFT, #4
 	ld1		{SUM.16b}, [x3]
 	cmp		BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	blt		.StrideLoopExit

@@ -275,16 +275,14 @@ ENDPROC(clmul_polyval_mul)
  *
  * rdi (OP1) - pointer to message blocks
  * rsi - pointer to precomputed key struct
- * rdx - number of bytes to hash
- * rcx - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
- * r8 - location to XOR with evaluated polynomial
+ * rdx - number of blocks to hash
+ * rcx - location to XOR with evaluated polynomial
  * 
- * void clmul_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u8* final, ble128* accumulator);
+ * void clmul_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nblocks, ble128* accumulator);
  */
 ENTRY(clmul_polyval_update)
 	FRAME_BEGIN
 	vmovdqa Lgstar(%rip), GSTAR
-	shr $4, BLOCKS_LEFT
 	movups (%rcx), SUM
 	cmpq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
 	jb .StrideLoopExit

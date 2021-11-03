@@ -40,13 +40,13 @@ void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len,
 	tmp.b = cpu_to_le64(tweak_len * 8 * 2 + 3);
 	tmp.a = cpu_to_le64(0);
 	polyval_update(&ctx->initial_states[0], &ctx->polyval_key, (u8 *)&tmp,
-		       POLYVAL_BLOCK_SIZE, simd);
+		       1, simd);
 
 	polyval_init(&ctx->initial_states[1]);
 	tmp.b = cpu_to_le64(tweak_len * 8 * 2 + 2);
 	tmp.a = cpu_to_le64(0);
 	polyval_update(&ctx->initial_states[1], &ctx->polyval_key, (u8 *)&tmp,
-		       POLYVAL_BLOCK_SIZE, simd);
+		       1, simd);
 }
 
 void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, size_t key_len,
@@ -73,13 +73,13 @@ static void hctr2_hash_tweak(const struct hctr2_ctx *ctx,
 {
 	u8 padded_final[POLYVAL_BLOCK_SIZE];
 	size_t remainder = nbytes % POLYVAL_BLOCK_SIZE;
+	size_t nblocks = nbytes / POLYVAL_BLOCK_SIZE;
 
-	polyval_update(state, &ctx->polyval_key, data, nbytes, simd);
+	polyval_update(state, &ctx->polyval_key, data, nblocks, simd);
 	if (remainder) {
 		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
 		memcpy(padded_final, data + nbytes - remainder, remainder);
-		polyval_update(state, &ctx->polyval_key, padded_final,
-			       POLYVAL_BLOCK_SIZE, simd);
+		polyval_update(state, &ctx->polyval_key, padded_final, 1, simd);
 	}
 }
 
@@ -89,14 +89,14 @@ static void hctr2_hash_message(const struct hctr2_ctx *ctx,
 {
 	u8 padded_final[POLYVAL_BLOCK_SIZE];
 	size_t remainder = nbytes % POLYVAL_BLOCK_SIZE;
+	size_t nblocks = nbytes / POLYVAL_BLOCK_SIZE;
 
-	polyval_update(state, &ctx->polyval_key, data, nbytes, simd);
+	polyval_update(state, &ctx->polyval_key, data, nblocks, simd);
 	if (remainder) {
 		memset(padded_final, 0, POLYVAL_BLOCK_SIZE);
 		memcpy(padded_final, data + nbytes - remainder, remainder);
 		padded_final[remainder] = 0x01;
-		polyval_update(state, &ctx->polyval_key, padded_final,
-			       POLYVAL_BLOCK_SIZE, simd);
+		polyval_update(state, &ctx->polyval_key, padded_final, 1, simd);
 	}
 }
 
@@ -142,7 +142,7 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 		polyval_init(&polystate1);
 		tmp.b = cpu_to_le64(tweak_len * 8 * 2 + length_modifier);
 		tmp.a = cpu_to_le64(0);
-		polyval_update(&polystate1, &ctx->polyval_key, (u8 *)&tmp, 16,
+		polyval_update(&polystate1, &ctx->polyval_key, (u8 *)&tmp, 1,
 			       simd);
 	}
 
