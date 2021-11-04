@@ -224,8 +224,13 @@ query \(s\) is an encryption query:
 
 \begin{itemize}
     \item \(\MM^r \qeq \MM^s\):
-    This holds iff \(M^r \xor H_{\hgen}(T^r, N^r) = M^s \xor H_{\hgen}(T^s, N^s)\);
-    by hash function property 2, this holds with probability at most
+    This holds iff \(M^r \xor H_{\hgen}(T^r, N^r) = M^s \xor H_{\hgen}(T^s, N^s)\).
+    Since pointless queries are forbidden,
+    we have that \((T^r, M^r, N^r) \neq (T^s, M^s, N^s)\).
+    If \((T^r, N^r) = (T^s, N^s)\) then \(M^r \neq M^s\),
+    and the equation does not hold.
+    Otherwise, by hash function property 2,
+    the equation holds with probability at most
     \(\max(d^r, d^s)/2^n\).
     \item \(\fromint(0) \qeq \MM^s\):
     This holds iff \(\fromint(0) = M^s \xor H_{\hgen}(T^s, N^s)\);
@@ -248,7 +253,8 @@ query \(s\) is a decryption query:
 \begin{itemize}
     \item \(\UU^r \qeq \UU^s\): 
     This holds iff \(U^r \xor H_{\hgen}(T^r, V^r) = U^s \xor H_{\hgen}(T^s, V^s)\);
-    by hash function property 2, this holds with probability at most
+    as with the case of \(\MM^r \qeq \MM^s\), 
+    this holds with probability at most
     \(\max(d^r, d^s)/2^n\).
     \item \(Y_i^r \qeq \UU^s\):
     This holds iff \(Y_i^r = U^s \xor H_{\hgen}(T^s, V^s)\);
