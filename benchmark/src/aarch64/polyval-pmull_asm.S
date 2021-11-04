@@ -122,14 +122,8 @@ GSTAR	.req	v24
 	eor		D.16b, D.16b, D.16b
 	eor		E.16b, E.16b, E.16b
 	
-	ld1		{M0.16b}, [x0], #16
-	ld1		{M1.16b}, [x0], #16
-	ld1		{M2.16b}, [x0], #16
-	ld1		{M3.16b}, [x0], #16
-	ld1		{M4.16b}, [x0], #16
-	ld1		{M5.16b}, [x0], #16
-	ld1		{M6.16b}, [x0], #16
-	ld1		{M7.16b}, [x0], #16
+	ld1		{M0.16b, M1.16b, M2.16b, M3.16b}, [x0], #64
+	ld1		{M4.16b, M5.16b, M6.16b, M7.16b}, [x0], #64
 
 	karatsuba1 M7 KEY1
 	.if(reduce)
@@ -180,12 +174,8 @@ GSTAR	.req	v24
 	eor		C.16b, C.16b, C.16b
 	eor		D.16b, D.16b, D.16b
 	eor		E.16b, E.16b, E.16b
-	mov		TMP, BLOCKS_LEFT
-	cmp		EXTRA_BYTES, #0
-	csinc	TMP, TMP, TMP, eq
-	lsl		TMP, TMP, #4
     // x1 currently points at the end of the key array
-	subs	KEY_START, x1, TMP
+	subs	KEY_START, x1, BLOCKS_LEFT, lsl #4
 	ld1		{v0.16b}, [KEY_START]
 	mov		v1.16b, SUM.16b
 	karatsuba1 v0 v1
@@ -204,15 +194,9 @@ GSTAR	.req	v24
 
 	cmp		TMP, #-4
     bgt		.gt4Partial
-	ld1		{M0.16b}, [x0], #16
-	ld1		{M1.16b}, [x0], #16
-	ld1		{M2.16b}, [x0], #16
-	ld1		{M3.16b}, [x0], #16
+	ld1		{M0.16b, M1.16b,  M2.16b, M3.16b}, [x0], #64
     // Clobber key registers
-	ld1		{KEY8.16b}, [KEY_START], #16
-	ld1		{KEY7.16b}, [KEY_START], #16
-	ld1		{KEY6.16b}, [KEY_START], #16
-	ld1		{KEY5.16b}, [KEY_START], #16
+	ld1		{KEY8.16b, KEY7.16b, KEY6.16b,  KEY5.16b}, [KEY_START], #64
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
 	karatsuba1 M2 KEY6
@@ -223,13 +207,9 @@ GSTAR	.req	v24
 .gt4Partial:
 	cmp		TMP, #-3
 	bgt		.gt3Partial
-	ld1		{M0.16b}, [x0], #16
-	ld1		{M1.16b}, [x0], #16
-	ld1		{M2.16b}, [x0], #16
+	ld1		{M0.16b, M1.16b, M2.16b}, [x0], #48
     // Clobber key registers
-	ld1		{KEY8.16b}, [KEY_START], #16
-	ld1		{KEY7.16b}, [KEY_START], #16
-	ld1		{KEY6.16b}, [KEY_START], #16
+	ld1		{KEY8.16b, KEY7.16b, KEY6.16b}, [KEY_START], #48
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
 	karatsuba1 M2 KEY6
@@ -239,11 +219,9 @@ GSTAR	.req	v24
 .gt3Partial:
 	cmp		TMP, #-2
 	bgt		.gt2Partial
-	ld1		{M0.16b}, [x0], #16
-	ld1		{M1.16b}, [x0], #16
+	ld1		{M0.16b, M1.16b}, [x0], #32
 	// Clobber key registers
-	ld1		{KEY8.16b}, [KEY_START], #16
-	ld1		{KEY7.16b}, [KEY_START], #16
+	ld1		{KEY8.16b, KEY7.16b}, [KEY_START], #32
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
 	add		IDX, IDX, #2
@@ -258,12 +236,6 @@ GSTAR	.req	v24
 .outPartial:
 	b .LoopPartial
 .LoopExitPartial:
-	# Handle extra block
-	cmp		EXTRA_BYTES, #0
-	beq		.no_extra_block
-	ld1		{M0.16b}, [x3]
-	karatsuba1 M0 KEY1
-.no_extra_block:
 	karatsuba2
 	montgomery_reduction
 	eor		SUM.16b, SUM.16b, PH.16b
@@ -301,27 +273,18 @@ ENDPROC(pmull_polyval_mul)
  *
  * x0 (OP1) - pointer to message blocks
  * x1 - pointer to precomputed key struct
- * x2 - number of bytes to hash
- * x3 - final block (if nbytes % 16 != 0) used to allow padding without modifying *in
- * x4 - location to XOR with evaluated polynomial
+ * x2 - number of blocks to hash
+ * x3 - location to XOR with evaluated polynomial
  *
- * void pmull_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nbytes, const u8* final, ble128* accumulator);
+ * void pmull_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nblocks, ble128* accumulator);
  */
 ENTRY(pmull_polyval_update)
 	adr		TMP, .Lgstar
 	ld1		{GSTAR.2d}, [TMP]
 	mov		KEY_START, x1
-	ld1		{KEY8.16b}, [x1], #16
-	ld1		{KEY7.16b}, [x1], #16
-	ld1		{KEY6.16b}, [x1], #16
-	ld1		{KEY5.16b}, [x1], #16
-	ld1		{KEY4.16b}, [x1], #16
-	ld1		{KEY3.16b}, [x1], #16
-	ld1		{KEY2.16b}, [x1], #16
-	ld1		{KEY1.16b}, [x1], #16
-	ands	EXTRA_BYTES, x2, 0xf
-	lsr		BLOCKS_LEFT, BLOCKS_LEFT, #4
-	ld1		{SUM.16b}, [x4]
+	ld1		{KEY8.16b, KEY7.16b, KEY6.16b, KEY5.16b}, [x1], #64
+	ld1		{KEY4.16b, KEY3.16b, KEY2.16b, KEY1.16b}, [x1], #64
+	ld1		{SUM.16b}, [x3]
 	cmp		BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	blt		.StrideLoopExit
 	full_stride 0
@@ -337,13 +300,9 @@ ENTRY(pmull_polyval_update)
 	mov		SUM.16b, PH.16b
 .StrideLoopExit:
 	cmp		BLOCKS_LEFT, 0
-	bne		.DoPartial
-	cmp		EXTRA_BYTES, 0
-	bne		.DoPartial
-	b		.SkipPartial
-.DoPartial:
+	beq		.SkipPartial
 	partial_stride
 .SkipPartial:
-	st1		{SUM.16b}, [x4]
+	st1		{SUM.16b}, [x3]
 	ret
 ENDPROC(pmull_polyval_update)
