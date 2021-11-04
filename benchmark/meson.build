@@ -48,10 +48,10 @@ cipherbench = executable('cipherbench', src,
 benchmark('benchmark', cipherbench)
 check4096 = custom_target('check4096',
     command: [cipherbench, '--bufsize=4096'],
-    output: 'check4096', capture: 'true')
+    output: 'check4096', capture: true)
 output4096 = custom_target('output4096',
     command: [cipherbench, '--bufsize=4096', '--ntries=25'],
-    output: 'output4096', capture: 'true')
+    output: 'output4096', capture: true)
 output512 = custom_target('output512',
     command: [cipherbench, '--bufsize=512', '--ntries=25'],
-    output: 'output512', capture: 'true')
+    output: 'output512', capture: true)
