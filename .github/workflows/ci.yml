@@ -1,0 +1,42 @@
+#
+# Copyright 2021 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+#
+
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-crypto meson ninja-build
+    - name: Test python code
+      run: |
+        ./python/testvec_tool check
+    - name: Convert test vectors
+      run: |
+        ./python/testvec_tool convert_cstruct
+    - name: Build benchmark tool
+      run: |
+        cd benchmark
+        meson build/host
+        ninja -C build/host
+    - name: Run benchmark tool
+      run: |
+        cd benchmark
+        build/host/cipherbench --ntries=1
