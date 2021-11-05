@@ -135,7 +135,7 @@ AES_FUNC_START(aes_xctr_encrypt)
 	ld1		{vctr.16b}, [x5]
 
 	umov		x12, vctr.d[0]		/* keep ctr in reg */
-	movz	x11, #1
+	movz		x11, #1
 
 .LxctrloopNx:
 	add		w7, w4, #15
@@ -144,6 +144,7 @@ AES_FUNC_START(aes_xctr_encrypt)
 	mov		w8, #MAX_STRIDE
 	cmp		w7, w8
 	csel		w7, w7, w8, lt
+	add		x11, x11, x7
 
 	mov		v0.16b, vctr.16b
 	mov		v1.16b, vctr.16b
@@ -151,16 +152,17 @@ AES_FUNC_START(aes_xctr_encrypt)
 	mov		v3.16b, vctr.16b
 ST5(	mov		v4.16b, vctr.16b		)
 
-	eor		x7, x12, x11
+	sub		x7, x11, #MAX_STRIDE
+	eor		x7, x12, x7
 	ins		v0.d[0], x7
-	add		x7, x11, #1
-	add		x8, x11, #2
+	sub		x7, x11, #MAX_STRIDE - 1
+	sub		x8, x11, #MAX_STRIDE - 2
 	eor		x7, x7, x12
-	add		x9, x11, #3
+	sub		x9, x11, #MAX_STRIDE - 3
 	mov		v1.d[0], x7
 	eor		x8, x8, x12
 	eor		x9, x9, x12
-ST5(	add		x10, x11, #4	)
+ST5(	sub		x10, x11, #MAX_STRIDE - 4)
 	mov		v2.d[0], x8
 	eor		x10, x10, x12
 	mov		v3.d[0], x9
@@ -178,8 +180,6 @@ ST5(	ld1		{v5.16b-v6.16b}, [x1], #32	)
 ST5(	eor		v4.16b, v6.16b, v4.16b		)
 	st1		{v0.16b-v3.16b}, [x0], #64
 ST5(	st1		{v4.16b}, [x0], #16		)
-ST4(add		x11, x11, #4)
-ST5(add		x11, x11, #5)
 	cbz		w4, .Lxctrout
 	b		.LxctrloopNx
 
@@ -195,13 +195,10 @@ ST5(add		x11, x11, #5)
 
 ST5(	cmp		w4, #64 - (MAX_STRIDE << 4))
 ST5(	csel		x14, x17, xzr, gt		)
-ST5(	csel		x10, x10, x9, gt		)
 	cmp		w4, #48 - (MAX_STRIDE << 4)
 	csel		x15, x17, xzr, gt
-ST5(	csel		x10, x10, x8, gt		)
 	cmp		w4, #32 - (MAX_STRIDE << 4)
 	csel		x16, x17, xzr, gt
-ST5(	csel		x10, x10, x7, gt		)
 	cmp		w4, #16 - (MAX_STRIDE << 4)
 	ble		.Lxctrtail1x
 
@@ -210,9 +207,9 @@ ST5(	mov		v4.d[0], x10			)
 	adr		x12, .Lcts_permute_table
 	add		x12, x12, x13
 
-ST5(	ld1		{v5.16b}, [x1], x16		)
+ST5(	ld1		{v5.16b}, [x1], x14		)
 	ld1		{v6.16b}, [x1], x15
-	ld1		{v7.16b}, [x1], x14
+	ld1		{v7.16b}, [x1], x16
 
 ST4(	bl		aes_encrypt_block4x		)
 ST5(	bl		aes_encrypt_block5x		)
@@ -234,33 +231,19 @@ ST5(	eor		v7.16b, v7.16b, v2.16b		)
 ST5(	eor		v8.16b, v8.16b, v3.16b		)
 ST5(	eor		v9.16b, v9.16b, v4.16b		)
 
-	add		x15, x15, x16
-ST5(	add		x14, x14, x15			)
-ST5(	add		x13, x13, x14			)
-ST4(	add		x13, x13, x15			)
-
-	add		x16, x16, x0
-	add		x15, x15, x0
-ST5(	add		x14, x14, x0			)
+ST5(	st1		{v5.16b}, [x0], x14		)
+	st1		{v6.16b}, [x0], x15
+	st1		{v7.16b}, [x0], x16
 	add		x13, x13, x0
-
-ST5(	st1		{v9.16b}, [x13])
-ST5(	st1		{v8.16b}, [x14])
-ST5(	st1		{v7.16b}, [x15])
-ST5(	st1		{v6.16b}, [x16])
-ST5(	st1		{v5.16b}, [x0])
-
-ST4(	st1		{v9.16b}, [x15])
-ST4(	st1		{v8.16b}, [x16])
-ST4(	st1		{v7.16b}, [x17])
-ST4(	st1		{v6.16b}, [x0])
+	st1		{v9.16b}, [x13]		// overlapping stores
+	st1		{v8.16b}, [x0]
 	b		.Lxctrout
 
 .Lxctrtail1x:
 	csel		x0, x0, x6, eq		// use finalbuf if less than a full block
 	csel		x1, x1, x6, eq		// use finalbuf if less than a full block
 	ld1		{v5.16b}, [x1]
-ST5(	mov		v3.16b, v0.16b			)
+ST5(	mov		v3.16b, v4.16b			)
 	encrypt_block	v3, w3, x2, x8, w7
 	eor		v5.16b, v5.16b, v3.16b
 	st1		{v5.16b}, [x0]
