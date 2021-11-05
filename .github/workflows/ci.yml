@@ -74,3 +74,16 @@ jobs:
         cd benchmark
         qemu-aarch64 -L /usr/aarch64-linux-gnu \
                build/qemu-aarch64/cipherbench --ntries=1
+  check-latex:
+    name: Check LaTeX sources
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y texlive-latex-extra texlive-luatex texlive-science biber
+    - name: Check LaTeX
+      run: |
+        cd paper
+        ./build.sh
