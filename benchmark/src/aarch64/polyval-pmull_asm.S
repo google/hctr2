@@ -7,12 +7,13 @@
 #include "asm_common.h"
 #include "../polyval-asm.h"
 
-BLOCKS_LEFT	.req	x2 // Ensure caller saved, maybe switch
-OP1	.req	x9 // Ensure caller saved, maybe switch
-KEY_START	.req	x10 // Ensure caller saved, maybe switch
-EXTRA_BYTES	.req	x11 // Ensure caller saved, maybe switch
-IDX	.req	x12 // Ensure caller saved, maybe switch
-TMP	.req	x13 // Ensure caller saved, maybe switch
+BLOCKS_LEFT	.req	x2
+OP1	.req	x9
+KEY_START	.req	x10
+EXTRA_BYTES	.req	x11
+IDX	.req	x12
+TMP	.req	x13
+PARTIAL_LEFT	.req	x14
 
 M0	.req	v0
 M1	.req	v1
@@ -167,15 +168,15 @@ GSTAR	.req	v24
 .endm
 
 /*
- * Handle any leftover blocks after
+ * Handle any extra blocks before
  * full_stride loop.
  */
 .macro partial_stride
 	eor		C.16b, C.16b, C.16b
 	eor		D.16b, D.16b, D.16b
 	eor		E.16b, E.16b, E.16b
-    // x1 currently points at the end of the key array
-	subs	KEY_START, x1, BLOCKS_LEFT, lsl #4
+	add		KEY_START, x1, #(NUM_PRECOMPUTE_KEYS << 4)
+	sub		KEY_START, KEY_START, PARTIAL_LEFT, lsl #4
 	ld1		{v0.16b}, [KEY_START]
 	mov		v1.16b, SUM.16b
 	karatsuba1 v0 v1
@@ -187,15 +188,15 @@ GSTAR	.req	v24
 	eor		E.16b, E.16b, E.16b
 	mov		IDX, XZR
 .LoopPartial:
-	cmp	IDX, BLOCKS_LEFT
-	bge	.LoopExitPartial
+	cmp		IDX, PARTIAL_LEFT
+	bge		.LoopExitPartial
 
-	subs	TMP, IDX, BLOCKS_LEFT
+	sub		TMP, IDX, PARTIAL_LEFT
 
 	cmp		TMP, #-4
-    bgt		.gt4Partial
+	bgt		.gt4Partial
 	ld1		{M0.16b, M1.16b,  M2.16b, M3.16b}, [x0], #64
-    // Clobber key registers
+	// Clobber key registers
 	ld1		{KEY8.16b, KEY7.16b, KEY6.16b,  KEY5.16b}, [KEY_START], #64
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
@@ -208,7 +209,7 @@ GSTAR	.req	v24
 	cmp		TMP, #-3
 	bgt		.gt3Partial
 	ld1		{M0.16b, M1.16b, M2.16b}, [x0], #48
-    // Clobber key registers
+	// Clobber key registers
 	ld1		{KEY8.16b, KEY7.16b, KEY6.16b}, [KEY_START], #48
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
@@ -225,7 +226,7 @@ GSTAR	.req	v24
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
 	add		IDX, IDX, #2
-    b		.outPartial
+	b		.outPartial
 
 .gt2Partial:
 	ld1		{M0.16b}, [x0], #16
@@ -281,28 +282,27 @@ ENDPROC(pmull_polyval_mul)
 ENTRY(pmull_polyval_update)
 	adr		TMP, .Lgstar
 	ld1		{GSTAR.2d}, [TMP]
-	mov		KEY_START, x1
+	ld1		{SUM.16b}, [x3]
+	ands		PARTIAL_LEFT, BLOCKS_LEFT, #7
+	beq		.SkipPartial
+	partial_stride
+.SkipPartial:
+	cmp		BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	ld1		{KEY8.16b, KEY7.16b, KEY6.16b, KEY5.16b}, [x1], #64
 	ld1		{KEY4.16b, KEY3.16b, KEY2.16b, KEY1.16b}, [x1], #64
-	ld1		{SUM.16b}, [x3]
-	cmp		BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	blt		.StrideLoopExit
 	full_stride 0
-	subs	BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
+	subs		BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 .StrideLoop:
 	cmp		BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	blt		.StrideLoopExitReduce
 	full_stride 1
-	subs	BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
+	subs		BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	b		.StrideLoop
 .StrideLoopExitReduce:
 	montgomery_reduction
 	mov		SUM.16b, PH.16b
 .StrideLoopExit:
-	cmp		BLOCKS_LEFT, 0
-	beq		.SkipPartial
-	partial_stride
-.SkipPartial:
 	st1		{SUM.16b}, [x3]
 	ret
 ENDPROC(pmull_polyval_update)
