@@ -16,8 +16,21 @@ on:
       - main
 
 jobs:
-  build:
-    name: Build and test
+  test-python:
+    name: Test python code
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-crypto
+    - name: Test python code
+      run: |
+        ./python/testvec_tool check
+
+  test-cryptobench:
+    name: Build and run benchmark tool
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -25,9 +38,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y python3 python3-crypto meson ninja-build
-    - name: Test python code
-      run: |
-        ./python/testvec_tool check
     - name: Convert test vectors
       run: |
         ./python/testvec_tool convert_cstruct
