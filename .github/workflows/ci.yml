@@ -16,8 +16,21 @@ on:
       - main
 
 jobs:
-  build:
-    name: Build and test
+  test-python:
+    name: Test python code
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-crypto
+    - name: Test python code
+      run: |
+        ./python/testvec_tool check
+
+  test-cryptobench-x86_64:
+    name: Build and run benchmark tool (x86_64)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -25,9 +38,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y python3 python3-crypto meson ninja-build
-    - name: Test python code
-      run: |
-        ./python/testvec_tool check
     - name: Convert test vectors
       run: |
         ./python/testvec_tool convert_cstruct
@@ -40,3 +50,27 @@ jobs:
       run: |
         cd benchmark
         build/host/cipherbench --ntries=1
+
+  test-cryptobench-qemu-aarch64:
+    name: Build and run benchmark tool (qemu-aarch64)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-crypto meson ninja-build \
+                qemu-user binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu
+    - name: Convert test vectors
+      run: |
+        ./python/testvec_tool convert_cstruct
+    - name: Build benchmark tool
+      run: |
+        cd benchmark
+        ./cross-tools/setup-build --build-type=qemu-aarch64
+        ninja -C build/qemu-aarch64
+    - name: Run benchmark tool
+      run: |
+        cd benchmark
+        qemu-aarch64 -L /usr/aarch64-linux-gnu \
+               build/qemu-aarch64/cipherbench --ntries=1
