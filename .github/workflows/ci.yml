@@ -44,7 +44,7 @@ jobs:
     - name: Build benchmark tool
       run: |
         cd benchmark
-        meson build/host
+        meson build/host --werror
         ninja -C build/host
     - name: Run benchmark tool
       run: |
@@ -67,7 +67,7 @@ jobs:
     - name: Build benchmark tool
       run: |
         cd benchmark
-        ./cross-tools/setup-build --build-type=qemu-aarch64
+        ./cross-tools/setup-build --build-type=qemu-aarch64 -- --werror
         ninja -C build/qemu-aarch64
     - name: Run benchmark tool
       run: |
