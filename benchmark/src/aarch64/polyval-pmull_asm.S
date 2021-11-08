@@ -287,18 +287,17 @@ ENTRY(pmull_polyval_update)
 	beq		.SkipPartial
 	partial_stride
 .SkipPartial:
-	cmp		BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
+	subs		BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
+	blt		.StrideLoopExit
 	ld1		{KEY8.16b, KEY7.16b, KEY6.16b, KEY5.16b}, [x1], #64
 	ld1		{KEY4.16b, KEY3.16b, KEY2.16b, KEY1.16b}, [x1], #64
-	blt		.StrideLoopExit
 	full_stride 0
 	subs		BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
-.StrideLoop:
-	cmp		BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
 	blt		.StrideLoopExitReduce
+.StrideLoop:
 	full_stride 1
 	subs		BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
-	b		.StrideLoop
+	bge		.StrideLoop
 .StrideLoopExitReduce:
 	montgomery_reduction
 	mov		SUM.16b, PH.16b
