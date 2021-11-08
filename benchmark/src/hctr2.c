@@ -8,7 +8,7 @@
 
 #include "aes.h"
 #include "aes_linux.h"
-#include "hctr2-xctr.h"
+#include "xctr.h"
 #include "polyval.h"
 #include "hctr2_testvecs.h"
 #include "testvec.h"

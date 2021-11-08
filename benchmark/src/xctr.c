@@ -8,7 +8,7 @@
 
 #include "aes.h"
 #include "aes_linux.h"
-#include "hctr2-xctr.h"
+#include "xctr.h"
 
 void xctr_setkey(struct aes_ctx *ctx, const u8 *key, size_t key_len)
 {
