@@ -25,13 +25,11 @@ asmlinkage void aes_xctr_enc_192_avx_by8(const u8 *in, const u8 *iv,
 asmlinkage void aes_xctr_enc_128_avx_by8(const u8 *in, const u8 *iv,
 					 const struct aes_ctx *key, u8 *out,
 					 size_t num_bytes);
-#endif
-#ifdef __aarch64__
+#elif defined(__aarch64__)
 asmlinkage void ce_aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[],
 				    int rounds, int bytes, const u8 ctr[],
 				    u8 *finalbuf);
-#endif
-#if !defined(__x86_64__) && !defined(__aarch64__)
+#else
 #error Unsupported architecture.
 #endif
 
