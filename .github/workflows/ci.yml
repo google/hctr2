@@ -69,6 +69,26 @@ jobs:
         qemu-aarch64 -L /usr/aarch64-linux-gnu \
                ./benchmark/build/qemu-aarch64/cipherbench --ntries=1
 
+  test-cryptobench-valgrind:
+    name: Build and run benchmark tool (x86_64, valgrind enabled)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES valgrind
+    - name: Build benchmark tool
+      run: |
+        cd benchmark
+        meson build/host --werror
+        ninja -C build/host
+    - name: Run benchmark tool
+      run: |
+        valgrind --error-exitcode=100 --leak-check=full \
+                --errors-for-leak-kinds=all \
+                ./benchmark/build/host/cipherbench --ntries=1
+
   check-latex:
     name: Check LaTeX sources
     runs-on: ubuntu-latest
