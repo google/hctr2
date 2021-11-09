@@ -45,12 +45,10 @@ void aes_encrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
 {
 #ifdef __x86_64__
 	aesni_ecb_enc(&ctx->aes_ctx, out, in, AES_BLOCK_SIZE);
-#endif
-#ifdef __aarch64__
+#elif defined(__aarch64__)
 	int rounds = 6 + ctx->aes_ctx.key_length / 4;
 	ce_aes_ecb_encrypt(out, in, (u8 *)ctx->aes_ctx.key_enc, rounds, 1);
-#endif
-#if !defined(__x86_64__) && !defined(__aarch64__)
+#else
 #error Unsupported architecture.
 #endif
 }
@@ -59,12 +57,10 @@ void aes_decrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
 {
 #ifdef __x86_64__
 	aesni_ecb_dec(&ctx->aes_ctx, out, in, AES_BLOCK_SIZE);
-#endif
-#ifdef __aarch64__
+#elif defined(__aarch64__)
 	int rounds = 6 + ctx->aes_ctx.key_length / 4;
 	ce_aes_ecb_decrypt(out, in, (u8 *)ctx->aes_ctx.key_dec, rounds, 1);
-#endif
-#if !defined(__x86_64__) && !defined(__aarch64__)
+#else
 #error Unsupported architecture.
 #endif
 }

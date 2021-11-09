@@ -16,16 +16,14 @@ asmlinkage void clmul_polyval_update(const u8 *in,
 asmlinkage void clmul_polyval_mul(ble128 *op1, const ble128 *op2);
 #define POLYVAL clmul_polyval_update
 #define MUL clmul_polyval_mul
-#endif
-#ifdef __aarch64__
+#elif defined(__aarch64__)
 asmlinkage void pmull_polyval_update(const u8 *in,
 				     const struct polyval_key *keys,
 				     uint64_t nblocks, ble128 *accumulator);
 asmlinkage void pmull_polyval_mul(ble128 *op1, const ble128 *op2);
 #define POLYVAL pmull_polyval_update
 #define MUL pmull_polyval_mul
-#endif
-#if !defined(__x86_64__) && !defined(__aarch64__)
+#else
 #error Unsupported architecture.
 #endif
 
