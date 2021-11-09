@@ -14,6 +14,8 @@ on:
   pull_request:
     branches:
       - main
+env:
+  CRYPTOBENCH_DEPENDENCIES: python3 python3-crypto meson ninja-build
 
 jobs:
   test-python:
@@ -37,7 +39,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3 python3-crypto meson ninja-build
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES
     - name: Convert test vectors
       run: |
         ./python/testvec_tool convert_cstruct
@@ -59,7 +61,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3 python3-crypto meson ninja-build \
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES \
                 qemu-user binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu
     - name: Convert test vectors
       run: |
