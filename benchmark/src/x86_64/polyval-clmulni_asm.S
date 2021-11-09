@@ -201,44 +201,44 @@ Lgstar:
 	pxor D, D
 	pxor EF, EF
 	xor IDX, IDX
-.LoopPartial:
+.LloopPartial:
 	cmpq BLOCKS_LEFT, IDX # IDX < rdx
-	jae .LoopExitPartial
+	jae .LloopExitPartial
 	
 	movq BLOCKS_LEFT, TMP
 	subq IDX, TMP # TMP = rdx - IDX
 
 	cmp $4, TMP # TMP < 4 ?
-	jl .lt4Partial
+	jl .Llt4Partial
 	schoolbook1 4
 	addq $4, IDX
 	addq $(4*16), OP1
 	addq $(4*16), OP2
-	jmp .outPartial
-.lt4Partial:
+	jmp .LoutPartial
+.Llt4Partial:
 	cmp $3, TMP # TMP < 3 ?
-	jl .lt3Partial
+	jl .Llt3Partial
 	schoolbook1 3
 	addq $3, IDX
 	addq $(3*16), OP1
 	addq $(3*16), OP2
-	jmp .outPartial
-.lt3Partial:
+	jmp .LoutPartial
+.Llt3Partial:
 	cmp $2, TMP # TMP < 2 ?
-	jl .lt2Partial
+	jl .Llt2Partial
 	schoolbook1 2
 	addq $2, IDX
 	addq $(2*16), OP1
 	addq $(2*16), OP2
-	jmp .outPartial
-.lt2Partial:
+	jmp .LoutPartial
+.Llt2Partial:
 	schoolbook1 1 # TMP < 1 ?
 	addq $1, IDX
 	addq $(1*16), OP1
 	addq $(1*16), OP2
-.outPartial:
-	jmp .LoopPartial
-.LoopExitPartial:
+.LoutPartial:
+	jmp .LloopPartial
+.LloopExitPartial:
 	schoolbook2
 	montgomery_reduction
 	pxor PH, SUM
@@ -286,23 +286,23 @@ ENTRY(clmul_polyval_update)
 	vmovdqa Lgstar(%rip), GSTAR
 	movups (%rcx), SUM
 	cmpq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
-	jb .StrideLoopExit
+	jb .LstrideLoopExit
 	full_stride 0
 	subq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
-.StrideLoop:
+.LstrideLoop:
 	cmpq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
-	jb .StrideLoopExitReduce
+	jb .LstrideLoopExitReduce
 	full_stride 1
 	subq $NUM_PRECOMPUTE_KEYS, BLOCKS_LEFT
-	jmp .StrideLoop
-.StrideLoopExitReduce:
+	jmp .LstrideLoop
+.LstrideLoopExitReduce:
 	montgomery_reduction
 	movdqa PH, SUM
-.StrideLoopExit:
+.LstrideLoopExit:
 	test BLOCKS_LEFT, BLOCKS_LEFT
-	je .SkipPartial
+	je .LskipPartial
 	partial_stride
-.SkipPartial:
+.LskipPartial:
 	movups SUM, (%rcx)
 	FRAME_END
 	ret

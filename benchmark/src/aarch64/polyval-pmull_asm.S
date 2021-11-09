@@ -188,14 +188,14 @@ GSTAR	.req	v24
 	eor		D.16b, D.16b, D.16b
 	eor		E.16b, E.16b, E.16b
 	mov		IDX, XZR
-.LoopPartial:
+.LloopPartial:
 	cmp		IDX, PARTIAL_LEFT
-	bge		.LoopExitPartial
+	bge		.LloopExitPartial
 
 	sub		TMP, IDX, PARTIAL_LEFT
 
 	cmp		TMP, #-4
-	bgt		.gt4Partial
+	bgt		.Lgt4Partial
 	ld1		{M0.16b, M1.16b,  M2.16b, M3.16b}, [x0], #64
 	// Clobber key registers
 	ld1		{KEY8.16b, KEY7.16b, KEY6.16b,  KEY5.16b}, [KEY_START], #64
@@ -204,11 +204,11 @@ GSTAR	.req	v24
 	karatsuba1 M2 KEY6
 	karatsuba1 M3 KEY5
 	add		IDX, IDX, #4
-	b		.outPartial
+	b		.LoutPartial
 
-.gt4Partial:
+.Lgt4Partial:
 	cmp		TMP, #-3
-	bgt		.gt3Partial
+	bgt		.Lgt3Partial
 	ld1		{M0.16b, M1.16b, M2.16b}, [x0], #48
 	// Clobber key registers
 	ld1		{KEY8.16b, KEY7.16b, KEY6.16b}, [KEY_START], #48
@@ -216,28 +216,28 @@ GSTAR	.req	v24
 	karatsuba1 M1 KEY7
 	karatsuba1 M2 KEY6
 	add		IDX, IDX, #3
-	b		.outPartial
+	b		.LoutPartial
 
-.gt3Partial:
+.Lgt3Partial:
 	cmp		TMP, #-2
-	bgt		.gt2Partial
+	bgt		.Lgt2Partial
 	ld1		{M0.16b, M1.16b}, [x0], #32
 	// Clobber key registers
 	ld1		{KEY8.16b, KEY7.16b}, [KEY_START], #32
 	karatsuba1 M0 KEY8
 	karatsuba1 M1 KEY7
 	add		IDX, IDX, #2
-	b		.outPartial
+	b		.LoutPartial
 
-.gt2Partial:
+.Lgt2Partial:
 	ld1		{M0.16b}, [x0], #16
 	// Clobber key registers
 	ld1		{KEY8.16b}, [KEY_START], #16
 	karatsuba1 M0 KEY8
 	add		IDX, IDX, #1
-.outPartial:
-	b .LoopPartial
-.LoopExitPartial:
+.LoutPartial:
+	b .LloopPartial
+.LloopExitPartial:
 	karatsuba2
 	montgomery_reduction
 	eor		SUM.16b, SUM.16b, PH.16b
@@ -285,24 +285,24 @@ ENTRY(pmull_polyval_update)
 	ld1		{GSTAR.2d}, [TMP]
 	ld1		{SUM.16b}, [x3]
 	ands		PARTIAL_LEFT, BLOCKS_LEFT, #7
-	beq		.SkipPartial
+	beq		.LskipPartial
 	partial_stride
-.SkipPartial:
+.LskipPartial:
 	subs		BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
-	blt		.StrideLoopExit
+	blt		.LstrideLoopExit
 	ld1		{KEY8.16b, KEY7.16b, KEY6.16b, KEY5.16b}, [x1], #64
 	ld1		{KEY4.16b, KEY3.16b, KEY2.16b, KEY1.16b}, [x1], #64
 	full_stride 0
 	subs		BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
-	blt		.StrideLoopExitReduce
-.StrideLoop:
+	blt		.LstrideLoopExitReduce
+.LstrideLoop:
 	full_stride 1
 	subs		BLOCKS_LEFT, BLOCKS_LEFT, #NUM_PRECOMPUTE_KEYS
-	bge		.StrideLoop
-.StrideLoopExitReduce:
+	bge		.LstrideLoop
+.LstrideLoopExitReduce:
 	montgomery_reduction
 	mov		SUM.16b, PH.16b
-.StrideLoopExit:
+.LstrideLoopExit:
 	st1		{SUM.16b}, [x3]
 	ret
 ENDPROC(pmull_polyval_update)
