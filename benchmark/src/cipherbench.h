@@ -7,12 +7,10 @@
  */
 #pragma once
 
+void test_hctr2(void);
 void test_polyval(void);
 void test_xctr(void);
-void test_hctr2(void);
 void test_xts(void);
-
-void do_insn_timing(void);
 
 struct cipherbench_params {
 	int bufsize;

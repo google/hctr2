@@ -13,7 +13,5 @@
 #define XCTR_IV_SIZE 16
 #define XCTR_BLOCK_SIZE 16
 
-void xctr_setkey(struct aes_ctx *ctx, const u8 *key, size_t key_len);
-
 void xctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		size_t nbytes, const u8 *iv, bool simd);

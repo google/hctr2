@@ -12,16 +12,16 @@
 #ifdef __x86_64__
 asmlinkage void clmul_polyval_update(const u8 *in,
 				     const struct polyval_key *keys,
-				     uint64_t nblocks, ble128 *accumulator);
+				     size_t nblocks, ble128 *accumulator);
 asmlinkage void clmul_polyval_mul(ble128 *op1, const ble128 *op2);
-#define POLYVAL clmul_polyval_update
+#define POLYVAL_UPDATE clmul_polyval_update
 #define MUL clmul_polyval_mul
 #elif defined(__aarch64__)
 asmlinkage void pmull_polyval_update(const u8 *in,
 				     const struct polyval_key *keys,
-				     uint64_t nblocks, ble128 *accumulator);
+				     size_t nblocks, ble128 *accumulator);
 asmlinkage void pmull_polyval_mul(ble128 *op1, const ble128 *op2);
-#define POLYVAL pmull_polyval_update
+#define POLYVAL_UPDATE pmull_polyval_update
 #define MUL pmull_polyval_mul
 #else
 #error Unsupported architecture.
@@ -31,7 +31,7 @@ asmlinkage void pmull_polyval_mul(ble128 *op1, const ble128 *op2);
  * Used to convert "GHASH-like" multiplication into "POLYVAL-like".
  * See https://datatracker.ietf.org/doc/html/rfc8452 for more detail.
  */
-void reverse_bytes(be128 *a)
+static void reverse_bytes(be128 *a)
 {
 	swap(a->a, a->b);
 	a->a = __builtin_bswap64(a->a);
@@ -65,15 +65,14 @@ static void polyval_setkey_simd(struct polyval_key *key, const u8 *raw_key)
 
 void polyval_setkey(struct polyval_key *key, const u8 *raw_key, bool simd)
 {
-	if (simd) {
+	if (simd)
 		polyval_setkey_simd(key, raw_key);
-	} else {
+	else
 		polyval_setkey_generic(key, raw_key);
-	}
 }
 
-void polyval_generic(const u8 *in, const struct polyval_key *key,
-		     uint64_t nblocks, be128 *accumulator)
+static void polyval_update_generic(const u8 *in, const struct polyval_key *key,
+				   size_t nblocks, be128 *accumulator)
 {
 	const be128 *h = &key->key.generic_h;
 	be128 tmp;
@@ -97,19 +96,20 @@ void polyval_update(struct polyval_state *state, const struct polyval_key *key,
 		    const u8 *in, size_t nblocks, bool simd)
 {
 	if (simd)
-		POLYVAL(in, key, nblocks, &state->state.simd_state);
+		POLYVAL_UPDATE(in, key, nblocks, &state->state.simd_state);
 	else
-		polyval_generic(in, key, nblocks, &state->state.generic_state);
+		polyval_update_generic(in, key, nblocks,
+				       &state->state.generic_state);
 }
 
 void polyval_emit(struct polyval_state *state, u8 out[POLYVAL_DIGEST_SIZE],
 		  bool simd)
 {
-	if (!simd) {
+	if (simd) {
+		memcpy(out, &state->state.simd_state, POLYVAL_DIGEST_SIZE);
+	} else {
 		reverse_bytes(&state->state.generic_state);
 		memcpy(out, &state->state.generic_state, POLYVAL_DIGEST_SIZE);
-	} else {
-		memcpy(out, &state->state.simd_state, POLYVAL_DIGEST_SIZE);
 	}
 }
 

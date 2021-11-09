@@ -10,11 +10,6 @@
 #include "aes_linux.h"
 #include "xctr.h"
 
-void xctr_setkey(struct aes_ctx *ctx, const u8 *key, size_t key_len)
-{
-	aes_setkey(ctx, key, key_len);
-}
-
 #ifdef __x86_64__
 asmlinkage void aes_xctr_enc_256_avx_by8(const u8 *in, const u8 *iv,
 					 const struct aes_ctx *key, u8 *out,
@@ -66,16 +61,14 @@ static void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	}
 #elif defined(__aarch64__)
 #define MAX_STRIDE 5
-	int rounds = 6 + ctx->aes_ctx.key_length / 4;
 	int tail = nbytes % (MAX_STRIDE * XCTR_BLOCK_SIZE);
-	if (tail > 0 && tail < XCTR_BLOCK_SIZE) {
+
+	if (tail > 0 && tail < XCTR_BLOCK_SIZE)
 		memcpy(&extra, src + nbytes - tail, tail);
-	}
-	ce_aes_xctr_encrypt(dst, src, (u8 *)&ctx->aes_ctx.key_enc, rounds,
-			    nbytes, iv, (u8 *)&extra);
-	if (tail > 0 && tail < XCTR_BLOCK_SIZE) {
+	ce_aes_xctr_encrypt(dst, src, (u8 *)&ctx->aes_ctx.key_enc,
+			    aes_nrounds(ctx), nbytes, iv, (u8 *)&extra);
+	if (tail > 0 && tail < XCTR_BLOCK_SIZE)
 		memcpy(dst + nbytes - tail, &extra, tail);
-	}
 #else
 #error Unsupported architecture.
 #endif
@@ -113,26 +106,25 @@ static void xctr_crypt_generic(const struct aes_ctx *ctx, u8 *dst,
 void xctr_crypt(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		size_t nbytes, const u8 *iv, bool simd)
 {
-	if (simd) {
+	if (simd)
 		xctr_crypt_simd(ctx, dst, src, nbytes, iv);
-	} else {
+	else
 		xctr_crypt_generic(ctx, dst, src, nbytes, iv);
-	}
 }
 
 static void xctr_aes128_setkey(struct aes_ctx *ctx, const u8 *key)
 {
-	xctr_setkey(ctx, key, AES_KEYSIZE_128);
+	aes_setkey(ctx, key, AES_KEYSIZE_128);
 }
 
 static void xctr_aes192_setkey(struct aes_ctx *ctx, const u8 *key)
 {
-	xctr_setkey(ctx, key, AES_KEYSIZE_192);
+	aes_setkey(ctx, key, AES_KEYSIZE_192);
 }
 
 static void xctr_aes256_setkey(struct aes_ctx *ctx, const u8 *key)
 {
-	xctr_setkey(ctx, key, AES_KEYSIZE_256);
+	aes_setkey(ctx, key, AES_KEYSIZE_256);
 }
 
 void test_xctr(void)

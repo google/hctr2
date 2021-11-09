@@ -25,16 +25,6 @@ struct crypto_aes_ctx {
 	u32 key_length;
 };
 
-static inline int aes_nrounds(const struct crypto_aes_ctx *ctx)
-{
-	/*
-	 * AES-128: 6 + 16 / 4 = 10 rounds
-	 * AES-192: 6 + 24 / 4 = 12 rounds
-	 * AES-256: 6 + 32 / 4 = 14 rounds
-	 */
-	return 6 + ctx->key_length / 4;
-}
-
 #ifdef __x86_64__
 asmlinkage int aesni_set_key(struct crypto_aes_ctx *ctx, const u8 *in_key,
             unsigned int key_len);

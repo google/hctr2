@@ -61,8 +61,6 @@ struct polyval_state {
 	} state;
 };
 
-void reverse_bytes(be128 *a);
-
 static inline void polyval_init(struct polyval_state *state)
 {
 	memset(state, 0, sizeof(*state));

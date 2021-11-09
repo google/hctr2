@@ -17,3 +17,13 @@ struct aes_ctx {
 void aes_setkey(struct aes_ctx *ctx, const u8 *key, int key_len);
 void aes_encrypt(const struct aes_ctx *ctx, u8 *out, const u8 *in, bool simd);
 void aes_decrypt(const struct aes_ctx *ctx, u8 *out, const u8 *in, bool simd);
+
+static inline int aes_nrounds(const struct aes_ctx *ctx)
+{
+	/*
+	 * AES-128: 6 + 16 / 4 = 10 rounds
+	 * AES-192: 6 + 24 / 4 = 12 rounds
+	 * AES-256: 6 + 32 / 4 = 14 rounds
+	 */
+	return 6 + ctx->aes_ctx.key_length / 4;
+}

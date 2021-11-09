@@ -32,8 +32,8 @@ struct hctr2_ctx {
  * The two computed states are used as the polynomial hash function's initial
  * state.
  */
-void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len,
-			    bool simd)
+static void hctr2_change_tweak_len(struct hctr2_ctx *ctx,
+				   const size_t tweak_len, bool simd)
 {
 	le128 tmp;
 
@@ -50,8 +50,8 @@ void hctr2_change_tweak_len(struct hctr2_ctx *ctx, const size_t tweak_len,
 		       1, simd);
 }
 
-void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, size_t key_len,
-		  bool simd)
+static void hctr2_setkey(struct hctr2_ctx *ctx, const u8 *key, size_t key_len,
+			 bool simd)
 {
 	u8 hbar[BLOCKCIPHER_BLOCK_SIZE];
 
@@ -101,9 +101,9 @@ static void hctr2_hash_message(const struct hctr2_ctx *ctx,
 	}
 }
 
-void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
-		 size_t nbytes, const u8 *tweak, size_t tweak_len, bool encrypt,
-		 bool simd)
+static void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
+			size_t nbytes, const u8 *tweak, size_t tweak_len,
+			bool encrypt, bool simd)
 {
 	struct polyval_state polystate1;
 	struct polyval_state polystate2;
@@ -156,11 +156,10 @@ void hctr2_crypt(const struct hctr2_ctx *ctx, u8 *dst, const u8 *src,
 
 	xor(&MM, M, digest, BLOCKCIPHER_BLOCK_SIZE);
 
-	if (encrypt) {
+	if (encrypt)
 		aes_encrypt(&ctx->aes_ctx, UU, MM, simd);
-	} else {
+	else
 		aes_decrypt(&ctx->aes_ctx, UU, MM, simd);
-	}
 
 	xor(&S, &MM, &UU, BLOCKCIPHER_BLOCK_SIZE);
 	xor(&S, &ctx->L, &S, BLOCKCIPHER_BLOCK_SIZE);
@@ -273,7 +272,6 @@ static void test_hctr2_testvecs(void)
 		test_hctr2_testvec(&hctr2_aes256_tv[i], AES_KEYSIZE_256, true);
 	}
 }
-
 
 void test_hctr2(void)
 {
