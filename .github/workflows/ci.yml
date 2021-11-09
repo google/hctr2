@@ -89,6 +89,44 @@ jobs:
                 --errors-for-leak-kinds=all \
                 ./benchmark/build/host/cipherbench --ntries=1
 
+  test-cryptobench-ubsan:
+    name: Build and run benchmark tool (x86_64, UBSAN enabled)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES clang
+    - name: Build benchmark tool
+      run: |
+        cd benchmark
+        CC=clang CFLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined" \
+                meson build/host --werror
+        ninja -C build/host
+    - name: Run benchmark tool
+      run: |
+        ./benchmark/build/host/cipherbench --ntries=1
+
+  test-cryptobench-asan:
+    name: Build and run benchmark tool (x86_64, ASAN enabled)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES clang
+    - name: Build benchmark tool
+      run: |
+        cd benchmark
+        CC=clang CFLAGS="-fsanitize=address -fno-sanitize-recover=address" \
+                meson build/host --werror
+        ninja -C build/host
+    - name: Run benchmark tool
+      run: |
+        ./benchmark/build/host/cipherbench --ntries=1
+
   check-latex:
     name: Check LaTeX sources
     runs-on: ubuntu-latest
