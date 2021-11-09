@@ -64,8 +64,7 @@ static void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 		xor(&dst[offset], (u8 *)&extra, &src[offset],
 		    nbytes % XCTR_BLOCK_SIZE);
 	}
-#endif
-#ifdef __aarch64__
+#elif defined(__aarch64__)
 #define MAX_STRIDE 5
 	int rounds = 6 + ctx->aes_ctx.key_length / 4;
 	int tail = nbytes % (MAX_STRIDE * XCTR_BLOCK_SIZE);
@@ -77,8 +76,7 @@ static void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 	if (tail > 0 && tail < XCTR_BLOCK_SIZE) {
 		memcpy(dst + nbytes - tail, &extra, tail);
 	}
-#endif
-#if !defined(__x86_64__) && !defined(__aarch64__)
+#else
 #error Unsupported architecture.
 #endif
 }
