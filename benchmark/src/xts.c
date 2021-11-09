@@ -12,18 +12,16 @@
 #include "aes_linux.h"
 
 #define XTS_BLOCK_SIZE 16
-#define BLOCKCIPHER_KEY_SIZE 32
-#define XTS_KEY_SIZE BLOCKCIPHER_KEY_SIZE * 2
 
 struct aes_xts_ctx {
 	struct aes_ctx crypt_ctx;
 	struct aes_ctx tweak_ctx;
 };
 
-void xts_setkey(struct aes_xts_ctx *ctx, const u8 *key, size_t key_len)
+static void xts_setkey(struct aes_xts_ctx *ctx, const u8 *key, size_t key_len)
 {
 	aes_setkey(&ctx->crypt_ctx, key, key_len);
-	aes_setkey(&ctx->tweak_ctx, key + BLOCKCIPHER_KEY_SIZE, key_len);
+	aes_setkey(&ctx->tweak_ctx, key + key_len, key_len);
 }
 
 
