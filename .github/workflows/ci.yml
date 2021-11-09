@@ -40,9 +40,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES
-    - name: Convert test vectors
-      run: |
-        ./python/testvec_tool convert_cstruct
     - name: Build benchmark tool
       run: |
         cd benchmark
@@ -62,9 +59,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES \
                 qemu-user binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu
-    - name: Convert test vectors
-      run: |
-        ./python/testvec_tool convert_cstruct
     - name: Build benchmark tool
       run: |
         cd benchmark
