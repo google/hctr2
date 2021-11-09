@@ -15,7 +15,7 @@ on:
     branches:
       - main
 env:
-  CRYPTOBENCH_DEPENDENCIES: python3 python3-crypto meson ninja-build
+  CRYPTOBENCH_DEPENDENCIES: python3 meson ninja-build
 
 jobs:
   test-python:
