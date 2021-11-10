@@ -14,6 +14,8 @@ on:
   pull_request:
     branches:
       - main
+env:
+  CRYPTOBENCH_DEPENDENCIES: python3 meson ninja-build
 
 jobs:
   test-python:
@@ -37,10 +39,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3 python3-crypto meson ninja-build
-    - name: Convert test vectors
-      run: |
-        ./python/testvec_tool convert_cstruct
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES
     - name: Build benchmark tool
       run: |
         cd benchmark
@@ -48,8 +47,7 @@ jobs:
         ninja -C build/host
     - name: Run benchmark tool
       run: |
-        cd benchmark
-        build/host/cipherbench --ntries=1
+        ./benchmark/build/host/cipherbench --ntries=1
 
   test-cryptobench-qemu-aarch64:
     name: Build and run benchmark tool (qemu-aarch64)
@@ -59,11 +57,8 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3 python3-crypto meson ninja-build \
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES \
                 qemu-user binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu
-    - name: Convert test vectors
-      run: |
-        ./python/testvec_tool convert_cstruct
     - name: Build benchmark tool
       run: |
         cd benchmark
@@ -71,9 +66,67 @@ jobs:
         ninja -C build/qemu-aarch64
     - name: Run benchmark tool
       run: |
-        cd benchmark
         qemu-aarch64 -L /usr/aarch64-linux-gnu \
-               build/qemu-aarch64/cipherbench --ntries=1
+               ./benchmark/build/qemu-aarch64/cipherbench --ntries=1
+
+  test-cryptobench-valgrind:
+    name: Build and run benchmark tool (x86_64, valgrind enabled)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES valgrind
+    - name: Build benchmark tool
+      run: |
+        cd benchmark
+        meson build/host --werror
+        ninja -C build/host
+    - name: Run benchmark tool
+      run: |
+        valgrind --error-exitcode=100 --leak-check=full \
+                --errors-for-leak-kinds=all \
+                ./benchmark/build/host/cipherbench --ntries=1
+
+  test-cryptobench-ubsan:
+    name: Build and run benchmark tool (x86_64, UBSAN enabled)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES clang
+    - name: Build benchmark tool
+      run: |
+        cd benchmark
+        CC=clang CFLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined" \
+                meson build/host --werror
+        ninja -C build/host
+    - name: Run benchmark tool
+      run: |
+        ./benchmark/build/host/cipherbench --ntries=1
+
+  test-cryptobench-asan:
+    name: Build and run benchmark tool (x86_64, ASAN enabled)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y $CRYPTOBENCH_DEPENDENCIES clang
+    - name: Build benchmark tool
+      run: |
+        cd benchmark
+        CC=clang CFLAGS="-fsanitize=address -fno-sanitize-recover=address" \
+                meson build/host --werror
+        ninja -C build/host
+    - name: Run benchmark tool
+      run: |
+        ./benchmark/build/host/cipherbench --ntries=1
+
   check-latex:
     name: Check LaTeX sources
     runs-on: ubuntu-latest
@@ -85,5 +138,4 @@ jobs:
         sudo apt-get install -y texlive-latex-extra texlive-luatex texlive-science biber
     - name: Check LaTeX
       run: |
-        cd paper
-        ./build.sh
+        ./paper/build.sh
