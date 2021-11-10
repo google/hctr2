@@ -24,7 +24,6 @@ static void xts_setkey(struct aes_xts_ctx *ctx, const u8 *key, size_t key_len)
 	aes_setkey(&ctx->tweak_ctx, key + key_len, key_len);
 }
 
-
 #ifdef __x86_64__
 asmlinkage void aesni_xts_encrypt(const struct crypto_aes_ctx *ctx, u8 *dst,
 				  const u8 *src, unsigned int len,
@@ -48,13 +47,13 @@ static void xts_encrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst,
 {
 #ifdef __x86_64__
 	le128 alpha;
+
 	aesni_ecb_enc(&ctx->tweak_ctx.aes_ctx, (u8 *)&alpha, iv,
 		      XTS_BLOCK_SIZE);
 	aesni_xts_encrypt(&ctx->crypt_ctx.aes_ctx, dst, src, nbytes, &alpha);
 #elif defined(__aarch64__)
-	int rounds = 6 + ctx->tweak_ctx.aes_ctx.key_length / 4;
 	ce_aes_xts_encrypt(dst, src, (u8 *)&ctx->tweak_ctx.aes_ctx.key_enc,
-			   rounds, nbytes,
+			   aes_nrounds(&ctx->tweak_ctx), nbytes,
 			   (u8 *)&ctx->crypt_ctx.aes_ctx.key_enc, iv, true);
 #else
 #error Unsupported architecture.
@@ -66,13 +65,13 @@ static void xts_decrypt_simd(const struct aes_xts_ctx *ctx, u8 *dst,
 {
 #ifdef __x86_64__
 	le128 alpha;
+
 	aesni_ecb_enc(&ctx->tweak_ctx.aes_ctx, (u8 *)&alpha, iv,
 		      XTS_BLOCK_SIZE);
 	aesni_xts_decrypt(&ctx->crypt_ctx.aes_ctx, dst, src, nbytes, &alpha);
 #elif defined(__aarch64__)
-	int rounds = 6 + ctx->tweak_ctx.aes_ctx.key_length / 4;
 	ce_aes_xts_decrypt(dst, src, (u8 *)&ctx->tweak_ctx.aes_ctx.key_dec,
-			   rounds, nbytes,
+			   aes_nrounds(&ctx->tweak_ctx), nbytes,
 			   (u8 *)&ctx->crypt_ctx.aes_ctx.key_enc, iv, true);
 #else
 #error Unsupported architecture.
@@ -97,8 +96,8 @@ static void xts_aes256_setkey(struct aes_xts_ctx *ctx, const u8 *key)
 void test_xts(void)
 {
 #define ALGNAME "AES-128-XTS"
-#define KEY_BYTES AES_KEYSIZE_128 * 2
-#define IV_BYTES 16
+#define KEY_BYTES (AES_KEYSIZE_128 * 2)
+#define IV_BYTES XTS_BLOCK_SIZE
 #define KEY struct aes_xts_ctx
 #define SETKEY_SIMD xts_aes128_setkey
 #define SIMD_IMPL_NAME "simd"
@@ -107,8 +106,8 @@ void test_xts(void)
 #include "cipher_benchmark_template.h"
 
 #define ALGNAME "AES-192-XTS"
-#define KEY_BYTES AES_KEYSIZE_192 * 2
-#define IV_BYTES 16
+#define KEY_BYTES (AES_KEYSIZE_192 * 2)
+#define IV_BYTES XTS_BLOCK_SIZE
 #define KEY struct aes_xts_ctx
 #define SETKEY_SIMD xts_aes192_setkey
 #define SIMD_IMPL_NAME "simd"
@@ -117,8 +116,8 @@ void test_xts(void)
 #include "cipher_benchmark_template.h"
 
 #define ALGNAME "AES-256-XTS"
-#define KEY_BYTES AES_KEYSIZE_256 * 2
-#define IV_BYTES 16
+#define KEY_BYTES (AES_KEYSIZE_256 * 2)
+#define IV_BYTES XTS_BLOCK_SIZE
 #define KEY struct aes_xts_ctx
 #define SETKEY_SIMD xts_aes256_setkey
 #define SIMD_IMPL_NAME "simd"

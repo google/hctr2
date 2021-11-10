@@ -123,7 +123,7 @@ GSTAR	.req	v24
 	eor		C.16b, C.16b, C.16b
 	eor		D.16b, D.16b, D.16b
 	eor		E.16b, E.16b, E.16b
-	
+
 	ld1		{M0.16b, M1.16b, M2.16b, M3.16b}, [x0], #64
 	ld1		{M4.16b, M5.16b, M6.16b, M7.16b}, [x0], #64
 
@@ -244,13 +244,13 @@ GSTAR	.req	v24
 .endm
 
 /*
- * Perform montgomery multiplication in GF128 and store result in op1.
+ * Perform montgomery multiplication in GF(2^128) and store result in op1.
  *
  * Computes op1*op2*x^{-128} mod x^128 + x^127 + x^126 + x^121 + 1
  * If op1, op2 are in montgomery form,  this computes the montgomery
  * form of op1*op2.
  *
- * void pmull_polyval_mul(ble128* op1, const ble128* op2);
+ * void pmull_polyval_mul(ble128 *op1, const ble128 *op2);
  */
 ENTRY(pmull_polyval_mul)
 	adr		TMP, .Lgstar
@@ -268,8 +268,8 @@ ENTRY(pmull_polyval_mul)
 ENDPROC(pmull_polyval_mul)
 
 /*
- * Perform polynomial evaluation as specified by POLYVAL. Multiplies the value stored
- * at accumulator by h^n and XORs the evaluated polynomial into it.
+ * Perform polynomial evaluation as specified by POLYVAL. Multiplies the value
+ * stored at accumulator by h^n and XORs the evaluated polynomial into it.
  *
  * Computes h^k*accumulator + h^kM_0 + ... + h^1M_{k-1} (No constant term)
  *
@@ -278,7 +278,8 @@ ENDPROC(pmull_polyval_mul)
  * x2 - number of blocks to hash
  * x3 - location to XOR with evaluated polynomial
  *
- * void pmull_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nblocks, ble128* accumulator);
+ * void pmull_polyval_update(const u8 *in, const struct polyhash_key *keys,
+ *			     size_t nblocks, ble128 *accumulator);
  */
 ENTRY(pmull_polyval_update)
 	adr		TMP, .Lgstar

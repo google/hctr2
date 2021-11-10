@@ -103,7 +103,7 @@ Lgstar:
 
 /*
  * Computes the 128-bit reduction of PL, PH. Stores the result in PH.
- * 
+ *
  * PL, PH, Z, T.
  * All other xmm registers are preserved.
  */
@@ -204,7 +204,7 @@ Lgstar:
 .LloopPartial:
 	cmpq BLOCKS_LEFT, IDX # IDX < rdx
 	jae .LloopExitPartial
-	
+
 	movq BLOCKS_LEFT, TMP
 	subq IDX, TMP # TMP = rdx - IDX
 
@@ -245,13 +245,13 @@ Lgstar:
 .endm
 
 /*
- * Perform montgomery multiplication in GF128 and store result in op1.
+ * Perform montgomery multiplication in GF(2^128) and store result in op1.
  *
  * Computes op1*op2*x^{-128} mod x^128 + x^127 + x^126 + x^121 + 1
  * If op1, op2 are in montgomery form,  this computes the montgomery
  * form of op1*op2.
  *
- * void clmul_polyval_mul(ble128* op1, const ble128* op2);
+ * void clmul_polyval_mul(ble128 *op1, const ble128 *op2);
  */
 ENTRY(clmul_polyval_mul)
 	FRAME_BEGIN
@@ -268,9 +268,9 @@ ENTRY(clmul_polyval_mul)
 	ret
 ENDPROC(clmul_polyval_mul)
 
-/* 
- * Perform polynomial evaluation as specified by POLYVAL. Multiplies the value stored
- * at accumulator by h^k and XORs the evaluated polynomial into it.
+/*
+ * Perform polynomial evaluation as specified by POLYVAL. Multiplies the value
+ * stored at accumulator by h^k and XORs the evaluated polynomial into it.
  *
  * Computes h^k*accumulator + h^kM_0 + ... + h^1M_{k-1} (No constant term)
  *
@@ -278,8 +278,9 @@ ENDPROC(clmul_polyval_mul)
  * rsi - pointer to precomputed key struct
  * rdx - number of blocks to hash
  * rcx - location to XOR with evaluated polynomial
- * 
- * void clmul_polyval_update(const u8 *in, const struct polyhash_key* keys, uint64_t nblocks, ble128* accumulator);
+ *
+ * void clmul_polyval_update(const u8 *in, const struct polyhash_key* keys,
+ *			     size_t nblocks, ble128* accumulator);
  */
 ENTRY(clmul_polyval_update)
 	FRAME_BEGIN

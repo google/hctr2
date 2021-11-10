@@ -31,35 +31,37 @@ void aes_setkey(struct aes_ctx *ctx, const u8 *key, int key_len)
 	ASSERT(err == 0);
 }
 
-void aes_encrypt_generic(const struct aes_ctx *ctx, u8 *out, const u8 *in)
+static void aes_encrypt_generic(const struct aes_ctx *ctx, u8 *out,
+				const u8 *in)
 {
 	aesti_encrypt(&ctx->aes_ctx, out, in);
 }
 
-void aes_decrypt_generic(const struct aes_ctx *ctx, u8 *out, const u8 *in)
+static void aes_decrypt_generic(const struct aes_ctx *ctx, u8 *out,
+				const u8 *in)
 {
 	aesti_decrypt(&ctx->aes_ctx, out, in);
 }
 
-void aes_encrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
+static void aes_encrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
 {
 #ifdef __x86_64__
 	aesni_ecb_enc(&ctx->aes_ctx, out, in, AES_BLOCK_SIZE);
 #elif defined(__aarch64__)
-	int rounds = 6 + ctx->aes_ctx.key_length / 4;
-	ce_aes_ecb_encrypt(out, in, (u8 *)ctx->aes_ctx.key_enc, rounds, 1);
+	ce_aes_ecb_encrypt(out, in, (u8 *)ctx->aes_ctx.key_enc,
+			   aes_nrounds(ctx), 1);
 #else
 #error Unsupported architecture.
 #endif
 }
 
-void aes_decrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
+static void aes_decrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
 {
 #ifdef __x86_64__
 	aesni_ecb_dec(&ctx->aes_ctx, out, in, AES_BLOCK_SIZE);
 #elif defined(__aarch64__)
-	int rounds = 6 + ctx->aes_ctx.key_length / 4;
-	ce_aes_ecb_decrypt(out, in, (u8 *)ctx->aes_ctx.key_dec, rounds, 1);
+	ce_aes_ecb_decrypt(out, in, (u8 *)ctx->aes_ctx.key_dec,
+			   aes_nrounds(ctx), 1);
 #else
 #error Unsupported architecture.
 #endif
@@ -67,18 +69,16 @@ void aes_decrypt_simd(const struct aes_ctx *ctx, u8 *out, const u8 *in)
 
 void aes_encrypt(const struct aes_ctx *ctx, u8 *out, const u8 *in, bool simd)
 {
-	if (simd) {
+	if (simd)
 		aes_encrypt_simd(ctx, out, in);
-	} else {
+	else
 		aes_encrypt_generic(ctx, out, in);
-	}
 }
 
 void aes_decrypt(const struct aes_ctx *ctx, u8 *out, const u8 *in, bool simd)
 {
-	if (simd) {
+	if (simd)
 		aes_decrypt_simd(ctx, out, in);
-	} else {
+	else
 		aes_decrypt_generic(ctx, out, in);
-	}
 }
