@@ -82,7 +82,10 @@ HCTR2 differs from HCTR in the following ways:
 \subsection{Comparison of SPRP modes}
 We considered a number of modes aiming to provide
 tweakable super-pseudorandom permutations
-as the basis for our design before settling on HCTR:
+as the basis for our design before settling on HCTR.
+HCTR is simpler than all of these modes except HHFHFH;
+each also has specific qualities that led us to choose
+an HCTR variant in preference.
 \begin{itemize}
     \item CMC\cite{cmc}, EME\cite{eme}, and EME*\cite{emestar}
     require two block cipher calls per input block.
@@ -110,8 +113,11 @@ as the basis for our design before settling on HCTR:
     which does not gain this advantage;
     at key setup time, the multiplicative inverse of
     the hash key must be calculated.
+    In addition, like HCTR (\autoref{badhash}) HMC's hash
+    function is not correctly injective onto polynomials.
     \item FAST\cite{fast} uses only the encryption
-    direction of the block cipher. However the minimum
+    direction of the block cipher. However 
+    it is fairly complex, and the minimum
     message size is twice the width of the block cipher;
     for our application we need efficient handling of small messages.
     \item HHFHFH\cite{hufflehuff} is a particularly
