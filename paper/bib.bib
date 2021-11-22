@@ -997,7 +997,7 @@ and Yung, Moti"
 ,    type = {RFC}
 ,    number = {8452}
 ,    year = {2019}
-,    month = april
+,    month = {4}
 ,    issn = {2070-1721}
 ,    publisher = {RFC Editor}
 ,    institution = {RFC Editor}
@@ -1088,4 +1088,48 @@ url={https://www.cs.ucdavis.edu/~rogaway/papers/3k.pdf}
     howpublished = {Cryptology ePrint Archive, Report 2017/168},
     year         = {2017},
     url         = {https://ia.cr/2017/168},
+}
+
+@misc{fscrypt
+,   title = {Filesystem-level encryption (fscrypt)}
+,   howpublished = {Linux kernel documentation}
+,   year = {2021}
+,   url = {https://www.kernel.org/doc/html/v5.15/filesystems/fscrypt.html}
+}
+
+@article{hash2l
+,   title={A Fast Single-Key Two-Level Universal Hash Function}, volume={2017}
+,   url={https://tosc.iacr.org/index.php/ToSC/article/view/586}
+,   DOI={10.13154/tosc.v2017.i1.106-128}
+,   abstractNote={Universal hash functions based on univariate polynomials are well known, e.g. Poly1305 and GHASH. Using Horner’s rule to evaluate such hash functionsrequire &amp;lt;em&amp;gt;l&amp;lt;/em&amp;gt; − 1 field multiplications for hashing a message consisting of &amp;lt;em&amp;gt;l&amp;lt;/em&amp;gt; blocks where each block is one field element. A faster method is based on the class of Bernstein-Rabin-Winograd (BRW) polynomials which require ⌊&amp;lt;em&amp;gt;l&amp;lt;/em&amp;gt;/2⌋ multiplications and ⌊lg&amp;lt;em&amp;gt;l&amp;lt;/em&amp;gt;⌋ squarings for &amp;lt;em&amp;gt;l&amp;lt;/em&amp;gt;≥3 blocks. Though this is significantly smaller than Horner’s rule based hashing, implementation of BRW polynomials for variable length messages present significant difficulties. In this work, we propose a two-level hash function where BRW polynomial based hashing is done at the lower level and Horner’s rule based hashing is done at the higher level. The BRW polynomial based hashing is applied to a fixed number of blocks and hence the difficulties in handling variable length messages is avoided. Even though the hash function has two levels, we show that it is sufficient to use a single field element as the hash key. The basic idea is instantiated to propose two new hash functions, one which hashes a single binary string and the other can hash a vector of binary strings. We describe two actual implementations, one over F&amp;lt;sub&amp;gt;2&amp;lt;sup&amp;gt;128&amp;lt;/sup&amp;gt;&amp;lt;/sub&amp;gt; and the other over F&amp;lt;sub&amp;gt;2&amp;lt;sup&amp;gt;256&amp;lt;/sup&amp;gt;&amp;lt;/sub&amp;gt; both using the pclmulqdq instruction available in modern Intel processors. On both the Haswell and Skylake processors, the implementation over F&amp;lt;sub&amp;gt;2&amp;lt;sup&amp;gt;128&amp;lt;/sup&amp;gt;&amp;lt;/sub&amp;gt; is faster than both an implementation of GHASH by Gueron; and a highly optimised implementation, also by Gueron, of another polynomial based hash function called POLYVAL. We further show that the Fast Fourier Transform based field multiplication over F&amp;lt;sub&amp;gt;2&amp;lt;sup&amp;gt;256&amp;lt;/sup&amp;gt;&amp;lt;/sub&amp;gt; proposed by Bernstein and Chou can be used to evaluate the new hash function at a cost of about at most 46 bit operations per bit of digest, but, unlike the Bernstein-Chou analysis, there is no hidden cost of generating the hash key. More generally, the new idea of building a two-level hash function having a single field element as the hash key can be applied to other finite fields to build new hash functions.}
+,   number={1}
+,   journal={IACR Transactions on Symmetric Cryptology}
+,   author={Chakraborty, Debrup and Ghosh, Sebati and Sarkar, Palash}
+,   year={2017}
+,   month={3}
+,   pages={106–128}
+}
+
+@article{fast,
+title = "${\sf {FAST}}$: Disk encryption and beyond",
+journal = " Advances in Mathematics of Communications",
+volume = "0",
+number = {1930-5346\_2019\_0\_92},
+pages = "",
+year = "2020",
+note = "",
+issn = "1930-5346",
+doi = "10.3934/amc.2020108",
+url = "http://aimsciences.org//article/id/ac2cbcad-a848-4d90-9c63-981709c4f988",
+author = {Debrup Chakraborty and Sebati Ghosh and Cuauhtemoc Mancillas López and Palash Sarkar},
+keywords = {Disk encryption, tweakable enciphering schemes,pseudo-random function, Horner, BRW},
+abstract = "This work introduces ${\sf {FAST}}$ which is a new family of tweakable enciphering schemes. Several instantiations of ${\sf {FAST}}$ are described. These are targeted towards two goals, the specific task of disk encryption and a more general scheme suitable for a wide variety of practical applications. A major contribution of this work is to present detailed and careful software implementations of all of these instantiations. For disk encryption, the results from the implementations show that ${\sf {FAST}}$ compares very favourably to the IEEE disk encryption standards XCB and EME2 as well as the more recent proposal AEZ. ${\sf {FAST}}$ is built using a fixed input length pseudo-random function and an appropriate hash function. It uses a single-block key, is parallelisable and can be instantiated using only the encryption function of a block cipher. The hash function can be instantiated using either the Horner's rule based usual polynomial hashing or hashing based on the more efficient Bernstein-Rabin-Winograd polynomials. Security of ${\sf {FAST}}$ has been rigorously analysed using the standard provable security approach and concrete security bounds have been derived. Based on our implementation results, we put forward ${\sf {FAST}}$ as a serious candidate for standardisation and deployment."
+}
+
+@techreport{hufflehuff
+,   author      = {Daniel J. Bernstein}
+,   institution = {University of Illinois at Chicago and Technische Universiteit Eindhoven}
+,   title       = {Some challenges in heavyweight cipher design}
+,   year        = {2016}
+,   url         = {https://cr.yp.to/talks/2016.01.15/slides-djb-20160115-a4.pdf}
 }

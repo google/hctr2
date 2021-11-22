@@ -18,7 +18,12 @@ features that make it an attractive design:
     hashing, with a single block encryption on the narrow side.
     This gives excellent performance and parallelizability,
     as well as natural handling of messages that are not
-    a multiple of the block size. 
+    a multiple of the block size.
+    It also efficiently handles messages as small as the
+    block size; our work on HCTR2 is motivated by
+    filename encryption for Linux's
+    \emph{fscrypt} module\cite{fscrypt}, where
+    short messages will be commonplace.
     \item Use of \(\MM \xor \UU\) in generating \(S\), which means
     that an adversary's control over \(S\) is very limited for both
     encryption and decryption queries; this is used in the
@@ -105,6 +110,15 @@ as the basis for our design before settling on HCTR:
     which does not gain this advantage;
     at key setup time, the multiplicative inverse of
     the hash key must be calculated.
+    \item FAST\cite{fast} uses only the encryption
+    direction of the block cipher. However the minimum
+    message size is twice the width of the block cipher;
+    for our application we need efficient handling of small messages.
+    \item HHFHFH\cite{hufflehuff} is a particularly
+    clean design based on a four-round Feistel network,
+    but requires a \(2^{4n}\)-bit message size for
+    \(n\)-bit security; again this doesn't meet our
+    small-message needs.
 \end{itemize}
 
 \subsection{Hash function design}\label{hashdesign}
@@ -207,6 +221,17 @@ parallelism, number of reductions, and so forth.
 Finally, preserving our guarantees of injectivity on variable-length
 tweaks and messages, and the other hash function properties we need
 to guarantee, proved challenging.
+
+\emph{Hash2L}: Hash2L\cite{hash2l} solves two issues with BRW polynomials.
+First, it limits the depth of recursion, and thus the space needed, by replacing
+the uppermost levels by a simpler Horner based evaluation. This slightly increases
+the number of multiplications per block but solves several implementation issues.
+Secondly, it adds an extra multiplication at the end to include length information
+so that the whole construction is injective on variable-length messages.
+Where most messages are large, such as for disk encryption, a variant of
+HCTR2 that uses Hash2L could be attractive; however since performance
+on small messages is key to our application we prefer the simplicity
+and optimization potential of Horner evaluation.
 
 \emph{Polynomials over non-binary fields}: When CPU instructions for carryless
 multiplication are unavailable, hashes using non-binary fields such as
