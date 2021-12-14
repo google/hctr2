@@ -86,4 +86,4 @@ class XCTR(ciphers.cipher.Bijection):
         }
 
     def linux_name(self):
-        return f"{self.name()}_{self._block.name()}"
+        return f"{self._block.name()}_{self.name()}"
