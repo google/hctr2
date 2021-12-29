@@ -93,9 +93,9 @@
 #define p_keys		%rdx
 #define p_out		%rcx
 #define num_bytes	%r8
+#define counter         %r9
 
 #define tmp		%r10
-#define counter         %r11
 #define	DDQ_DATA	0
 #define	XDATA		1
 #define KEY_128		1
@@ -498,7 +498,7 @@ ddq_add_8:
 	jb	.Ldo_return2\key_len
 
 	vmovdqa	byteswap_const(%rip), xbyteswap
-	movq	$0, counter
+	shr	$4, counter
 	vmovdqu (p_iv), xiv
 
 	mov	num_bytes, tmp
@@ -599,7 +599,7 @@ ddq_add_8:
  * XMM registers are clobbered.
  * Saving/restoring must be done at a higher level
  * aes_xctr_enc_128_avx_by8(const u8 *in, const u8 *iv, const aes_ctx *keys, u8 *out,
- *			unsigned int num_bytes)
+ *			unsigned int num_bytes, unsigned int byte_ctr)
  */
 ENTRY(aes_xctr_enc_128_avx_by8)
 	/* call the aes main loop */
@@ -612,7 +612,7 @@ ENDPROC(aes_xctr_enc_128_avx_by8)
  * XMM registers are clobbered.
  * Saving/restoring must be done at a higher level
  * aes_xctr_enc_192_avx_by8(const u8 *in, const u8 *iv, const aes_ctx *keys, u8 *out,
- *			unsigned int num_bytes)
+ *			unsigned int num_bytes, unsigned int byte_ctr)
  */
 ENTRY(aes_xctr_enc_192_avx_by8)
 	/* call the aes main loop */
@@ -625,7 +625,7 @@ ENDPROC(aes_xctr_enc_192_avx_by8)
  * XMM registers are clobbered.
  * Saving/restoring must be done at a higher level
  * aes_xctr_enc_256_avx_by8(void *in, void *iv, void *keys, void *out,
- *			unsigned int num_bytes)
+ *			unsigned int num_bytes, unsigned int byte_ctr)
  */
 ENTRY(aes_xctr_enc_256_avx_by8)
 	/* call the aes main loop */

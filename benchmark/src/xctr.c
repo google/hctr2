@@ -13,13 +13,13 @@
 #ifdef __x86_64__
 asmlinkage void aes_xctr_enc_256_avx_by8(const u8 *in, const u8 *iv,
 					 const struct aes_ctx *key, u8 *out,
-					 size_t num_bytes);
+					 size_t num_bytes, size_t byte_ctr);
 asmlinkage void aes_xctr_enc_192_avx_by8(const u8 *in, const u8 *iv,
 					 const struct aes_ctx *key, u8 *out,
-					 size_t num_bytes);
+					 size_t num_bytes, size_t byte_ctr);
 asmlinkage void aes_xctr_enc_128_avx_by8(const u8 *in, const u8 *iv,
 					 const struct aes_ctx *key, u8 *out,
-					 size_t num_bytes);
+					 size_t num_bytes, size_t byte_ctr);
 #elif defined(__aarch64__)
 asmlinkage void ce_aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[],
 				    int rounds, int bytes, const u8 ctr[],
@@ -37,13 +37,13 @@ static void xctr_crypt_simd(const struct aes_ctx *ctx, u8 *dst, const u8 *src,
 
 	switch (ctx->aes_ctx.key_length) {
 	case AES_KEYSIZE_256:
-		aes_xctr_enc_256_avx_by8(src, iv, ctx, dst, nbytes);
+		aes_xctr_enc_256_avx_by8(src, iv, ctx, dst, nbytes, 0);
 		break;
 	case AES_KEYSIZE_192:
-		aes_xctr_enc_192_avx_by8(src, iv, ctx, dst, nbytes);
+		aes_xctr_enc_192_avx_by8(src, iv, ctx, dst, nbytes, 0);
 		break;
 	case AES_KEYSIZE_128:
-		aes_xctr_enc_128_avx_by8(src, iv, ctx, dst, nbytes);
+		aes_xctr_enc_128_avx_by8(src, iv, ctx, dst, nbytes, 0);
 		break;
 	default:
 		ASSERT("Invalid AES key size.");
