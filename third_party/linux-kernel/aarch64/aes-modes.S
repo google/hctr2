@@ -124,7 +124,7 @@ AES_FUNC_END(aes_ecb_decrypt)
 	
     /*
 	 * aes_xctr_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
-	 *		   int bytes, u8 const ctr[], u8 finalbuf[])
+	 *		   int bytes, u8 const ctr[], u8 finalbuf[], int byte_ctr)
 	 */
 
 AES_FUNC_START(aes_xctr_encrypt)
@@ -135,7 +135,8 @@ AES_FUNC_START(aes_xctr_encrypt)
 	ld1		{vctr.16b}, [x5]
 
 	umov		x12, vctr.d[0]		/* keep ctr in reg */
-	movz		x11, #1
+	lsr			x11, x7, #4
+	add			x11, x11, #1
 
 .LxctrloopNx:
 	add		w7, w4, #15
