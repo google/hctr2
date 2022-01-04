@@ -49,6 +49,7 @@ class Polyval(Hash):
         v = dict(self.lengths())
         for mlen in range(0, 80, 16):
             yield {**v, "message": mlen}
+        yield {**v, "message": 256}
 
     def hash(self, key, message):
         blocksize = self.lengths()['key']
