@@ -13,72 +13,33 @@
  * The generic and simd implementations produce matching outputs, but
  * they operate in fundamentally different ways.
  *
- * POLYVAL is designed to operate in three isomorphic finite fields.
- * These fields are:
+ * POLYVAL uses the irreducible polynomial g(x) = x^128 + x^127 + x^126 + x^121
+ * + 1.  This is the "bitreflection" of the usual modulus p(x) = x^128 + x^7 +
+ * x^2 + x + 1. This different modulus has two notable effects.
  *
- *	1) Elements of GF(128) where multiplication is normal polynomial
- *	multiplication modulo the irreducible polynomial: x^128 + x^127 + x^126 +
- *	x^121 + 1
+ * 1) The simd implementation is optimized using Montgomery multiplication
+ * instead of Barrett reduction. This is slightly faster on little-endian
+ * machines.
+ * 2) The generic implementation is implemented by using an isomorphism between
+ * the fields defined by p(x) and g(x). This allows generic implementations of
+ * POLYVAL to reuse the pre-existing GF(2^128) lookup tables.
  *
- *	2) Elements of GF(128) in montgomery where multiplication a*b is defined as
- *	montgomery multiplication. Montgomery multiplication is defined by taking
- *	the normal polynomial product, multiplying by x^{-128}, then reducing by the
- *	irreducible polynomial: x^128 + x^127 + x^126 + x^121 + 1
+ * The isomorphism used for generic POLYVAL is described below.
  *
- *	3) Elements of GF(128) where multiplication is normal polynomial
- *	multiplication modulo the irreducible polynomial: x^128 + x^7 + x^2 + x + 1
+ * The two fields we that generic POLYVAL uses are:
+ * 1) Elements of GF(2^128) where multiplication is defined modulo the
+ * irreducible polynomial: g(x) = x^128 + x^127 + x^126 + x^121 + 1.
+ * 2) Elements of GF(2^128) where multiplication is multiplication modulo the
+ * irreducible polynomial: p(x) = x^128 + x^7 + x^2 + x + 1.
  *
- * 
- * The implementation differences arise because the simd implementation is more
- * efficient when using field (3). Likewise, the generic implementation can
- * reuse pre-existing finite field code by operating in field (2). The final
- * outputs are then mapped into field (1). By transforming the elements of one
- * field to another via field isomorphisms, we can perform computations in
- * whichever field is convenient.
- *
- * The field isomorphisms are described as follows:
- * 	Field (1) -> Field(2)
- * 		a -> x^128*a
- * 	Field (2) -> Field(3)
- * 		a -> x*reverse_bytes(a)
- *
- * When computing POLYVAL, the key h is assumed to be in field (2). The
- * message elements are assumed to be in field (1). The output is also
- * assumed to be in field (1).
- *
- *
- * When computing simd-POLYVAL, we require an implementation of montgomery
- * multiplication as specified in the definition of field (2). Powers of h
- * are computed normally in field (2). Then montgomery multiplication is
- * performed on these powers of h in field (2) and the message elements
- * in field (1). This works for the following reasons:
- *
- * 1) Mapping a field element from field (1) to field (2) requires
- * multiplying by x^{128}.
- * 2) Montgomery multiplication requires multiplying by
- * x^{-128}. 
- * 3) Mapping a field element from field (2) to field (1) requires
- * multiplying by x^{-128}. 
- *
- * Steps 1 and 3 can be omitted since they cancel each
- * other. Thus we are left with the final product in field (1).
- *
- *
- * When computing generic-POLYVAL, we require an implementation of normal
- * finite field multiplication in field (3). We first map h from field (2) to
- * field (3) using the isomorphism above. We compute powers of h in field (3).
- * Then the powers of h in field (3) are multiplied by reverse_bytes(M) where M
- * is a message element in field (1). This works for the following reasons:
- * 
- * 1) Mapping a field element from field (1) to field (3) is done by computing
+ * 1) Mapping a field element from field (1) to field (2) is done by computing
  * b = x*reverse_bytes(x^128*a). 
- * 2) Mapping an element from field (3) to field (1) is done by computing
- * x^{-128}*reverse_bytes(x^{-1}*(b*h^k)).
+ * 2) Mapping an element from field (2) to field (1) is done by computing
+ * a = x^{-128}*reverse_bytes(x^{-1}*b)).
  *
- * The multiplication by x can be omitted since it will be cancelled when
- * multiplying by x^{-1}. Furthermore, the x^{128} and x^{-128} will also cancel
- * eachother, so they can both be omitted. Thus we are left with the final
- * product in field (1).
+ * Our generic implementation is derived with this isomorphism and by omitting
+ * multiplications of x, x^{-1}, x^{128} and x^{-128} that would otherwise be
+ * cancelled.
  */
 
 #ifdef __x86_64__
