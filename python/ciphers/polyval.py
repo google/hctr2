@@ -47,7 +47,7 @@ class Polyval(Hash):
 
     def test_input_lengths(self):
         v = dict(self.lengths())
-        for mlen in range(0, 80, 16):
+        for mlen in [0, 16, 32, 48, 64, 256]:
             yield {**v, "message": mlen}
 
     def hash(self, key, message):
