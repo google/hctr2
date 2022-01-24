@@ -4,30 +4,61 @@
 % license that can be found in the LICENSE file or at
 % https://opensource.org/licenses/MIT.
 
-%%% script AUTHOR: Paul Crowley, Nathan Huckleberry, Eric Biggers%%%
-%%% script TITLE: Length-preserving encryption with {HCTR2} %%%
-
 %!BIB program = biber
 %!TeX program = lualatex
 %!TeX spellcheck = en-US
 
-\documentclass[journal=tosc,submission,floatrow]{iacrtrans}
-\usepackage[none]{hyphenat}
+\documentclass[letterpaper,11pt]{article}
 
-\tolerance=9999
-
+\usepackage[svgnames]{xcolor}
+\usepackage{floatrow}
+\usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{amsmath}
 \usepackage[style=alphabetic,backend=biber,alldates=ymd]{biblatex}
 \usepackage{bm}
 \usepackage[logic,probability,advantage,adversary,landau,sets,operators]{cryptocode}
+\usepackage{hyperxmp}
+\usepackage{hyperref}
 \usepackage{tikz}
+
+\usepackage[parfill]{parskip}
+\usepackage[style]{abstract}
+\usepackage{titling}
+\usepackage{sectsty}
+\usepackage{authblk}
+
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Schola}
+\setsansfont{TeX Gyre Heros}
+\setmathrm{Latin Modern Roman}
+\setmathsf{Latin Modern Sans}
+\defaultfontfeatures{}
+\setmonofont{TeX Gyre Cursor}[Ligatures={NoCommon,NoRequired,NoContextual},Scale=0.9]
 
 \usetikzlibrary{groupops}
 
-\author{Anonymous submission}
-%\author{Paul~Crowley \and Nathan~Huckleberry \and Eric~Biggers}
-%\institute{Google LLC \\ \email[paulcrowley@google.com,nhuck@google.com,ebiggers@google.com]{{paulcrowley,nhuck,ebiggers}@google.com}}
+\pretitle{\begin{center}\LARGE\bfseries\sffamily} % sf title
+\renewcommand{\abstitlestyle}{\sffamily\bfseries\centering} % sf abstract
+\allsectionsfont{\sffamily} % sf sections
+
+\raggedright
+\raggedbottom
+
+\author{Paul~Crowley}
+\author{Nathan~Huckleberry}
+\author{Eric~Biggers}
+\affil{Google}
+
+\usepackage{hyperref}
+\hypersetup{breaklinks}
+\hypersetup{colorlinks}
+\hypersetup{urlcolor=DarkBlue}
+\hypersetup{linkcolor=DarkRed}
+\hypersetup{citecolor=DarkGreen}
+\hypersetup{unicode}
+\hypersetup{pdfencoding=unicode}
+\hypersetup{pdfauthor={Paul Crowley, Nathan Huckleberry, Eric Biggers}}
 
 \addbibresource{bib.bib}
 
@@ -56,9 +87,9 @@
 \usepackage{subfiles}
 \begin{document}
 \maketitle
-\keywords{super-pseudorandom permutation \and
-variable input length \and
-tweakable encryption}
+%\keywords{super-pseudorandom permutation \and
+%variable input length \and
+%tweakable encryption}
 
 \begin{abstract}
 On modern processors HCTR\cite{hctr} is
@@ -69,7 +100,7 @@ Chakraborty and Nandi's security proof\cite{hctrquad}
 invalidate the claimed security bound. We here present HCTR2,
 which fixes these issues and improves the
 security bound, performance and flexibility.
-%GitHub: \url{https://github.com/google/hctr2}
+GitHub: \url{https://github.com/google/hctr2}
 \end{abstract}
 
 \subfile{introduction.tex}

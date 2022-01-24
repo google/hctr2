@@ -11,6 +11,7 @@
 \documentclass[hctr2.tex]{subfiles}
 \begin{document}
 \section{Specification}\label{specification}
+\subfile{algorithm.tex}
 \subsection{Notation}
 \begin{itemize}
     \item $\abs{X}$: length of $X \in \bin^{*}$ in bits
@@ -82,5 +83,4 @@ recovers the plaintext given the same tweak and the ciphertext, ie
 for \(k \in \mathcal{K}\), \(T \in \mathcal{T}\)
 and \(P \in \mathcal{M}\),
 \(\textsc{Decrypt}(k, T, \textsc{Encrypt}(k, T, P)) = P\).
-\subfile{algorithm.tex}
 \end{document}
