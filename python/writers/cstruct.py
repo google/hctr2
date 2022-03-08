@@ -75,9 +75,13 @@ class TestvecFile:
         self.write(f"\nstatic const struct {struct} {array_name}[] = {{\n")
         for vec in entries:
             if vec is not None:
-                self.write('\t{\n')
+                if vec['description']:
+                    self.write(f"\t{{ // {vec['description']}\n")
+                else:
+                    self.write("\t{\n")
                 for k, v in vec.items():
-                    self.write_linux_testvec_field(k, v)
+                    if k != 'description':
+                        self.write_linux_testvec_field(k, v)
                 self.write('\t},\n')
         self.write('\n};\n')
 
@@ -136,7 +140,7 @@ def convert(tvdir, cipher):
 
 def linux_testvectors(tvdir, cipher):
     length_count = collections.defaultdict(lambda: 0)
-    max_count = 2
+    max_count = 1
     for v in cipher.variants():
         cipher.variant = v
         for s in testvectors(tvdir, cipher):

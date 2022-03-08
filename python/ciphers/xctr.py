@@ -60,7 +60,12 @@ class XCTR(ciphers.cipher.Bijection):
 
     def test_input_lengths(self):
         v = dict(self.lengths())
-        for l in [32, 255]:
+        lengths = {
+            16: [1, 16, 31, 128, 255],
+            24: [15, 17, 48, 512],
+            32: [1, 15, 16, 17, 31, 48, 128, 255, 512]
+        }
+        for l in lengths[v['key']]:
             for m in "plaintext", "ciphertext":
                 yield {**v, m: l}
 
@@ -83,6 +88,7 @@ class XCTR(ciphers.cipher.Bijection):
             'ctext': v['ciphertext'],
             'klen': len(v['input']['key']),
             'len': len(v['plaintext']),
+            'description': None
         }
 
     def linux_name(self):

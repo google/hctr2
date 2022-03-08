@@ -47,7 +47,7 @@ class Polyval(Hash):
 
     def test_input_lengths(self):
         v = dict(self.lengths())
-        for mlen in [0, 16, 32, 48, 64, 256]:
+        for mlen in [0, 16, 32, 48, 64, 80, 96, 112, 256]:
             yield {**v, "message": mlen}
 
     def hash(self, key, message):
@@ -66,7 +66,7 @@ class Polyval(Hash):
         for tv in parsers.polyval.parse_tvs(tvdir):
             yield {
                 'cipher': self.variant,
-                'description': "From RFC",
+                'description': "From RFC 8452",
                 'input': {
                     'key': tv['Record authentication key'],
                     'message': tv['POLYVAL input'],
@@ -91,4 +91,5 @@ class Polyval(Hash):
             'digest': v['hash'],
             'psize': len(v['input']['message']),
             'ksize': len(v['input']['key']),
+            'description': v['description']
         }
