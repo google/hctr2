@@ -358,6 +358,216 @@
         },
         "description": "Random ( 1)",
         "input": {
+            "key_hex": "4a8d818c7cc36094ff1831980f2e0fc0",
+            "message_hex": "f24883409e897eee2841dad356c6fd2061875c6eb5ed2148916f23ca5fbca246b68673df448adc951d3f9659723ebae3670fec5a382edcbaa06bb3b5470188ff3db6aeeaf3cd0d8e45fa2d2a14f5d7b2"
+        },
+        "hash_hex": "0399c7a782a54456d20536561651eaa5"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 2)",
+        "input": {
+            "key_hex": "a9c254cdd80b7e51e06168400657d03c",
+            "message_hex": "781b8d623e5ff01b57efab4cb9f627be4cc24e1d335baf0a2b9eeb2add719430d30a7f97f1dd983e4a095bb1b86c4dfe4a0a27c076009f28867307fac9796374488ff1f6a35464bc1b45af9f073a6777"
+        },
+        "hash_hex": "a97df29e2404d6627e455ce08ec51616"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 3)",
+        "input": {
+            "key_hex": "c744de5bb347bac0dc7fe9e30b7875aa",
+            "message_hex": "97cd5a23ffdb92acb34a3b79dac9ed8ff1dfe604760d1114fe86c36279f2528faf7a1e7708e36681f24d23579b416d2755c6580845ec4ddbc0f9cc9f29c0f677171832068aa9eabb667c85043f7e8984"
+        },
+        "hash_hex": "e6a65c7406a36cbc452d3b1bd0d6d35b"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 4)",
+        "input": {
+            "key_hex": "b449d9fada10f97e8316f7073f7bc890",
+            "message_hex": "7138a88e4eb1afe845b51d51525ba452db6087e862cd93f1c312d38e28930da6cdb495c88326656a721d76c821498eb4df283d4c0c36e1797cccbb6dec106824d20d4194aac4512597562a6e0d56c49f"
+        },
+        "hash_hex": "6c0612a51c98402f150b1ceff825800c"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 5)",
+        "input": {
+            "key_hex": "093457146cc3f9ee59bda6a2f8fb0b07",
+            "message_hex": "903d4bb042368764b81646fbb505eae94af686df02760a767973fa6cbb54c56c317c4e3beb9f373bd95d314bbbbe0632d200d3359dbf47fb1bbcca7229faa4cfdde772c8c302ecac4824e4db968a7e99"
+        },
+        "hash_hex": "32f1736b1dc921aab6c96d114b3d6c84"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 1)",
+        "input": {
+            "key_hex": "0c6a50b6cea722001b566da1a16a7532",
+            "message_hex": "e863de751572d0707e0480f0b4d4a0c6b4459be3da087980ebe6fb61c20f09a41c7d08ef3474bb47002b15aa5be115f675c73fb1757d078defb04b7d37abf175e9762542cb3f46f7424f86e515ee76ba8049dd5da7aa20aa0511838125052874"
+        },
+        "hash_hex": "ccebd48fbb61a25e9f7a7c1823b2f96e"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 2)",
+        "input": {
+            "key_hex": "26ea56cb4e64869bffcad319a70f63fb",
+            "message_hex": "a98e2ab3acc993ad8c9ad1286dc70d403a1a04ab775b2e8229f77d1d8d33d79b12e1b0b54c06f3acb3f1ec28e8f352e58b96cd37858aac0d501aad4e92fe06369942e58f0d7c7f14a9fe7be44cd754b9f492a97bb7aa01882afadf69ad5afe02"
+        },
+        "hash_hex": "dc2605a968ea789b1aeb476734f3e18a"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 3)",
+        "input": {
+            "key_hex": "15be95840eabe195860c87ff277cb047",
+            "message_hex": "80f3b4ee24e0e9fc6822c59fc941ba23bc443e8f7082f6e04ec2d461a7781d46c00e29e7fd04ddca61df63135a2ed8f705d40fcec9e88123ce4cf223139390eca6378e94c36e5176717c9bddf0d6a14d25c4b3e53065cd9c1aaa13ccb74ae48f"
+        },
+        "hash_hex": "4279b10a624a1b14557bf9234668cb4c"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 4)",
+        "input": {
+            "key_hex": "94cecc4c4d249231bb461bdaae47baee",
+            "message_hex": "da67056b09d38c60fbccde70aac6b025dd6c37b52fb50d0861895d228cbbadea3e06f24dd714562f39cdb6ec9505e9d3f12e20ff5807d3fb8922eabf0174962c1b76a6e7d3ff54a38cc08d011337a45e0094f8a31f1c7537166b0cc42f46f539"
+        },
+        "hash_hex": "54ff97369eb259496ce0986f7da4de58"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 5)",
+        "input": {
+            "key_hex": "70ae1cf5570ff2d0cb6bf711d5798a4c",
+            "message_hex": "2143b18de42d0367d9551d21fd98dbd9a61897be40a82aeff76d4bd3e34178dc39fbdbcab3905339a09051fabe5a3108c8a54fd2e64e4d8446ebe2abce2b522ddca10241e22db235d2b3e0d70aec18360ab22b3aa3f2da09807b378bcb411316"
+        },
+        "hash_hex": "424f9057700da1977a95c79ca321568d"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 1)",
+        "input": {
+            "key_hex": "c14571f0300794e73adde4c6192d02a2",
+            "message_hex": "c15d47c74c7c5e0785148f79cc7383f735b8cb7361f05331bf84deb6deafb0b8b7d9119189fd1e4c844a1f2a87a4af628d7d58f64335fc538f1af612e1133f66914b13d645fbb07ae08b8e99f7864637d1229e52f33fd9752c2cc6bb0e081429e8502fd8bef4e9694aeef7ae1565351e"
+        },
+        "hash_hex": "004f5de93bc0d6503e387386c6daca7f"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 2)",
+        "input": {
+            "key_hex": "6967b6e862efad93e44e2ed43f51ea21",
+            "message_hex": "ef3caf3efa110fe0aff41a3b6dfbd88800f6a3c155a512c81aa95868a67e6d3ff306c9ae3bec732abcbd498dc6df2c04c5b547d36927147c62531dd6e1bbd4b078f9b3a783918ec663c83d87e4f8973a1b21c49ed2b89c3b66ba7a1a2fe37eaae8750492e4990f7fa4a8c1d32f94e072"
+        },
+        "hash_hex": "d7451c62a50307432ffe1575fbc6ed16"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 3)",
+        "input": {
+            "key_hex": "f5541a3e3c98532b6e116691d61a0e7e",
+            "message_hex": "d98360b13e8b2bdba1efe59f6dc5f9d2e952ee3e209e9af6c7834213c071245c17c5db1de3690d8fe604f3cec5462201bff00956d2eec0dc548113ed8769a465502508fe1232136a4f75950ad1680cd4a2d2d92feb9686d7510d78cc5bf25d3267dd1f885189ae6dc0706c73b055fd46"
+        },
+        "hash_hex": "78d259c6f17975c6e78b6674f90c69dd"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 4)",
+        "input": {
+            "key_hex": "99eccdec31cfd406f23ddca345a37ba4",
+            "message_hex": "6f679c0c13438acca315c29ba1536b4f65e37345583132e98570e1a95a5ffd36380599d1cdd779ff1db65a359343e88ba1fca89b87b5c68e112e384e8af5b97ff6c5e0cb67be95f33fed54beee508740f1e0cc15a4ca238bdb9ea415e386e6d1aa545ec4bc0fc4d52ea7b02b35d80f70"
+        },
+        "hash_hex": "f27c44d9468dee0f334188925fcdbfe4"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 5)",
+        "input": {
+            "key_hex": "0de73ae7072f4d3cab727bdeced50945",
+            "message_hex": "1eb865a682d7106ef479ed70fc0e2722191496430fd0053b52170501dda37c085161929dbbc94a304823fbda4f3ddf89bb3127fb600b31257bc7e9b5b44824ec0da517d00980e9814d4eef7ea38543a6f3cfe4df9537b1fd2b77b17f47effb6d6a3f23e31ed72e1406e6f559cea19af5"
+        },
+        "hash_hex": "9afdb0482a43d3db39e0a7ed07d7d344"
+    },
+    {
+        "cipher": {
+            "cipher": "Polyval",
+            "lengths": {
+                "key": 16
+            }
+        },
+        "description": "Random ( 1)",
+        "input": {
             "key_hex": "37be681650b94eb047dee2bddee44809",
             "message_hex": "87fc689ffff24a1e823b738fc1b21b7a6c4f81bc889b6ca39cc2a5bc14704c9b0c9f5992164b913d18552268128c63b251cb854bd2ae0b1c5d289d1db1c8f077e9b5074e06c8eef81bed722a557d16c9f254e7e9e0445b33b149eeff43fb82cd4a707881a43436e84c2854a66cc36b78e7c05dc65d81ab700886a1fdf47755fda3e9e21bdf99b780f90a4f724ad3afbbb33beb08580f79cea599051234d4f48637231dc849c092aea6ac9b3155ed15c60517378d9042e487896288691c6afde3002b471a73c151c2c062746a9eb2e521be90b5b050ca8868e19d7adf6cb7b998ee2862618bd147f9047a0b5dcd2b65f512a3fe1aaa2c7842b8be7d74eb59baba"
         },

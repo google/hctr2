@@ -93,8 +93,13 @@ class HCTR2(ciphers.cipher.Bijection):
         v = dict(self.lengths())
         b = v['block']
         del v['block']
+        lengths = {
+            16: [16, 31, 128, 255],
+            24: [17, 48, 512],
+            32: [16, 17, 31, 48, 128, 255, 512]
+        }
         for t in [0, 1, 16, 32, 47]:
-            for l in [16, 17, 48, 255]:
+            for l in lengths[v['key']]:
                 for m in "plaintext", "ciphertext":
                     yield {**v, 'tweak': t, m: l}
 
@@ -121,6 +126,7 @@ class HCTR2(ciphers.cipher.Bijection):
             'ctext': v['ciphertext'],
             'klen': len(v['input']['key']),
             'len': len(v['plaintext']),
+            'description': None
         }
 
     def linux_name(self):
