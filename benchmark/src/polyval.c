@@ -10,17 +10,15 @@
 #include "polyval.h"
 
 #ifdef __x86_64__
-asmlinkage void clmul_polyval_update(const u8 *in,
-				     const struct polyval_key *keys,
-				     size_t nblocks, ble128 *accumulator);
-asmlinkage void clmul_polyval_mul(ble128 *op1, const ble128 *op2);
+asmlinkage void clmul_polyval_update(const struct polyval_key *key,
+	const u8 *in, size_t nblocks, u8 *accumulator);
+asmlinkage void clmul_polyval_mul(u8 *op1, const u8 *op2);
 #define POLYVAL_UPDATE clmul_polyval_update
 #define MUL clmul_polyval_mul
 #elif defined(__aarch64__)
-asmlinkage void pmull_polyval_update(const u8 *in,
-				     const struct polyval_key *keys,
-				     size_t nblocks, ble128 *accumulator);
-asmlinkage void pmull_polyval_mul(ble128 *op1, const ble128 *op2);
+asmlinkage void pmull_polyval_update(const struct polyval_key *key,
+	const u8 *in, size_t nblocks, u8 *accumulator);
+asmlinkage void pmull_polyval_mul(u8 *op1, const u8 *op2);
 #define POLYVAL_UPDATE pmull_polyval_update
 #define MUL pmull_polyval_mul
 #else
@@ -50,16 +48,14 @@ static void polyval_setkey_generic(struct polyval_key *key, const u8 *raw_key)
 
 static void polyval_setkey_simd(struct polyval_key *key, const u8 *raw_key)
 {
-	ble128 *powers = key->key.simd_powers;
-
 	/* set h */
-	memcpy(&powers[NUM_PRECOMPUTE_KEYS - 1], raw_key, sizeof(ble128));
+	memcpy(&key->key.simd_powers[NUM_KEY_POWERS - 1], raw_key,
+	       POLYVAL_BLOCK_SIZE);
 
 	/* Precompute key powers */
-	for (int i = NUM_PRECOMPUTE_KEYS - 2; i >= 0; i--) {
-		memcpy(&powers[i], &powers[NUM_PRECOMPUTE_KEYS - 1],
-		       sizeof(ble128));
-		MUL(&(powers[i]), &(powers[(i + 1)]));
+	for (int i = NUM_KEY_POWERS - 2; i >= 0; i--) {
+		memcpy(&key->key.simd_powers[i], raw_key, POLYVAL_BLOCK_SIZE);
+		MUL(key->key.simd_powers[i], key->key.simd_powers[i + 1]);
 	}
 }
 
@@ -71,7 +67,7 @@ void polyval_setkey(struct polyval_key *key, const u8 *raw_key, bool simd)
 		polyval_setkey_generic(key, raw_key);
 }
 
-static void polyval_update_generic(const u8 *in, const struct polyval_key *key,
+static void polyval_update_generic(const struct polyval_key *key, const u8 *in,
 				   size_t nblocks, be128 *accumulator)
 {
 	const be128 *h = &key->key.generic_h;
@@ -82,7 +78,7 @@ static void polyval_update_generic(const u8 *in, const struct polyval_key *key,
 		reverse_bytes(&tmp);
 		be128_xor(accumulator, accumulator, &tmp);
 		gf128mul_lle(accumulator, h);
-		in += 16;
+		in += POLYVAL_BLOCK_SIZE;
 		nblocks--;
 	}
 }
@@ -96,9 +92,9 @@ void polyval_update(struct polyval_state *state, const struct polyval_key *key,
 		    const u8 *in, size_t nblocks, bool simd)
 {
 	if (simd)
-		POLYVAL_UPDATE(in, key, nblocks, &state->state.simd_state);
+		POLYVAL_UPDATE(key, in, nblocks, state->state.simd_state);
 	else
-		polyval_update_generic(in, key, nblocks,
+		polyval_update_generic(key, in, nblocks,
 				       &state->state.generic_state);
 }
 
