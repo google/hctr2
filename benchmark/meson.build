@@ -37,14 +37,14 @@ src = [
 
 if host_machine.cpu_family() == 'aarch64'
     src += [
-        'src/aarch64/polyval-pmull_asm.S',
+        'src/aarch64/polyval-ce-core.S',
         '../third_party/linux-kernel/aarch64/aes-ce.S',
     ]
 endif
 if host_machine.cpu_family() == 'x86_64'
     src += [
-	    'src/x86_64/polyval-clmulni_asm.S',
-        '../third_party/linux-kernel/x86_64/aes_xctr.S',
+        'src/x86_64/polyval-clmulni_asm.S',
+        '../third_party/linux-kernel/x86_64/aes_ctrby8_avx-x86_64.S',
         '../third_party/linux-kernel/x86_64/aesni-intel_asm.S',
     ]
 endif

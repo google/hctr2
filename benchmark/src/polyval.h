@@ -9,11 +9,11 @@
 
 #include "util.h"
 #include "gf128.h"
-#include "polyval-asm.h"
 
 #define POLYVAL_BLOCK_SIZE 16
 #define POLYVAL_DIGEST_SIZE 16
 #define POLYVAL_KEY_SIZE 16
+#define NUM_KEY_POWERS 8
 
 /*
  * GF(2^128) elements are represented differently depending on whether
@@ -21,7 +21,8 @@
  * GHASH-like implementation.
  */
 struct polyval_key {
-	union key {
+	union {
+
 		/*
 		 * Array of montgomery-form GF(2^128) field elements
 		 * stored in big-little endian.
@@ -36,7 +37,8 @@ struct polyval_key {
 		 * The array contains the GF(2^128) elements h^n .. h^1
 		 * in decreasing order of degree.
 		 */
-		ble128 simd_powers[NUM_PRECOMPUTE_KEYS];
+		u8 simd_powers[NUM_KEY_POWERS][POLYVAL_BLOCK_SIZE];
+
 		/*
 		 * GF(2^128) element h stored in little-little endian.
 		 *
@@ -52,11 +54,11 @@ struct polyval_key {
 		 */
 		be128 generic_h;
 	} key;
-};
+} __attribute__((aligned(16)));
 
 struct polyval_state {
-	union state {
-		ble128 simd_state;
+	union {
+		u8 simd_state[POLYVAL_BLOCK_SIZE];
 		be128 generic_state;
 	} state;
 };
