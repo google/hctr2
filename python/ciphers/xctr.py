@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-import Crypto.Util.strxor
+import Cryptodome.Util.strxor
 
 import ciphers.aes
 import ciphers.cipher
@@ -12,10 +12,10 @@ import ciphers.cipher
 
 def strxor(a, b):
     assert len(a) == len(b)
-    # Crypto.Util.strxor craps out on zero length input :(
+    # Cryptodome.Util.strxor craps out on zero length input :(
     if len(a) == 0:
         return b''
-    return Crypto.Util.strxor.strxor(a, b)
+    return Cryptodome.Util.strxor.strxor(a, b)
 
 
 class XCTR(ciphers.cipher.Bijection):
