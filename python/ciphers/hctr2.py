@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-from Crypto.Util.strxor import strxor
+from Cryptodome.Util.strxor import strxor
 
 import ciphers.aes
 import ciphers.cipher
