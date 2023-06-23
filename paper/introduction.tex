@@ -11,36 +11,43 @@
 \documentclass[hctr2.tex]{subfiles}
 \begin{document}
 \section{Introduction}
-A symmetric encryption construction such as AES-GCM\cite{gcm}
-will produce a ciphertext which is larger than
-the plaintext, once the nonce and authentication tag are included. However,
-there are situations such as disk sector encryption
-where the ciphertext must be the same size as the
-plaintext, and what is required is a tweakable
-\emph{super-pseudorandom permutation} (SPRP):
-a family of permutations indexed by tweak and input length,
-which appear to be random permutations to an adversary without the key
-who can make encryption and decryption queries\cite{cmc}.
-\cite{adiantum} includes a detailed history of length-preserving encryption.
-Where AES and multiplication in \(\GF(2^{128})\) are hardware-accelerated,
-HCTR\cite{hctr} is among the most efficient 
-tweakable SPRP constructions, using
-a single block cipher invocation and two \(\GF(2^{128})\) multiplications
-per 16-byte block.
 
-In this paper, we present 
-a specification (\autoref{specification})
-and security bound (\autoref{security})
-for a revised version, HCTR2, which 
-addresses the following issues:
+A \emph{tweakable super-pseudorandom permutation} (tweakable SPRP) is
+a family of permutations indexed by tweak and input length, which
+appear to be random permutations to an adversary without the key who
+can make encryption and decryption queries\cite{cmc}. \cite{adiantum}
+includes a detailed history of length-preserving encryption. A
+tweakable SPRP is a highly general and flexible cryptographic
+construction. One common use is in disk sector encryption: if the
+ciphertext must be the same size as the plaintext, with no extra room
+for nonce or MAC, a tweakable SPRP represents an upper bound on the
+achievable security. If a variable-length tweak is accepted, it can
+also serve as a nonce-misuse-resistant AEAD mode: concatenate the
+nonce and the associated data to form the tweak, and authenticate the
+message by appending zeroes to the plaintext which will be checked on
+decryption\cite{encodethenencrypt, aez}.
+
+\subfile{hctr2fig.tex}
+In this paper, we present a specification (\autoref{specification})
+and security bound (\autoref{security}) for HCTR2, a tweakable SPRP
+based on HCTR\cite{hctr} and inheriting the following advantages:
+\begin{itemize}
+    \item simple
+    \item efficient on modern processors, using a single block cipher
+    invocation and two \(\GF(2^{128})\) multiplications per 16-byte
+    block
+    \item naturally handles ciphertext of any length of 16 bytes or greater
+    \item tight quadratic security claim
+\end{itemize}
+HCTR2 addresses these issues in HCTR:
 \begin{itemize}
     \item \cite{kumarhctr} observes that HCTR's hash function
     is not almost-XOR-universal\cite{eadu} as claimed (\autoref{badhash}).
     HCTR2's hash function fixes this property.
     \item Separately,
     an error in the proof presented in \cite{hctrquad}
-    invalidates the security bound claimed in that paper (\autoref{badproof}); with our revised
-    mode we can claim a tighter bound.
+    invalidates the quadratic security bound claimed in that paper (\autoref{badproof}); with our revised
+    mode we can claim a tighter quadratic bound.
     \item HCTR2 supports using tweaks of any length with a single key.
     \item HCTR's key is a block cipher key, plus an \(n\)-bit
     hash key. HCTR2's key is simply
@@ -53,5 +60,4 @@ addresses the following issues:
 We discuss our design decisions (\autoref{design})
 and report on its implementation on x86-64 and ARM64 (\autoref{implementation}).
 We know of no patents affecting HCTR2.
-\subfile{hctr2fig.tex}
 \end{document}

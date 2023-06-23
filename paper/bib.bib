@@ -1133,3 +1133,33 @@ abstract = "This work introduces ${\sf {FAST}}$ which is a new family of tweakab
 ,   year        = {2016}
 ,   url         = {https://cr.yp.to/talks/2016.01.15/slides-djb-20160115-a4.pdf}
 }
+
+@InProceedings{encodethenencrypt,
+author="Bellare, Mihir and Rogaway, Phillip",
+editor="Okamoto, Tatsuaki",
+title="Encode-Then-Encipher Encryption: How to Exploit Nonces or Redundancy in Plaintexts for Efficient Cryptography",
+booktitle="Advances in Cryptology --- ASIACRYPT 2000",
+year="2000",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="317--330",
+abstract="We investigate the following approach to symmetric encryption: first encode the message via some keyless transform, and then encipher the encoded message, meaning apply a permutation FK based on a shared key K. We provide conditions on the encoding functions and the cipher which ensure that the resulting encryption scheme meets strong privacy (eg. semantic security) and/or authenticity goals. The encoding can either be implemented in a simple way (eg. prepend a counter and append a checksum) or viewed as modeling existing redundancy or entropy already present in the messages, whereby encode-then-encipher encryption provides a way to exploit structured message spaces to achieve compact ciphertexts.",
+isbn="978-3-540-44448-0",
+doi             = {https://doi.org/10.1007/3-540-44448-3_24},
+url={https://web.cs.ucdavis.edu/~rogaway/papers/encode.pdf}
+}
+
+@InProceedings{aez,
+author="Hoang, Viet Tung and Krovetz, Ted and Rogaway, Phillip",
+editor="Oswald, Elisabeth and Fischlin, Marc",
+title="Robust Authenticated-Encryption AEZ and the Problem That It Solves",
+booktitle="Advances in Cryptology -- EUROCRYPT 2015",
+year="2015",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="15--44",
+abstract="With a scheme for robust authenticated-encryption a user can select an arbitrary value {\$}{\$}{\backslash}lambda {\backslash}!{\backslash}ge 0{\$}{\$}and then encrypt a plaintext of any length into a ciphertext that's {\$}{\$}{\backslash}lambda {\$}{\$}characters longer. The scheme must provide all the privacy and authenticity possible for the requested {\$}{\$}{\backslash}lambda {\$}{\$}. We formalize and investigate this idea, and construct a well-optimized solution, AEZ, from the AES round function. Our scheme encrypts strings at almost the same rate as OCB-AES or CTR-AES (on Haswell, AEZ has a peak speed of about 0.7 cpb). To accomplish this we employ an approach we call prove-then-prune: prove security and then instantiate with a scaled-down primitive (e.g., reducing rounds for blockcipher calls).",
+isbn="978-3-662-46800-5",
+doi={https://doi.org/10.1007/978-3-662-46800-5_2},
+url={https://ia.cr/2014/793}
+}
