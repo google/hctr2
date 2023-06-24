@@ -267,6 +267,9 @@ Halevi and Rogaway's PRP-RND lemma
 Putting these together with our main lemma, we conclude
 \begin{align*}
     &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
+    \leq & \quad \advantage{\pm \widetilde{\mathrm{prp}}}{\pm\widetilde{\mathrm{rnd}}}[(q, \sigma, t)] \\
+    & + \advantage{\pm\widetilde{\mathrm{rnd}}}{\HCTR[\Perm(n)]}[(q, \sigma, t)] \\
+    & + \advantage{\HCTR[\Perm(n)]}{\HCTR[E]}[(q, \sigma, t)] \\
     \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')] \\
     &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 7\sigma + 2\right)\middle/2^{n+1}\right.
 \end{align*}
