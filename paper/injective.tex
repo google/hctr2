@@ -17,24 +17,24 @@ a binary string \(X\) of length \(\abs{X} = n (1 + \deg(H(T, M)))\)
 representing the coefficients of 
 the polynomial \(H(T, M)\) in binary form,
 starting with the greatest nonzero power; thus
-\(13\hpoly^3\) would encode as \(1011 \Concat 0^{4n -4}\).
+\(13\hpoly^3\) would encode as \(\binary{1011} \Concat \bino^{4n -4}\).
 \begin{algorithmic}[1]
     \Procedure{GetTM}{$X$}
     \State \textbf{assert} \(\abs{X} \bmod n = 0\)
     \State \textbf{assert} \(\abs{X} \geq 2n\)
-    \State \textbf{assert} \(X[\abs{X} - n; n] = 0^n\)
+    \State \textbf{assert} \(X[\abs{X} - n; n] = \bino^n\)
     \State \(t \gets \fromint^{-1}_{n-1}(X[1;n-1])\)
     \State \textbf{assert} \(t > 0\)
     \State \(t \gets t-1\)
     \State \(w \gets n(1 + \ceil{t/n})\)
-    \If{\(X[0; 1] = 0\)}
+    \If{\(X[0; 1] = \bino\)}
         \State \textbf{assert} \(w + n \leq \abs{X}\)
         \State \(M \gets X[w;\abs{X}-w-n]\)
     \Else
         \State \textbf{assert} \(w + 2n \leq \abs{X}\)
-        \State \textbf{assert} \(X[\abs{X}-2n+1; n-1] \neq 0^{n-1}\)
+        \State \textbf{assert} \(X[\abs{X}-2n+1; n-1] \neq \bino^{n-1}\)
         \State \(i \gets \abs{X} - n - 1\)
-        \While{\(X[i; 1] = 0\)}
+        \While{\(X[i; 1] = \bino\)}
             \State \(i \gets i - 1\)
         \EndWhile
         \State \(M \gets X[w;i - w]\)

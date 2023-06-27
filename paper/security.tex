@@ -97,7 +97,7 @@ in value if \(\hpoly = 1\),
 they are not equal as formal polynomials;
 two formal polynomials are only equal
 if every coefficient is equal. Thus \(\poly(M) = \poly(M')\)
-only if \(M = 0^{ln} \Concat M'\) for some \(l\) or vice versa.
+only if \(M = \bino^{ln} \Concat M'\) for some \(l\) or vice versa.
 
 Define \(H(T, M)\) as the formal polynomial in \(\hpoly\) given
 by that tweak and message.
@@ -108,9 +108,9 @@ performance reasons.
     & H(T, M) \\
     \defeq &
     \begin{cases}
-        \poly(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat 0^n) &
+        \poly(\fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M \Concat \bino^n) &
         \text{if } n \text{ divides } \abs{M} \\
-        \poly(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1) \Concat 0^n) &
+        \poly(\fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat \bini) \Concat \bino^n) &
         \text{otherwise}
     \end{cases}
 \end{align*}

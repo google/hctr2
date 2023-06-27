@@ -31,12 +31,18 @@
 \usepackage{fontspec}
 \setmainfont{TeX Gyre Schola}
 \setsansfont{TeX Gyre Heros}
-\setmathrm{Latin Modern Roman}
-\setmathsf{Latin Modern Sans}
 \defaultfontfeatures{}
 \setmonofont{TeX Gyre Cursor}[Ligatures={NoCommon,NoRequired,NoContextual},Scale=0.9]
+\setmathrm{Latin Modern Roman}
+\setmathsf{Latin Modern Sans}
+\setmathtt{Latin Modern Mono}
 
 \usetikzlibrary{groupops}
+
+\newcommand{\binary}[1]{{\color{red!80!black} \mathtt{#1}}}
+\newcommand{\bino}{\binary{0}}
+\newcommand{\bini}{\binary{1}}
+\renewcommand{\bin}{\{\bino,\bini\}}
 
 \renewcommand{\pcadvantagesuperstyle}[1]{#1}
 
