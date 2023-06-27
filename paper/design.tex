@@ -184,7 +184,7 @@ polynomial can be inferred from the degree.
 
 This change means that \(\ceil{\abs{T}/n} + \ceil{\abs{M}/n}\)
 can be inferred from the degree of the polynomial.  
-If we append a 1 to the message before padding with zeroes,
+If we append a \(\bini\) to the message before padding with zeroes,
 we need only encode only the tweak length in the length block,
 and the message length can then be inferred.
 For users whose tweaks are always the same length
@@ -195,9 +195,9 @@ precomputed.
 However, in the very common case where 
 the message length is a multiple of the block size,
 we don't want an extra multiplication
-for an extra block containing only the appended 1 bit.
+for an extra block containing only the appended \(\bini\) bit.
 Borrowing from~\cite{xcbc},
-we don't append a 1 bit to such messages.
+we don't append a \(\bini\) bit to such messages.
 Instead, we indicate whether
 the message length is a multiple of the block size
 in the least significant bit of the length block.

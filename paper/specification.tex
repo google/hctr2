@@ -14,6 +14,7 @@
 \subfile{algorithm.tex}
 \subsection{Notation}
 \begin{itemize}
+    \item \(\bin^{*}\): set of binary strings
     \item $\abs{X}$: length of $X \in \bin^{*}$ in bits
     \item $\lambda$: the empty string $\abs{\lambda} = 0$
     \item $X[a;l]$: the substring of $X$ of length $l$ starting at the 0-based index $a$
@@ -23,7 +24,7 @@
     \item $\fromint_l: \{0 \ldots 2^l-1\} \rightarrow \bin^l$:
     little-endian conversion of integers to binary; 
     \(\fromint(x)\) means \(\fromint_n(x)\)
-    \item $\pad(X) = X \Concat 0^v$
+    \item $\pad(X) = X \Concat \bino^v$
     where $v$ is the least integer $\geq 0$ such that $n$ divides $\abs{X} + v$
     \item \(x, x^2, \ldots\): elements of the finite field \(\GF(2^n)\)
     \item \(E: \mathcal{K} \times \bin^n \rightarrow \bin^n\): 
@@ -41,10 +42,10 @@ $a \in A$ then $f_a: B \rightarrow C$, and if $f_a^{-1}$ exists then $f_a^{-1}(f
 
 \subsection{Polynomial hash function}\label{hashspec}
 We interpret \(n\)-bit blocks as little-endian field elements of \(\GF(2^n)\),
-so \(001 \Concat 0^{n-3}\) is interpreted as the element \(x^2\).
+so \(\binary{001} \Concat \bino^{n-3}\) is interpreted as the element \(x^2\).
 Per \cite{aes_gcm_siv,aes_gcm_siv_rfc} we define
 \begin{align*}
-    \POLYVAL(\hgen, \lambda) & = 0^n\\
+    \POLYVAL(\hgen, \lambda) & = \bino^n\\
     \POLYVAL(\hgen, A \Concat B) & = (\POLYVAL(\hgen, A) \xor B) \otimes \hgen \otimes x^{-n}
 \end{align*}
 where \(\abs{\hgen} = \abs{B} = n\) and
@@ -61,7 +62,7 @@ For hash key \(\hgen \in \bin^n\), tweak \(T\) and message \(M\), we define:
     \begin{cases}
         \POLYVAL(\hgen, \fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M) &
         \text{if } n \text{ divides } \abs{M} \\
-        \POLYVAL(\hgen, \fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat 1)) &
+        \POLYVAL(\hgen, \fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat \bini)) &
         \text{otherwise}
     \end{cases}
 \end{align*}
