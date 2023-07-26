@@ -29,7 +29,7 @@ features that make it an attractive design:
     encryption and decryption queries; this is used in the
     proof of security to bound \(S_i^r \qeq S_j^s\)
     and avert a cubic term in the security bound.
-    \item The CTR mode variant XCTR.
+    \item The CTR mode variant XCTR\@.
     Because of the extra constant \(L\), it would be straightforward
     to prove secure an HCTR2 variant that used CTR mode.
     However, unlike CTR, XCTR
@@ -82,7 +82,7 @@ HCTR2 differs from HCTR in the following ways:
 \subsection{Comparison of SPRP modes}
 We considered a number of modes aiming to provide
 tweakable super-pseudorandom permutations
-as the basis for our design before settling on HCTR.
+as the basis for our design before settling on HCTR\@.
 HCTR is simpler than all of these modes except HHFHFH;
 each also has specific qualities that led us to choose
 an HCTR variant in preference.
@@ -154,7 +154,7 @@ which allows code/hardware for one to be used for the other.
 \subsubsection{Input formatting}\label{inputformatting}
 
 The formatting of inputs to the polynomial hash in HCTR2 is significantly
-different from that in HCTR. Our design goals are:
+different from that in HCTR\@. Our design goals are:
 
 \begin{itemize}
     \item fix the flaw described in \cite{kumarhctr}
