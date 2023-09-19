@@ -10,3 +10,6 @@ scratch/
 *.pdf
 *.run.xml
 *.synctex*
+*.nav
+*.snm
+*.toc

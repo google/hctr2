@@ -1,0 +1,126 @@
+\documentclass{beamer}
+\usepackage{tikz}
+\usetikzlibrary{groupops}
+
+\input{defines.tex}
+
+\setbeamertemplate{navigation symbols}{}
+
+\title{HCTR2}
+\author{Paul Crowley, Eric Biggers, Nathan Huckleberry}
+\institute{Google LLC}
+\date{2023-10-03}
+
+\usepackage{subfiles}
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+
+\frametitle{Background}
+
+\begin{itemize}
+    \item Adiantum for disk encryption on low-end
+    \item needed a wide-block mode efficient on small blocks
+    \item fast with AES+GCM instructions
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{The field}
+
+\begin{itemize}
+    \item Much interest in around 2005-2009
+    \item Many proposals: CMC, EME, EME*, PEP, TET, HEH, HCH, HSE, HMC…
+    \item We chose HCTR (Wang, Feng, and Wu 2005)
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{Hash-encrypt-hash}
+
+\begin{itemize}
+    \item Any secure mode has three passes
+    \item Hashing is faster than encryption
+    \item so hash-encrypt-hash is fastest
+    \item (HHFHFH is hash-encrypt-hash in disguise)
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{HCTR (and HCTR2)}
+
+\begin{itemize}
+    \item Simple
+    \item fast with AES+GHASH instructions
+    \item No ciphertext stealing tricks needed
+    \item tight quadratic security claim
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{HCTR issues}
+
+\begin{itemize}
+    \item Empty message special case
+    \item …makes hash non injective
+    \item Error in quadratic security proof
+    \item HCTR2 fixes these, and “sands the edges”
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{HCTR2}
+\begin{figure}
+\subfile{hctr2fig.tex}
+\end{figure}
+\begin{itemize}
+    \item L fixes quadratic security proof
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+
+\frametitle{HCTR2 hash function}
+
+\begin{itemize}
+    \item Fixes the zero bug
+    \item Handles variable-length tweak
+    \item Tweak+length block processed only once
+    \item uses POLYVAL for speed
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{Sanding the edges}
+
+\begin{itemize}
+    \item h, L derived from block cipher
+    \item Endianness etc specified
+    \item Sample implementation and test vectors
+    \item In Linux kernel now
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{Speculative bit: better than quadratic security}
+
+\begin{itemize}
+    \item Inspired by AES-GCM-SIV
+    \item PRF generates keys from nonce
+    \item 128-bit keys, multi-target security matters more
+    \item Generate h and L from PRF
+    \item Proof in ideal cipher model
+\end{itemize}
+\end{frame}
+
+\end{document}

@@ -27,7 +27,10 @@ nonce and the associated data to form the tweak, and authenticate the
 message by appending zeroes to the plaintext which will be checked on
 decryption\cite{encodethenencrypt, aez}.
 
-\subfile{hctr2fig.tex}
+\begin{figure}
+    \subfile{hctr2fig.tex}
+    \caption{HCTR2}\label{hctr2fig}
+\end{figure}
 In this paper, we present a specification (\autoref{specification})
 and security bound (\autoref{security}) for HCTR2, a tweakable SPRP
 based on HCTR\cite{hctr} and inheriting the following advantages:
