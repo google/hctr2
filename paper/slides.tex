@@ -35,8 +35,8 @@
 \frametitle{The field}
 
 \begin{itemize}
-    \item Much interest in wide block modes around 2005-2009
-    \item Many proposals: CMC, EME, EME*, PEP, TET, HEH, HCH, HSE, HMC…
+    \item Much interest in wide block modes around 2005--2009
+    \item Many proposals: CMC, EME, EME*, PEP, TET, HEH, HCH, HSE, HMC\ldots
     \item We chose HCTR (Wang, Feng, and Wu 2005)
 \end{itemize}
 \end{frame}
@@ -55,14 +55,27 @@
 
 \begin{frame}
 
-\frametitle{HCTR and HCTR2}
+\frametitle{HCTR}
 
 \begin{itemize}
     \item Simple
     \item fast with AES+GHASH instructions
     \item No ciphertext stealing tricks needed
+    \item XCTR mode
     \item tight quadratic security claim
 \end{itemize}
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{XCTR mode}
+    
+    \begin{itemize}
+        \item CTR: nonce PLUS counter
+        \item XCTR: nonce XOR counter
+        \item No 128-bit addition required
+        \item No nasty GCM hack
+    \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -70,10 +83,10 @@
 \frametitle{HCTR issues}
 
 \begin{itemize}
-    \item Empty message special case
-    \item …makes hash non injective
+    \item Block-length message special case
+    \item \ldots makes hash non injective
     \item Error in quadratic security proof
-    \item HCTR2 fixes these, and “sands the edges”
+    \item HCTR2 fixes these, and ``sands the edges''
 \end{itemize}
 \end{frame}
 
@@ -84,7 +97,7 @@
 \subfile{hctr2fig.tex}
 \end{figure}
 \begin{itemize}
-    \item L fixes quadratic security proof
+    \item $L$ fixes quadratic security proof
 \end{itemize}
 
 \end{frame}
@@ -106,26 +119,13 @@
 \frametitle{Sanding the edges}
 
 \begin{itemize}
-    \item h, L derived from block cipher
+    \item $h$, $L$ derived from block cipher
     \item Endianness etc specified
     \item Sample implementation and test vectors
     \item In Linux kernel now
 \end{itemize}
 \end{frame}
 
-\begin{frame}
-
-    \frametitle{XCTR mode}
-    
-    \begin{itemize}
-        \item CTR: nonce PLUS counter
-        \item XCTR: nonce XOR counter
-        \item No 128-bit addition required
-        \item No nasty GCM hack
-        \item Copied from HCTR
-    \end{itemize}
-\end{frame}
-    
 \begin{frame}
 
     \frametitle{Quadratic security}
@@ -147,9 +147,9 @@
 
 \begin{itemize}
     \item Inspired by AES-GCM-SIV
-    \item PRF generates keys from nonce
-    \item 128-bit keys, multi-target security matters more
-    \item Generate h and L from PRF
+    \item Per-message keys derived from nonce
+    \item Derive $h$ and $L$ in the same way
+    \item Multi-target security matters if keys are 128-bit
     \item Proof in ideal cipher model
 \end{itemize}
 \end{frame}
