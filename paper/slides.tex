@@ -1,5 +1,8 @@
 \documentclass{beamer}
+
 \usepackage{tikz}
+\usepackage[logic,probability,advantage,adversary,landau,sets,operators]{cryptocode}
+
 \usetikzlibrary{groupops}
 
 \input{defines.tex}
@@ -32,7 +35,7 @@
 \frametitle{The field}
 
 \begin{itemize}
-    \item Much interest in around 2005-2009
+    \item Much interest in wide block modes around 2005-2009
     \item Many proposals: CMC, EME, EME*, PEP, TET, HEH, HCH, HSE, HMC…
     \item We chose HCTR (Wang, Feng, and Wu 2005)
 \end{itemize}
@@ -43,16 +46,16 @@
 \frametitle{Hash-encrypt-hash}
 
 \begin{itemize}
-    \item Any secure mode has three passes
-    \item Hashing is faster than encryption
+    \item Any secure wide-block mode has three passes
+    \item Almost-universal hashing is faster than encryption
     \item so hash-encrypt-hash is fastest
-    \item (HHFHFH is hash-encrypt-hash in disguise)
+    \item HHFHFH is hash-encrypt-hash in disguise
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 
-\frametitle{HCTR (and HCTR2)}
+\frametitle{HCTR and HCTR2}
 
 \begin{itemize}
     \item Simple
@@ -112,6 +115,34 @@
 
 \begin{frame}
 
+    \frametitle{XCTR mode}
+    
+    \begin{itemize}
+        \item CTR: nonce PLUS counter
+        \item XCTR: nonce XOR counter
+        \item No 128-bit addition required
+        \item No nasty GCM hack
+        \item Copied from HCTR
+    \end{itemize}
+\end{frame}
+    
+\begin{frame}
+
+    \frametitle{Quadratic security}
+
+    \begin{align*}
+        &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
+        \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')] \\
+        &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 7\sigma + 2\right)\middle/2^{n+1}\right.
+    \end{align*}
+        
+
+    \begin{itemize}
+        \item \(q\) queries, \(\sigma\) blocks, \(t\) time
+    \end{itemize}
+\end{frame}
+    
+\begin{frame}
 \frametitle{Speculative bit: better than quadratic security}
 
 \begin{itemize}
