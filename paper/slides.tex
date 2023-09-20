@@ -21,15 +21,29 @@
 
 \begin{frame}
 
-\frametitle{Background}
+\frametitle{Background: Adiantum}
 
 \begin{itemize}
-    \item Adiantum for disk encryption on low-end
-    \item needed a wide-block mode efficient on small blocks
-    \item fast with AES+GCM instructions
+    \item 2018: \textit{Adiantum: length-preserving encryption for entry-level processors}
+    \item A wide-block mode
+    \item Fast without AES+GHASH instructions
+    \item Efficient on 0.5kB-4kB messages
 \end{itemize}
 \end{frame}
 
+\begin{frame}
+
+    \frametitle{Background: HCTR2}
+    
+    \begin{itemize}
+        \item We needed a new wide-block mode
+        \item Fast \textit{with} AES+GHASH instructions
+        \item Efficient on short messages (16B-64B)
+        \item Secure and fully specified
+    \end{itemize}
+    \end{frame}
+    
+    
 \begin{frame}
 
 \frametitle{The field}
@@ -46,9 +60,9 @@
 \frametitle{Hash-encrypt-hash}
 
 \begin{itemize}
-    \item Any secure wide-block mode has three passes
+    \item Any secure wide-block mode has at least three passes
     \item Almost-universal hashing is faster than encryption
-    \item so hash-encrypt-hash is fastest
+    \item So hash-encrypt-hash constructions are fastest
     \item HHFHFH is hash-encrypt-hash in disguise
 \end{itemize}
 \end{frame}
@@ -59,10 +73,10 @@
 
 \begin{itemize}
     \item Simple
-    \item fast with AES+GHASH instructions
+    \item Fast with AES+GHASH instructions
     \item No ciphertext stealing tricks needed
     \item XCTR mode
-    \item tight quadratic security claim
+    \item Tight quadratic security claim
 \end{itemize}
 \end{frame}
 
@@ -84,7 +98,7 @@
 
 \begin{itemize}
     \item Block-length message special case
-    \item \ldots makes hash non injective
+    \item Hash is non injective
     \item Error in quadratic security proof
     \item HCTR2 fixes these, and ``sands the edges''
 \end{itemize}
@@ -107,10 +121,10 @@
 \frametitle{HCTR2 hash function}
 
 \begin{itemize}
-    \item Fixes the zero bug
+    \item Fixes hash to be injective, no special case
     \item Handles variable-length tweak
     \item Tweak+length block processed only once
-    \item uses POLYVAL for speed
+    \item Uses POLYVAL for speed
 \end{itemize}
 \end{frame}
 
@@ -120,7 +134,7 @@
 
 \begin{itemize}
     \item $h$, $L$ derived from block cipher
-    \item Endianness etc specified
+    \item Endianness, field convention specified
     \item Sample implementation and test vectors
     \item In Linux kernel now
 \end{itemize}
@@ -143,9 +157,10 @@
 \end{frame}
     
 \begin{frame}
-\frametitle{Speculative bit: better than quadratic security}
+\frametitle{Future work: better than quadratic security?}
 
 \begin{itemize}
+    \item This is all still speculative
     \item Inspired by AES-GCM-SIV
     \item Per-message keys derived from nonce
     \item Derive $h$ and $L$ in the same way
