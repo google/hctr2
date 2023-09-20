@@ -10,6 +10,12 @@
 
 \documentclass[hctr2.tex]{subfiles}
 \begin{document}
+\iftoggle{oldhctr}{
+  \newcommand*{\hdiag}{\hpoly}
+}{
+  \newcommand*{\hdiag}{\hgen}
+}
+
   \begin{tikzpicture}
     [thick,
      box/.style = {
@@ -67,4 +73,7 @@
     \draw[wire] (X3) -- (U);
     \draw[wire] (X2) -- (V);
   \end{tikzpicture}
-\end{document}
+
+  % Delete \hdiag so we can newcommand it again later.
+  \let\hdiag\relax
+  \end{document}
