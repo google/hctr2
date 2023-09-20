@@ -10,6 +10,7 @@
 
 \documentclass[letterpaper,11pt]{article}
 
+\usepackage{etoolbox}
 \usepackage[svgnames]{xcolor}
 \usepackage{floatrow}
 \usepackage{algorithm}
@@ -38,13 +39,6 @@
 \setmathtt{Latin Modern Mono}
 
 \usetikzlibrary{groupops}
-
-\newcommand{\binary}[1]{{\color{red!80!black} \mathtt{#1}}}
-\newcommand{\bino}{\binary{0}}
-\newcommand{\bini}{\binary{1}}
-\renewcommand{\bin}{\{\bino,\bini\}}
-
-\renewcommand{\pcadvantagesuperstyle}[1]{#1}
 
 \pretitle{\begin{center}\LARGE\bfseries\sffamily} % sf title
 \renewcommand{\abstitlestyle}{\sffamily\bfseries\centering} % sf abstract

@@ -1,11 +1,26 @@
-\documentclass{beamer}
+\documentclass[aspectratio=169]{beamer}
 
-\usepackage{tikz}
+\usepackage{etoolbox}
 \usepackage[logic,probability,advantage,adversary,landau,sets,operators]{cryptocode}
+\usepackage{tikz}
 
 \usetikzlibrary{groupops}
 
 \input{defines.tex}
+
+\newenvironment*{figslide}{
+    \begin{columns}
+        \begin{column}{.4\textwidth}
+
+}{
+\end{column}
+\begin{column}{.6\textwidth}
+    \begin{figure}
+        \subfile{hctr2fig.tex}
+    \end{figure}
+\end{column}
+\end{columns}
+}
 
 \setbeamertemplate{navigation symbols}{}
 
@@ -17,7 +32,11 @@
 \usepackage{subfiles}
 \begin{document}
 
-\frame{\titlepage}
+\begin{frame}
+    \begin{figslide}
+        \titlepage
+    \end{figslide}
+\end{frame}
 
 \begin{frame}
 
@@ -41,9 +60,8 @@
         \item Efficient on short messages (16B-64B)
         \item Secure and fully specified
     \end{itemize}
-    \end{frame}
-    
-    
+\end{frame}
+
 \begin{frame}
 
 \frametitle{The field}
@@ -67,77 +85,92 @@
 \end{itemize}
 \end{frame}
 
+\toggletrue{oldhctr}
+\renewcommand*{\hdiag}{\hpoly}
+
 \begin{frame}
 
 \frametitle{HCTR}
 
-\begin{itemize}
-    \item Simple
-    \item Fast with AES+GHASH instructions
-    \item No ciphertext stealing tricks needed
-    \item XCTR mode
-    \item Tight quadratic security claim
-\end{itemize}
+    \begin{figslide}
+        \begin{itemize}
+            \item Simple
+            \item Fast with AES+GHASH instructions
+            \item No ciphertext stealing tricks needed
+            \item XCTR mode
+            \item Tight quadratic security claim
+        \end{itemize}
+    \end{figslide}
 \end{frame}
 
 \begin{frame}
 
     \frametitle{XCTR mode}
     
-    \begin{itemize}
-        \item CTR: nonce PLUS counter
-        \item XCTR: nonce XOR counter
-        \item No 128-bit addition required
-        \item No nasty GCM hack
-    \end{itemize}
+    \begin{figslide}
+            \begin{itemize}
+                \item CTR: nonce PLUS counter
+                \item XCTR: nonce XOR counter
+                \item No 128-bit addition required
+                \item No nasty GCM hack
+            \end{itemize}
+    \end{figslide}
 \end{frame}
 
 \begin{frame}
 
 \frametitle{HCTR issues}
+\begin{figslide}
+        \begin{itemize}
+            \item Block-length message special case
+            \item Hash is non injective
+            \item Error in quadratic security proof
+            \item HCTR2 fixes these, and ``sands the edges''
+        \end{itemize}
+\end{figslide}
 
-\begin{itemize}
-    \item Block-length message special case
-    \item Hash is non injective
-    \item Error in quadratic security proof
-    \item HCTR2 fixes these, and ``sands the edges''
-\end{itemize}
 \end{frame}
+
+\togglefalse{oldhctr}
+\renewcommand*{\hdiag}{\hgen}
 
 \begin{frame}
 
 \frametitle{HCTR2}
-\begin{figure}
-\subfile{hctr2fig.tex}
-\end{figure}
-\begin{itemize}
-    \item $L$ fixes quadratic security proof
-\end{itemize}
+\begin{figslide}
+    \begin{itemize}
+        \item New key-dependent constant \(L\) XORed into \(S\)
+        \item Rescues quadratic security bound
+    \end{itemize}
+\end{figslide}
 
 \end{frame}
 
 \begin{frame}
 
 \frametitle{HCTR2 hash function}
-
-\begin{itemize}
-    \item Fixes hash to be injective, no special case
-    \item Handles variable-length tweak
-    \item Tweak+length block processed only once
-    \item Uses POLYVAL for speed
-\end{itemize}
+\begin{figslide}
+    \begin{itemize}
+        \item Fixes hash to be injective, no special case
+        \item Handles variable-length tweak
+        \item Tweak+length block processed only once
+        \item Uses POLYVAL for speed
+    \end{itemize}
+\end{figslide}
 \end{frame}
 
 \begin{frame}
 
 \frametitle{Sanding the edges}
+\begin{figslide}
+    \begin{itemize}
+        \item \(\hgen\), \(L\) derived from block cipher
+        \item Endianness, field convention specified
+        \item Sample implementation and test vectors
+        \item In Linux kernel now
+    \end{itemize}
 
-\begin{itemize}
-    \item $h$, $L$ derived from block cipher
-    \item Endianness, field convention specified
-    \item Sample implementation and test vectors
-    \item In Linux kernel now
-\end{itemize}
+\end{figslide}
 \end{frame}
 
 \begin{frame}
@@ -153,6 +186,7 @@
 
     \begin{itemize}
         \item \(q\) queries, \(\sigma\) blocks, \(t\) time
+        \item \(H\)-coefficient based proof
     \end{itemize}
 \end{frame}
     
@@ -163,7 +197,7 @@
     \item This is all still speculative
     \item Inspired by AES-GCM-SIV
     \item Per-message keys derived from nonce
-    \item Derive $h$ and $L$ in the same way
+    \item Derive \(\hgen\) and \(L\) in the same way
     \item Multi-target security matters if keys are 128-bit
     \item Proof in ideal cipher model
 \end{itemize}

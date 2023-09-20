@@ -33,15 +33,17 @@
     %Draw nodes
     \node[rectangle] at (0,0) (M) {$M$};
     \node[rectangle] at (13,0) (N) {$N$};
-    \node[cbox] at (9,-3) (H1) {$H_{\hgen}$};
+    \node[cbox] at (9,-3) (H1) {$H_{\hdiag}$};
     \node[XOR] at (M |- H1) (X1) {};
     \node[cbox] at (0,-8) (E) {$E_k$};
     \node[rectangle] at (17,-8) (T) {$T$};
     \node[XOR] at (4, -8) (XS) {};
-    \node[rectangle] at (2, -8) (L) {\(L\)};
-    \node[cbox] at (H1 |- L) (XCTR) {$\XCTR_k$};
+    \iftoggle{oldhctr}{}{
+      \node[rectangle] at (2, -8) (L) {\(L\)};
+    }
+    \node[cbox] at (H1 |- E) (XCTR) {$\XCTR_k$};
     \node[XOR] at (N |- XCTR) (X2) {};
-    \node[cbox] at (9,-13) (H3) {$H_{\hgen}$};
+    \node[cbox] at (9,-13) (H3) {$H_{\hdiag}$};
     \node[XOR] at (M |- H3) (X3) {};
     \node[rectangle] at (0,-16) (U) {$U$};
     \node[rectangle] at (X2 |- U) (V) {$V$};
@@ -51,7 +53,9 @@
     \draw[wire] (H1) -- (X1);
     \draw[wire] (X1) -- node[left] {\(\MM\)} (E);
     \draw[wire] (0,-5) -| (XS);
-    \draw[wire] (L) -- (XS);
+    \iftoggle{oldhctr}{}{
+      \draw[wire] (L) -- (XS);
+    }
     \draw[wire] (XS) -- node[above] {\(S\)} (XCTR);
     \draw[wire] (XCTR) -- (X2);
     \draw[wire] (0,-11) -| (XS);
