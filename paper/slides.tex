@@ -103,17 +103,28 @@
 \end{frame}
 
 \begin{frame}
-
     \frametitle{XCTR mode}
-    
-    \begin{figslide}
+    \begin{columns}
+        \begin{column}{.4\textwidth}
             \begin{itemize}
                 \item CTR: nonce PLUS counter
                 \item XCTR: nonce XOR counter
                 \item No 128-bit addition required
                 \item No nasty GCM hack
+                \item Little-endian
             \end{itemize}
-    \end{figslide}
+        \end{column}
+        \begin{column}{.6\textwidth}
+            \begin{align*}
+                \operatorname{CTR}_k(S) =& E_k(\fromint(S + 1)) \\
+                & \Concat  E_k(\fromint(S + 2)) \\ 
+                & \Concat  E_k(\fromint(S + 3)) \Concat \cdots \\
+                \XCTR_k(S) =& E_k(S \xor \fromint(1)) \\
+                & \Concat  E_k(S \xor \fromint(2)) \\ 
+                & \Concat  E_k(S \xor \fromint(3)) \Concat \cdots \\
+            \end{align*}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}
@@ -145,16 +156,28 @@
 \end{frame}
 
 \begin{frame}
-
-\frametitle{HCTR2 hash function}
-\begin{figslide}
-    \begin{itemize}
-        \item Fixes hash to be injective, no special case
-        \item Handles variable-length tweak
-        \item Tweak+length block processed only once
-        \item Uses POLYVAL for speed
-    \end{itemize}
-\end{figslide}
+    \frametitle{HCTR2 hash function}
+    \begin{columns}
+        \begin{column}{.3\textwidth}
+            \begin{itemize}
+                \item Fixes encoding to be injective
+                \item Handles variable-length tweak
+                \item Length+tweak processed only once
+                \item Uses POLYVAL for speed
+            \end{itemize}
+        \end{column}
+        \begin{column}{.7\textwidth}
+            \begin{align*}
+                &\operatorname{encoding}(T, M) =\\
+                &\begin{cases}
+                    \fromint(2\abs{T} + 2) \Concat \pad(T) \Concat M &
+                    \abs{M} = 0 \pmod{n}  \\
+                    \fromint(2\abs{T} + 3) \Concat \pad(T) \Concat \pad(M \Concat \bini) &
+                    \abs{M} \ne 0 \pmod{n}
+                \end{cases}
+            \end{align*}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}
