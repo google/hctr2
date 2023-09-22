@@ -26,6 +26,7 @@
 \end{columns}
 }
 
+\useinnertheme{circles}
 \setbeamertemplate{navigation symbols}{}
 
 \title{HCTR2}
@@ -59,10 +60,12 @@
     \frametitle{Background: HCTR2}
     
     \begin{itemize}
-        \item We needed a new wide-block mode
-        \item Fast \textit{with} AES+GHASH instructions
-        \item Efficient on short messages (16B-64B)
-        \item Secure and fully specified
+        \item We needed a new wide-block mode that's:
+        \begin{itemize}
+            \item Fast \textit{with} AES+GHASH instructions
+            \item Efficient on short messages (16B-64B)
+            \item Secure and fully specified
+        \end{itemize}
     \end{itemize}
 \end{frame}
 
@@ -74,18 +77,6 @@
     \item Much interest in wide block modes around 2005--2009
     \item Many proposals: CMC, EME, EME*, PEP, TET, HEH, HCH, HSE, HMC\ldots
     \item We chose HCTR (Wang, Feng, and Wu 2005)
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-
-\frametitle{Hash-encrypt-hash}
-
-\begin{itemize}
-    \item Any secure wide-block mode has at least three passes
-    \item Almost-universal hashing is faster than encryption
-    \item So hash-encrypt-hash constructions are fastest
-    \item HHFHFH is hash-encrypt-hash in disguise
 \end{itemize}
 \end{frame}
 
@@ -203,17 +194,21 @@
 
     \frametitle{Quadratic security}
 
-    \begin{align*}
-        &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
-        \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')] \\
-        &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 7\sigma + 2\right)\middle/2^{n+1}\right.
-    \end{align*}
-        
-
-    \begin{itemize}
-        \item \(q\) queries, \(\sigma\) blocks, \(t\) time
-        \item \(H\)-coefficient based proof
-    \end{itemize}
+    \begin{columns}
+        \begin{column}{.4\textwidth}
+            \begin{itemize}
+                \item \(q\) queries, \(\sigma\) blocks, \(t\) time
+                \item \(H\)-coefficient based proof
+            \end{itemize}
+                \end{column}
+        \begin{column}{.6\textwidth}
+            \begin{align*}
+                &\advantage{\pm \widetilde{\mathrm{prp}}}{\HCTR[E]}[(q, \sigma, t)] \\
+                \leq & \quad \advantage{\pm \mathrm{prp}}{E}[(\sigma + 2, t + \sigma t')] \\
+                &+ \left.\left(3\sigma^2 + 2q\sigma + q^2 + 7\sigma + 2\right)\middle/2^{n+1}\right.
+            \end{align*}
+                \end{column}
+    \end{columns}
 \end{frame}
     
 \begin{frame}
