@@ -57,42 +57,39 @@
 
 \begin{frame}
 
-    \frametitle{Background: HCTR2}
+    \frametitle{What we needed}
     
     \begin{itemize}
-        \item We needed a new wide-block mode that's:
-        \begin{itemize}
-            \item Fast \textit{with} AES+GHASH instructions
-            \item Efficient on short messages (16B-64B)
-            \item Secure and fully specified
-        \end{itemize}
+        \item A wide-block mode
+        \item Fast \textit{with} AES+GHASH instructions
+        \item Efficient on short messages (16B-64B)
+        \item Secure and fully specified
     \end{itemize}
-\end{frame}
-
-\begin{frame}
-
-\frametitle{The field}
-
-\begin{itemize}
-    \item Much interest in wide block modes around 2005--2009
-    \item Many proposals: CMC, EME, EME*, PEP, TET, HEH, HCH, HSE, HMC\ldots
-    \item We chose HCTR (Wang, Feng, and Wu 2005)
-\end{itemize}
 \end{frame}
 
 \toggletrue{oldhctr}
 
 \begin{frame}
 
-\frametitle{HCTR}
+    \frametitle{HCTR}
+        \begin{figslide}
+            \begin{itemize}
+                \item Lots of proposals from around 2005--2009
+                \item CMC, EME, EME*, PEP, TET, HEH, HCH, HSE, HMC\ldots
+                \item We chose HCTR: Wang, Feng, and Wu 2005
+                \item Quadratic security claim: Chakraborty and Nandi 2008
+            \end{itemize}
+        \end{figslide}
+    \end{frame}
+    \begin{frame}
 
+\frametitle{HCTR}
     \begin{figslide}
         \begin{itemize}
             \item Simple
             \item Fast with AES+GHASH instructions
-            \item No ciphertext stealing tricks needed
+            \item No ciphertext stealing
             \item XCTR mode
-            \item Tight quadratic security claim
         \end{itemize}
     \end{figslide}
 \end{frame}
@@ -125,14 +122,28 @@
 \begin{frame}
 
 \frametitle{HCTR issues}
-\begin{figslide}
+\begin{columns}
+    \begin{column}{.4\textwidth}
         \begin{itemize}
             \item Block-length message special case
             \item Hash is non injective
             \item Error in quadratic security proof
             \item HCTR2 fixes these, and ``sands the edges''
         \end{itemize}
-\end{figslide}
+    \end{column}
+    \begin{column}{.6\textwidth}
+        \begin{algorithmic}
+            \Procedure{Hash}{$h, T, M$}
+            \State \(X \gets M \Concat T\)
+            \If{\(\abs{X} = 0\)}
+                \State \textbf{return} \(h\)
+            \Else
+                \State \textbf{return} \(\operatorname{polyeval}(h, \pad(X)\Concat\fromint(\abs{X}))\)
+            \EndIf
+            \EndProcedure
+        \end{algorithmic}
+\end{column}
+\end{columns}
 
 \end{frame}
 
