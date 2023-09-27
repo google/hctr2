@@ -75,9 +75,11 @@
         \begin{figslide}
             \begin{itemize}
                 \item Lots of proposals from around 2005--2009
-                \item CMC, EME, EME*, PEP, TET, HEH, HCH, HSE, HMC\ldots
-                \item We chose HCTR: Wang, Feng, and Wu 2005
-                \item Quadratic security claim: Chakraborty and Nandi 2008
+                \begin{itemize}
+                    \item CMC, EME, EME*, PEP, TET, HEH, HCH, HSE, HMC\ldots
+                \end{itemize}
+                \item HCTR: Wang, Feng, and Wu 2005
+                \item Quadratic security: Chakraborty and Nandi 2008
             \end{itemize}
         \end{figslide}
     \end{frame}
@@ -87,6 +89,7 @@
     \begin{figslide}
         \begin{itemize}
             \item Simple
+            \item Hash-encrypt-hash structure
             \item Fast with AES+GHASH instructions
             \item No ciphertext stealing
             \item XCTR mode
@@ -102,7 +105,7 @@
                 \item CTR: nonce PLUS counter
                 \item XCTR: nonce XOR counter
                 \item No 128-bit addition required
-                \item No nasty GCM hack
+                \item No GCM hack
                 \item Little-endian
             \end{itemize}
         \end{column}
@@ -125,8 +128,10 @@
 \begin{columns}
     \begin{column}{.4\textwidth}
         \begin{itemize}
-            \item Block-length message special case
-            \item Hash is non injective
+            \item Hash encoding is non injective
+            \begin{itemize}
+                \item \(H_h(\bino) = h = H_h(\lambda)\)
+            \end{itemize}
             \item Error in quadratic security proof
             \item HCTR2 fixes these, and ``sands the edges''
         \end{itemize}
@@ -134,7 +139,11 @@
     \begin{column}{.6\textwidth}
         \begin{algorithmic}
             \Procedure{Hash}{$h, T, M$}
-            \State \(X \gets M \Concat T\)
+                \State \textbf{return} \(H_h(M \Concat T)\)
+            \EndProcedure
+        \end{algorithmic}
+        \begin{algorithmic}
+            \Procedure{H}{$h, X$}
             \If{\(\abs{X} = 0\)}
                 \State \textbf{return} \(h\)
             \Else
