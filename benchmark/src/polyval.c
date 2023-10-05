@@ -9,6 +9,40 @@
 #include "gf128.h"
 #include "polyval.h"
 
+/*
+ * This file provides generic and simd implementations of POLYVAL.
+ * The generic and simd implementations produce matching outputs, but
+ * they operate in fundamentally different ways.
+ *
+ * POLYVAL uses the irreducible polynomial g(x) = x^128 + x^127 + x^126 + x^121
+ * + 1.  This is the "bitreflection" of the usual modulus p(x) = x^128 + x^7 +
+ * x^2 + x + 1. This different modulus has two notable effects.
+ *
+ * 1) The simd implementation is optimized using Montgomery multiplication
+ * instead of Barrett reduction. This is slightly faster on little-endian
+ * machines.
+ * 2) The generic implementation is implemented by using an isomorphism between
+ * the fields defined by p(x) and g(x). This allows generic implementations of
+ * POLYVAL to reuse the pre-existing GF(2^128) lookup tables.
+ *
+ * The isomorphism used for generic POLYVAL is described below.
+ *
+ * The two fields we that generic POLYVAL uses are:
+ * 1) Elements of GF(2^128) where multiplication is defined modulo the
+ * irreducible polynomial: g(x) = x^128 + x^127 + x^126 + x^121 + 1.
+ * 2) Elements of GF(2^128) where multiplication is multiplication modulo the
+ * irreducible polynomial: p(x) = x^128 + x^7 + x^2 + x + 1.
+ *
+ * 1) Mapping a field element from field (1) to field (2) is done by computing
+ * b = x*reverse_bytes(x^128*a). 
+ * 2) Mapping an element from field (2) to field (1) is done by computing
+ * a = x^{-128}*reverse_bytes(x^{-1}*b)).
+ *
+ * Our generic implementation is derived with this isomorphism and by omitting
+ * multiplications of x, x^{-1}, x^{128} and x^{-128} that would otherwise be
+ * cancelled.
+ */
+
 #ifdef __x86_64__
 asmlinkage void clmul_polyval_update(const struct polyval_key *key,
 	const u8 *in, size_t nblocks, u8 *accumulator);
